@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/storage"
 	"github.com/stepkareserva/obsermon/internal/models"
@@ -18,74 +19,81 @@ func NewServer(storage storage.Storage) (*Server, error) {
 	return &Server{storage: storage}, nil
 }
 
-func (s *Server) UpdateGauge(name string, val models.Gauge) error {
+func (s *Server) UpdateGauge(val models.Gauge) error {
 	if err := s.checkValidity(); err != nil {
 		return err
 	}
 
-	s.storage.SetGauge(name, val)
-	return nil
+	return s.storage.SetGauge(val)
 }
 
-func (s *Server) GetGauge(name string) (models.Gauge, error) {
+func (s *Server) GetGauge(name string) (*models.Gauge, bool, error) {
 	if err := s.checkValidity(); err != nil {
-		return 0, err
+		return nil, false, err
 	}
 
-	val, exists := s.storage.GetGauge(name)
-	if !exists {
-		return 0, fmt.Errorf("gauge does not exist")
-	}
-
-	return val, nil
+	return s.storage.GetGauge(name)
 }
 
-func (s *Server) ListGauges() (models.Names, error) {
+func (s *Server) ListGauges() ([]models.Gauge, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, err
 	}
-	return s.storage.ListGauges(), nil
+	gauges, err := s.storage.ListGauges()
+	if err != nil {
+		return nil, err
+	}
+
+	sort.SliceStable(gauges, func(i, j int) bool {
+		return gauges[i].Name < gauges[j].Name
+	})
+
+	return gauges, nil
 }
 
-func (s *Server) UpdateCounter(name string, val models.Counter) error {
+func (s *Server) UpdateCounter(val models.Counter) error {
 	if err := s.checkValidity(); err != nil {
 		return err
 	}
 
-	current, exists := s.storage.GetCounter(name)
-	if !exists {
-		s.storage.SetCounter(name, val)
-		return nil
-	}
-
-	err := current.Update(val)
+	current, exists, err := s.storage.GetCounter(val.Name)
 	if err != nil {
 		return err
 	}
-
-	s.storage.SetCounter(name, current)
-	return nil
-}
-
-func (s *Server) GetCounter(name string) (models.Counter, error) {
-	if err := s.checkValidity(); err != nil {
-		return 0, err
-	}
-
-	value, exists := s.storage.GetCounter(name)
 	if !exists {
-		return value, fmt.Errorf("counter does not exist")
+		return s.storage.SetCounter(val)
 	}
 
-	return value, nil
+	if err = current.Value.Update(val.Value); err != nil {
+		return err
+	}
+
+	return s.storage.SetCounter(*current)
 }
 
-func (s *Server) ListCounters() (models.Names, error) {
+func (s *Server) GetCounter(name string) (*models.Counter, bool, error) {
+	if err := s.checkValidity(); err != nil {
+		return nil, false, err
+	}
+
+	return s.storage.GetCounter(name)
+}
+
+func (s *Server) ListCounters() ([]models.Counter, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, err
 	}
 
-	return s.storage.ListCounters(), nil
+	counters, err := s.storage.ListCounters()
+	if err != nil {
+		return nil, err
+	}
+
+	sort.SliceStable(counters, func(i, j int) bool {
+		return counters[i].Name < counters[j].Name
+	})
+
+	return counters, nil
 }
 
 func (s *Server) checkValidity() error {

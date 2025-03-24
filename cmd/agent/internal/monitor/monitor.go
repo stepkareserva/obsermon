@@ -47,22 +47,17 @@ var (
 )
 
 func GetMetrics() (*metrics.Metrics, error) {
-	gauges := make(metrics.Gauges, len(RuntimeGauges)+1)
-
-	runtimeGauges, err := GetRuntimeGauges()
+	gauges, err := getRuntimeGauges()
 	if err != nil {
 		return nil, err
 	}
-	for k, v := range runtimeGauges {
-		gauges[k] = v
-	}
 
-	randomGaugeName, randomGaugeVal := GetRandomGauge()
+	randomGaugeName, randomGaugeVal := getRandomGauge()
 	gauges[randomGaugeName] = randomGaugeVal
 
-	counters := make(metrics.Counters, 1)
+	counters := make(models.CountersMap, 1)
 
-	pollCounterName, pollCounterVal := GetPollCount()
+	pollCounterName, pollCounterVal := getPollCount()
 	counters[pollCounterName] = pollCounterVal
 
 	return &metrics.Metrics{
@@ -71,7 +66,7 @@ func GetMetrics() (*metrics.Metrics, error) {
 	}, nil
 }
 
-func GetRuntimeGauges() (metrics.Gauges, error) {
+func getRuntimeGauges() (models.GaugesMap, error) {
 	// get mem stats as map
 	var s runtime.MemStats
 	runtime.ReadMemStats(&s)
@@ -81,24 +76,24 @@ func GetRuntimeGauges() (metrics.Gauges, error) {
 	}
 
 	// extract required runtime gauges
-	gauges := make(metrics.Gauges, len(RuntimeGauges))
+	gauges := make(models.GaugesMap, len(RuntimeGauges))
 	for _, name := range RuntimeGauges {
 		val, exists := m[name]
 		if !exists {
 			return nil, fmt.Errorf("gauge %s not fount in runtime stats", name)
 		}
-		gauges[name] = models.Gauge(val)
+		gauges[name] = models.GaugeValue(val)
 	}
 
 	return gauges, nil
 }
 
-func GetRandomGauge() (name string, val models.Gauge) {
-	return RandomGauge, models.Gauge(rand.Float64())
+func getRandomGauge() (name string, val models.GaugeValue) {
+	return RandomGauge, models.GaugeValue(rand.Float64())
 }
 
-func GetPollCount() (name string, val models.Counter) {
-	return PollCount, models.Counter(1)
+func getPollCount() (name string, val models.CounterValue) {
+	return PollCount, models.CounterValue(1)
 }
 
 func structToMap(obj interface{}) (map[string]float64, error) {

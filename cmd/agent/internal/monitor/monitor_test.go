@@ -7,7 +7,7 @@ import (
 )
 
 func TestGetRuntimeGauges(t *testing.T) {
-	_, err := GetRuntimeGauges()
+	_, err := getRuntimeGauges()
 	require.NoError(t, err)
 }
 

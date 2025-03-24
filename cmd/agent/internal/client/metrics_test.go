@@ -11,8 +11,10 @@ import (
 )
 
 func TestUpdateCounter(t *testing.T) {
-	counterName := "name"
-	counterValue := models.Counter(2)
+	counter := models.Counter{
+		Name:  "name",
+		Value: models.CounterValue(2),
+	}
 	expectedURLPath := "/update/counter/name/2"
 
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -24,13 +26,15 @@ func TestUpdateCounter(t *testing.T) {
 	metricsClient, err := NewMetricsClient(mockServer.URL)
 	require.NoError(t, err)
 
-	err = metricsClient.UpdateCounter(counterName, counterValue)
+	err = metricsClient.UpdateCounter(counter)
 	require.NoError(t, err)
 }
 
 func TestUpdateGauge(t *testing.T) {
-	gaugeName := "name"
-	gaugeValue := models.Gauge(2.5)
+	gauge := models.Gauge{
+		Name:  "name",
+		Value: models.GaugeValue(2.5),
+	}
 	expectedURLPath := "/update/gauge/name/2.5"
 
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -42,6 +46,6 @@ func TestUpdateGauge(t *testing.T) {
 	metricsClient, err := NewMetricsClient(mockServer.URL)
 	require.NoError(t, err)
 
-	err = metricsClient.UpdateGauge(gaugeName, gaugeValue)
+	err = metricsClient.UpdateGauge(gauge)
 	require.NoError(t, err)
 }

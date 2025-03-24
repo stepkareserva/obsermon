@@ -6,22 +6,27 @@ import (
 	"strconv"
 )
 
-type Counter int64
+type CounterValue int64
 
-func (c *Counter) FromString(s string) error {
+type Counter struct {
+	Name  string
+	Value CounterValue
+}
+
+func (c *CounterValue) FromString(s string) error {
 	value, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
-		return fmt.Errorf("could not parse Counter: %w", err)
+		return fmt.Errorf("could not parse CounterValue: %w", err)
 	}
-	*c = Counter(value)
+	*c = CounterValue(value)
 	return nil
 }
 
-func (c *Counter) ToString() string {
+func (c *CounterValue) String() string {
 	return strconv.FormatInt(int64(*c), 10)
 }
 
-func (c *Counter) Update(v Counter) error {
+func (c *CounterValue) Update(v CounterValue) error {
 	updated, err := safeAdd(*c, v)
 	if err != nil {
 		return err
@@ -32,19 +37,19 @@ func (c *Counter) Update(v Counter) error {
 
 // stuff for counter overflow handling
 const (
-	counterMax Counter = Counter(math.MaxInt64)
-	counterMin Counter = Counter(math.MinInt64)
+	counterMax CounterValue = CounterValue(math.MaxInt64)
+	counterMin CounterValue = CounterValue(math.MinInt64)
 )
 
 type CounterOverflowError struct {
-	a, b Counter
+	a, b CounterValue
 }
 
 func (e CounterOverflowError) Error() string {
 	return fmt.Sprintf("CounterOverflowError: caused by %d + %d", e.a, e.b)
 }
 
-func safeAdd(a, b Counter) (Counter, error) {
+func safeAdd(a, b CounterValue) (CounterValue, error) {
 	if (b > 0 && a > counterMax-b) || (b < 0 && a < counterMin-b) {
 		return 0, CounterOverflowError{a: a, b: b}
 	}

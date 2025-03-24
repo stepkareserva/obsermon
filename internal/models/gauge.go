@@ -5,17 +5,22 @@ import (
 	"strconv"
 )
 
-type Gauge float64
+type GaugeValue float64
 
-func (g *Gauge) FromString(s string) error {
+type Gauge struct {
+	Name  string
+	Value GaugeValue
+}
+
+func (g *GaugeValue) FromString(s string) error {
 	value, err := strconv.ParseFloat(s, 64)
 	if err != nil {
-		return fmt.Errorf("could not parse Gauge: %w", err)
+		return fmt.Errorf("could not parse GaugeValue: %w", err)
 	}
-	*g = Gauge(value)
+	*g = GaugeValue(value)
 	return nil
 }
 
-func (g *Gauge) ToString() string {
+func (g *GaugeValue) String() string {
 	return strconv.FormatFloat(float64(*g), 'f', -1, 64)
 }

@@ -40,13 +40,13 @@ func UpdateHandler(s *server.Server) (http.Handler, error) {
 func updateGaugeHandler(s *server.Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, ChiName)
-		var value models.Gauge
+		var value models.GaugeValue
 		if err := value.FromString(chi.URLParam(r, ChiValue)); err != nil {
 			WriteError(w, ErrInvalidMetricValue)
 			return
 		}
-
-		if err := s.UpdateGauge(name, value); err != nil {
+		gauge := models.Gauge{Name: name, Value: value}
+		if err := s.UpdateGauge(gauge); err != nil {
 			WriteError(w, ErrInternalServerError)
 			return
 		}
@@ -59,13 +59,14 @@ func updateGaugeHandler(s *server.Server) http.HandlerFunc {
 func updateCounterHandler(s *server.Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, ChiName)
-		var value models.Counter
+		var value models.CounterValue
 		if err := value.FromString(chi.URLParam(r, ChiValue)); err != nil {
 			WriteError(w, ErrInvalidMetricValue)
 			return
 		}
 
-		if err := s.UpdateCounter(name, value); err != nil {
+		counter := models.Counter{Name: name, Value: value}
+		if err := s.UpdateCounter(counter); err != nil {
 			WriteError(w, ErrInternalServerError)
 			return
 		}
