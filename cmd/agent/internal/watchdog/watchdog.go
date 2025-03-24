@@ -69,7 +69,7 @@ func (w *Watchdog) metricsPoller() {
 		select {
 		case <-w.ctx.Done():
 			close(w.metrics)
-			log.Println("Metrics updater stopped")
+			log.Println("Metrics poller stopped")
 			return
 		default:
 			m, err := monitor.GetMetrics()
