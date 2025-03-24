@@ -25,9 +25,22 @@ func main() {
 		log.Fatal(err)
 		return
 	}
+	valueHandler, err := handlers.ValueHandler(server)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	valuesHandler, err := handlers.ValuesHandler(server)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 
 	r := chi.NewRouter()
 	r.Mount("/update", updateHandler)
+	r.Mount("/value", valueHandler)
+	r.Mount("/", valuesHandler)
 
 	fmt.Println("Server is running on :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
