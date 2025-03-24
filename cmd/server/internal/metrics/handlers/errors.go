@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type Error struct {
@@ -30,12 +31,17 @@ var (
 		StatusCode: http.StatusNotFound,
 		Message:    "Metric name is missing",
 	}
+
+	ErrMetricNotFound = Error{
+		StatusCode: http.StatusNotFound,
+		Message:    "Metric not found",
+	}
 )
 
 func WriteError(w http.ResponseWriter, err Error, details ...string) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(err.StatusCode)
 
-	errText := fmt.Sprintln(err.Message, details)
+	errText := fmt.Sprintln(err.Message, strings.Join(details, " "))
 	w.Write([]byte(errText))
 }
