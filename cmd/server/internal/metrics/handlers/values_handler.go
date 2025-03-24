@@ -22,7 +22,6 @@ func ValuesHandler(s *server.Server) (http.Handler, error) {
 }
 
 func metricValuesHandler(s *server.Server) http.HandlerFunc {
-
 	var tmpl = template.Must(template.New("index").Parse(`
 	<!DOCTYPE html>
 	<html>
@@ -34,17 +33,38 @@ func metricValuesHandler(s *server.Server) http.HandlerFunc {
 			body {
 				font-family: monospace;
 			}
+			table {
+				border-collapse: collapse;
+				width: auto;
+			}
+			td {
+				padding: 0;
+    			padding-right: 1ch;
+				border: none;
+				line-height: 1.5; 
+			}
 		</style>
 	</head>
 	<body>
 		<h1>Gauges:</h1>
+		<table>
 		{{range .Gauges}}
-			{{.Name}}: {{.Value}}<br/>
+		<tr>
+			<td>{{.Name}}</td>
+			<td>{{.Value.PrettyString}}</td>
+		</tr>
 		{{end}}
+		</table>
+
 		<h1>Counters:</h1>
+		<table>
 		{{range .Counters}}
-			{{.Name}}: {{.Value}}<br/>
+		<tr>
+			<td>{{.Name}}</td>
+			<td>{{.Value}}</td>
+		</tr>
 		{{end}}
+		</table>
 	</body>
 	</html>`))
 
