@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/handlers"
 	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/server"
 	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/storage"
@@ -18,21 +20,15 @@ func main() {
 		log.Fatal(err)
 		return
 	}
-	updateHandler, err := handlers.NewUpdateHandler(server)
+	updateHandler, err := handlers.UpdateHandler(server)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	mux := http.NewServeMux()
-
-	mux.Handle("/update/gauge/", http.StripPrefix("/update/gauge/",
-		http.HandlerFunc(updateHandler.UpdateGaugeHandler)))
-	mux.Handle("/update/counter/", http.StripPrefix("/update/counter/",
-		http.HandlerFunc(updateHandler.UpdateCounterHandler)))
-	mux.Handle("/update/", http.StripPrefix("/update/",
-		http.HandlerFunc(updateHandler.UpdateHandler)))
+	r := chi.NewRouter()
+	r.Mount("/update", updateHandler)
 
 	fmt.Println("Server is running on :8080")
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	log.Fatal(http.ListenAndServe(":8080", r))
 }

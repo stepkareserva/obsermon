@@ -23,28 +23,26 @@ type testCase struct {
 func TestUpdateCounter(t *testing.T) {
 	updateHandler := mockUpdatesHandler(t)
 
+	ts := httptest.NewServer(updateHandler)
+	defer ts.Close()
+
 	testCases := []testCase{
 		// correct
-		{request: "/name/1", expected: expected{code: http.StatusOK}},
+		{request: "/counter/name/1", expected: expected{code: http.StatusOK}},
 		// without metric name
-		{request: "/", expected: expected{code: http.StatusNotFound}},
+		{request: "/counter/", expected: expected{code: http.StatusNotFound}},
 		// incorrect metric value
-		{request: "/name/value", expected: expected{code: http.StatusBadRequest}},
-		{request: "/name/1.000", expected: expected{code: http.StatusBadRequest}},
-		{request: "/name/1.25", expected: expected{code: http.StatusBadRequest}},
-		{request: "/name/99999999999999999999999999", expected: expected{code: http.StatusBadRequest}},
+		{request: "/counter/name/value", expected: expected{code: http.StatusBadRequest}},
+		{request: "/counter/name/1.000", expected: expected{code: http.StatusBadRequest}},
+		{request: "/counter/name/1.25", expected: expected{code: http.StatusBadRequest}},
+		{request: "/counter/name/99999999999999999999999999", expected: expected{code: http.StatusBadRequest}},
 	}
 
 	for _, test := range testCases {
 		t.Run(fmt.Sprintf("test '%s'", test.request), func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodGet, test.request, nil)
-
-			w := httptest.NewRecorder()
-			updateHandler.UpdateCounterHandler(w, request)
-
-			res := w.Result()
+			res, err := http.Post(ts.URL+test.request, "text/plain", nil)
+			require.NoError(t, err)
 			defer res.Body.Close()
-
 			assert.Equal(t, test.expected.code, res.StatusCode)
 		})
 	}
@@ -53,56 +51,34 @@ func TestUpdateCounter(t *testing.T) {
 func TestUpdateGauge(t *testing.T) {
 	updateHandler := mockUpdatesHandler(t)
 
+	ts := httptest.NewServer(updateHandler)
+	defer ts.Close()
+
 	testCases := []testCase{
 		// correct
-		{request: "/name/1.0", expected: expected{code: http.StatusOK}},
+		{request: "/gauge/name/1.0", expected: expected{code: http.StatusOK}},
 		// without metric name
-		{request: "/", expected: expected{code: http.StatusNotFound}},
+		{request: "/gauge/", expected: expected{code: http.StatusNotFound}},
 		// incorrect metric value
-		{request: "/name/value", expected: expected{code: http.StatusBadRequest}},
-		{request: "/name/1.2.3", expected: expected{code: http.StatusBadRequest}},
+		{request: "/gauge/name/value", expected: expected{code: http.StatusBadRequest}},
+		{request: "/gauge/name/1.2.3", expected: expected{code: http.StatusBadRequest}},
 	}
 
 	for _, test := range testCases {
 		t.Run(fmt.Sprintf("test '%s'", test.request), func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodGet, test.request, nil)
-
-			w := httptest.NewRecorder()
-			updateHandler.UpdateGaugeHandler(w, request)
-
-			res := w.Result()
+			res, err := http.Post(ts.URL+test.request, "text/plain", nil)
+			require.NoError(t, err)
 			defer res.Body.Close()
-
 			assert.Equal(t, test.expected.code, res.StatusCode)
 		})
 	}
 }
 
-func TestUpdateEmpty(t *testing.T) {
-	updateHandler := mockUpdatesHandler(t)
-
-	testCases := []testCase{
-		{request: "/", expected: expected{code: http.StatusBadRequest}},
-	}
-
-	for _, test := range testCases {
-		t.Run(fmt.Sprintf("test '%s'", test.request), func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodGet, test.request, nil)
-			w := httptest.NewRecorder()
-			updateHandler.UpdateHandler(w, request)
-
-			res := w.Result()
-			defer res.Body.Close()
-
-			assert.Equal(t, test.expected.code, res.StatusCode)
-		})
-	}
-}
-func mockUpdatesHandler(t *testing.T) *UpdateHandler {
+func mockUpdatesHandler(t *testing.T) http.Handler {
 	storage := storage.NewMemStorage()
 	server, err := server.NewServer(storage)
 	require.NoError(t, err, "server initialization error")
-	updateHandler, err := NewUpdateHandler(server)
+	updateHandler, err := UpdateHandler(server)
 	require.NoError(t, err, "update handler initialization error")
 	return updateHandler
 }
