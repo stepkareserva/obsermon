@@ -5,73 +5,70 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/stepkareserva/obsermon/internal/models"
 )
 
+const (
+	// metrics for url
+	MetricGauge   = "gauge"
+	MetricCounter = "counter"
+
+	// names of chi routing url params to be extracted
+	URLMetric = "metric"
+	URLName   = "name"
+	URLValue  = "value"
+)
+
 type MetricsClient struct {
-	url string
+	client *resty.Client
 }
 
 func NewMetricsClient(s string) (*MetricsClient, error) {
-	parsedURL, err := url.ParseRequestURI(s)
-	if err != nil || parsedURL.Scheme == "" || parsedURL.Host == "" {
+	parsedEndpoint, err := url.ParseRequestURI(s)
+	if err != nil || parsedEndpoint.Scheme == "" || parsedEndpoint.Host == "" {
 		return nil, fmt.Errorf("invalid server url")
 	}
-	return &MetricsClient{url: s}, nil
+
+	client := resty.New()
+	client.SetBaseURL(s)
+
+	return &MetricsClient{client: client}, nil
 }
 
 func (c *MetricsClient) UpdateCounter(name string, value models.Counter) error {
-	request := models.UpdateCounterRequest{
-		Name:  name,
-		Value: value,
-	}
-	requestURL, err := request.ToURLPath()
-	if err != nil {
-		return err
+	pathParams := map[string]string{
+		URLMetric: MetricCounter,
+		URLName:   name,
+		URLValue:  value.ToString(),
 	}
 
-	path, err := url.JoinPath(c.url, "update", "counter", requestURL)
-	if err != nil {
-		return err
-	}
-	return c.sendPost(path)
+	return c.sendUpdateRequest(pathParams)
 }
 
 func (c *MetricsClient) UpdateGauge(name string, value models.Gauge) error {
-	request := models.UpdateGaugeRequest{
-		Name:  name,
-		Value: value,
-	}
-	requestURL, err := request.ToURLPath()
-	if err != nil {
-		return err
+	pathParams := map[string]string{
+		URLMetric: MetricGauge,
+		URLName:   name,
+		URLValue:  value.ToString(),
 	}
 
-	path, err := url.JoinPath(c.url, "update", "gauge", requestURL)
-	if err != nil {
-		return err
-	}
-	return c.sendPost(path)
+	return c.sendUpdateRequest(pathParams)
 }
 
-func (c *MetricsClient) sendPost(url string) error {
+func (c *MetricsClient) sendUpdateRequest(pathParams map[string]string) error {
+	resp, err := c.client.R().
+		SetPathParams(pathParams).
+		SetHeader("Content-Type", "text/plain").
+		SetBody(http.NoBody).
+		Post(fmt.Sprintf("/update/{%s}/{%s}/{%s}", URLMetric, URLName, URLValue))
 
-	req, err := http.NewRequest("POST", url, nil)
-	if err != nil {
-		return fmt.Errorf("could not create request: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "text/plain")
-	client := &http.Client{}
-
-	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("could not send request: %w", err)
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("post %s request error, status %d", url, resp.StatusCode)
+	if resp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("post %s request error, status %d", resp.Request.URL, resp.StatusCode())
 	}
 	return nil
 }
