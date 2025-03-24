@@ -24,3 +24,7 @@ func (g *GaugeValue) FromString(s string) error {
 func (g *GaugeValue) String() string {
 	return strconv.FormatFloat(float64(*g), 'f', -1, 64)
 }
+
+func (g *GaugeValue) PrettyString() string {
+	return strconv.FormatFloat(float64(*g), 'g', 6, 64)
+}
