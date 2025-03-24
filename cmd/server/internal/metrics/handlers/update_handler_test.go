@@ -12,12 +12,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type expected struct {
+type UpdateExpected struct {
 	code int
 }
-type testCase struct {
+type UpdateTestCase struct {
 	request  string
-	expected expected
+	expected UpdateExpected
 }
 
 func TestUpdateCounter(t *testing.T) {
@@ -26,16 +26,16 @@ func TestUpdateCounter(t *testing.T) {
 	ts := httptest.NewServer(updateHandler)
 	defer ts.Close()
 
-	testCases := []testCase{
+	testCases := []UpdateTestCase{
 		// correct
-		{request: "/counter/name/1", expected: expected{code: http.StatusOK}},
+		{request: "/counter/name/1", expected: UpdateExpected{code: http.StatusOK}},
 		// without metric name
-		{request: "/counter/", expected: expected{code: http.StatusNotFound}},
+		{request: "/counter/", expected: UpdateExpected{code: http.StatusNotFound}},
 		// incorrect metric value
-		{request: "/counter/name/value", expected: expected{code: http.StatusBadRequest}},
-		{request: "/counter/name/1.000", expected: expected{code: http.StatusBadRequest}},
-		{request: "/counter/name/1.25", expected: expected{code: http.StatusBadRequest}},
-		{request: "/counter/name/99999999999999999999999999", expected: expected{code: http.StatusBadRequest}},
+		{request: "/counter/name/value", expected: UpdateExpected{code: http.StatusBadRequest}},
+		{request: "/counter/name/1.000", expected: UpdateExpected{code: http.StatusBadRequest}},
+		{request: "/counter/name/1.25", expected: UpdateExpected{code: http.StatusBadRequest}},
+		{request: "/counter/name/99999999999999999999999999", expected: UpdateExpected{code: http.StatusBadRequest}},
 	}
 
 	for _, test := range testCases {
@@ -54,14 +54,14 @@ func TestUpdateGauge(t *testing.T) {
 	ts := httptest.NewServer(updateHandler)
 	defer ts.Close()
 
-	testCases := []testCase{
+	testCases := []UpdateTestCase{
 		// correct
-		{request: "/gauge/name/1.0", expected: expected{code: http.StatusOK}},
+		{request: "/gauge/name/1.0", expected: UpdateExpected{code: http.StatusOK}},
 		// without metric name
-		{request: "/gauge/", expected: expected{code: http.StatusNotFound}},
+		{request: "/gauge/", expected: UpdateExpected{code: http.StatusNotFound}},
 		// incorrect metric value
-		{request: "/gauge/name/value", expected: expected{code: http.StatusBadRequest}},
-		{request: "/gauge/name/1.2.3", expected: expected{code: http.StatusBadRequest}},
+		{request: "/gauge/name/value", expected: UpdateExpected{code: http.StatusBadRequest}},
+		{request: "/gauge/name/1.2.3", expected: UpdateExpected{code: http.StatusBadRequest}},
 	}
 
 	for _, test := range testCases {
