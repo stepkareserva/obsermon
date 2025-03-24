@@ -3,11 +3,11 @@ package storage
 import "github.com/stepkareserva/obsermon/internal/models"
 
 type Storage interface {
-	SetGauge(name string, val models.Gauge)
-	GetGauge(name string) (models.Gauge, bool)
-	ListGauges() models.Names
+	SetGauge(val models.Gauge) error
+	GetGauge(name string) (*models.Gauge, bool, error)
+	ListGauges() (models.GaugesList, error)
 
-	SetCounter(name string, val models.Counter)
-	GetCounter(name string) (models.Counter, bool)
-	ListCounters() models.Names
+	SetCounter(val models.Counter) error
+	GetCounter(name string) (*models.Counter, bool, error)
+	ListCounters() (models.CountersList, error)
 }

@@ -9,66 +9,60 @@ import (
 var _ Storage = (*MemStorage)(nil)
 
 type MemStorage struct {
-	gauges   map[string]models.Gauge
-	counters map[string]models.Counter
+	gauges   models.GaugesMap
+	counters models.CountersMap
 	lock     sync.Mutex
 }
 
 func NewMemStorage() *MemStorage {
 	return &MemStorage{
-		gauges:   make(map[string]models.Gauge),
-		counters: make(map[string]models.Counter),
+		gauges:   make(models.GaugesMap),
+		counters: make(models.CountersMap),
 	}
 }
 
-func (m *MemStorage) SetGauge(name string, val models.Gauge) {
+func (m *MemStorage) SetGauge(val models.Gauge) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
-	m.gauges[name] = val
+	m.gauges[val.Name] = val.Value
+	return nil
 }
 
-func (m *MemStorage) GetGauge(name string) (models.Gauge, bool) {
+func (m *MemStorage) GetGauge(name string) (*models.Gauge, bool, error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
 	val, exists := m.gauges[name]
-	return val, exists
+	return &models.Gauge{Name: name, Value: val}, exists, nil
 }
 
-func (m *MemStorage) ListGauges() models.Names {
+func (m *MemStorage) ListGauges() (models.GaugesList, error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
-	return listKeys(m.gauges)
+	return m.gauges.List(), nil
 }
 
-func (m *MemStorage) SetCounter(name string, val models.Counter) {
+func (m *MemStorage) SetCounter(val models.Counter) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
-	m.counters[name] = val
+	m.counters[val.Name] = val.Value
+	return nil
 }
 
-func (m *MemStorage) GetCounter(name string) (models.Counter, bool) {
+func (m *MemStorage) GetCounter(name string) (*models.Counter, bool, error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
 	val, exists := m.counters[name]
-	return val, exists
+	return &models.Counter{Name: name, Value: val}, exists, nil
 }
 
-func (m *MemStorage) ListCounters() models.Names {
+func (m *MemStorage) ListCounters() (models.CountersList, error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
-	return listKeys(m.counters)
-}
-
-func listKeys[T any](m map[string]T) models.Names {
-	keys := make(models.Names)
-	for key := range m {
-		keys[key] = struct{}{}
-	}
-	return keys
+	return m.counters.List(), nil
 }

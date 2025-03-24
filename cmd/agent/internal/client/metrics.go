@@ -36,21 +36,21 @@ func NewMetricsClient(s string) (*MetricsClient, error) {
 	return &MetricsClient{client: client}, nil
 }
 
-func (c *MetricsClient) UpdateCounter(name string, value models.Counter) error {
+func (c *MetricsClient) UpdateCounter(value models.Counter) error {
 	pathParams := map[string]string{
 		URLMetric: MetricCounter,
-		URLName:   name,
-		URLValue:  value.ToString(),
+		URLName:   value.Name,
+		URLValue:  value.Value.String(),
 	}
 
 	return c.sendUpdateRequest(pathParams)
 }
 
-func (c *MetricsClient) UpdateGauge(name string, value models.Gauge) error {
+func (c *MetricsClient) UpdateGauge(value models.Gauge) error {
 	pathParams := map[string]string{
 		URLMetric: MetricGauge,
-		URLName:   name,
-		URLValue:  value.ToString(),
+		URLName:   value.Name,
+		URLValue:  value.Value.String(),
 	}
 
 	return c.sendUpdateRequest(pathParams)

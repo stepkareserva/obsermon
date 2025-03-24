@@ -69,7 +69,7 @@ func (w *Watchdog) metricsPoller() {
 		select {
 		case <-w.ctx.Done():
 			close(w.metrics)
-			log.Println("Metrics poller stopped")
+			log.Println("Metrics updater stopped")
 			return
 		default:
 			m, err := monitor.GetMetrics()
@@ -118,13 +118,13 @@ func (w *Watchdog) processPolledMetrics() metrics.Metrics {
 
 func (w *Watchdog) sendMetrics(metrics metrics.Metrics) error {
 	var errs []error
-	for k, v := range metrics.Counters {
-		if err := w.params.MetricsServerClient.UpdateCounter(k, v); err != nil {
+	for _, m := range metrics.Counters.List() {
+		if err := w.params.MetricsServerClient.UpdateCounter(m); err != nil {
 			errs = append(errs, err)
 		}
 	}
-	for k, v := range metrics.Gauges {
-		if err := w.params.MetricsServerClient.UpdateGauge(k, v); err != nil {
+	for _, m := range metrics.Gauges.List() {
+		if err := w.params.MetricsServerClient.UpdateGauge(m); err != nil {
 			errs = append(errs, err)
 		}
 	}

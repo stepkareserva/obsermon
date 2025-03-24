@@ -1,40 +1,26 @@
 package metrics
 
 import (
-	"errors"
-
 	"github.com/stepkareserva/obsermon/internal/models"
 )
 
-type Gauges map[string]models.Gauge
-type Counters map[string]models.Counter
-
 type Metrics struct {
-	Gauges   Gauges
-	Counters Counters
+	Gauges   models.GaugesMap
+	Counters models.CountersMap
 }
 
 func NewMetrics() Metrics {
 	return Metrics{
-		Gauges:   Gauges{},
-		Counters: Counters{},
+		Gauges:   models.GaugesMap{},
+		Counters: models.CountersMap{},
 	}
 }
 
 func (m *Metrics) Update(metrics Metrics) error {
-	for k, v := range metrics.Gauges {
-		m.Gauges[k] = v
+	m.Gauges.Update(metrics.Gauges)
+	if err := m.Counters.Update(metrics.Counters); err != nil {
+		return err
 	}
 
-	var errs []error
-	for k, v := range metrics.Counters {
-		updated := m.Counters[k]
-		if err := updated.Update(v); err != nil {
-			errs = append(errs, err)
-		} else {
-			m.Counters[k] = updated
-		}
-	}
-
-	return errors.Join(errs...)
+	return nil
 }
