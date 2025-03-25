@@ -5,20 +5,22 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/stepkareserva/obsermon/cmd/agent/internal/client"
+	"github.com/stepkareserva/obsermon/cmd/agent/internal/config"
 	"github.com/stepkareserva/obsermon/cmd/agent/internal/watchdog"
 )
 
 func main() {
-	// params
-	pollInterval := 2 * time.Second
-	updateInterval := 10 * time.Second
-	metricsServerURL := "http://localhost:8080"
+	// reading params
+	cfg := config.ParseConfig()
+	if err := cfg.Validate(); err != nil {
+		log.Print(err)
+		return
+	}
 
 	// metrics client
-	metricsClient, err := client.NewMetricsClient(metricsServerURL)
+	metricsClient, err := client.NewMetricsClient(cfg.Endpoint)
 	if err != nil {
 		log.Printf("metrics client initialization error: %v", err)
 		return
@@ -26,16 +28,16 @@ func main() {
 
 	// watchdog
 	watchdogParams := watchdog.WatchdogParams{
-		PollInterval:        pollInterval,
-		UpdateInterval:      updateInterval,
+		PollInterval:        cfg.PollInterval,
+		ReportInterval:      cfg.ReportInterval,
 		MetricsServerClient: metricsClient,
 	}
 	watchdog := watchdog.NewWatchdog(watchdogParams)
 
 	// run watchdog in goroutine
 	go func() {
-		watchdog.Start()
 		log.Println("Running watchdog goroutine...")
+		watchdog.Start()
 	}()
 
 	// wait for interrupt signal
