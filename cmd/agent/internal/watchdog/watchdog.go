@@ -15,7 +15,7 @@ import (
 type WatchdogParams struct {
 	MetricsServerClient *client.MetricsClient
 	PollInterval        time.Duration
-	UpdateInterval      time.Duration
+	ReportInterval      time.Duration
 }
 
 type Watchdog struct {
@@ -29,7 +29,7 @@ type Watchdog struct {
 }
 
 func NewWatchdog(params WatchdogParams) *Watchdog {
-	chanCapacity := params.UpdateInterval/params.PollInterval + 1
+	chanCapacity := params.ReportInterval/params.PollInterval + 1
 	metrics := make(chan metrics.Metrics, chanCapacity)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -54,7 +54,7 @@ func (w *Watchdog) Start() {
 
 	go func() {
 		defer w.wg.Done()
-		w.metricsUpdater()
+		w.metricsReporter()
 	}()
 }
 
@@ -83,9 +83,9 @@ func (w *Watchdog) metricsPoller() {
 	}
 }
 
-func (w *Watchdog) metricsUpdater() {
+func (w *Watchdog) metricsReporter() {
 	for {
-		time.Sleep(w.params.UpdateInterval)
+		time.Sleep(w.params.ReportInterval)
 		select {
 		case <-w.ctx.Done():
 			log.Println("Metrics updater stopped")
