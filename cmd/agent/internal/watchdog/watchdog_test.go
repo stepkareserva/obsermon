@@ -15,7 +15,7 @@ import (
 func TestWatchdog(t *testing.T) {
 	// test params
 	pollInterval := 300 * time.Millisecond
-	updateInterval := 1 * time.Second
+	reportInterval := 1 * time.Second
 	expectedPollCount := 3
 	expectedURLPath := fmt.Sprintf("/update/counter/%s/%d", monitor.PollCount, expectedPollCount)
 
@@ -34,15 +34,15 @@ func TestWatchdog(t *testing.T) {
 	// watchdog
 	watchdogParams := WatchdogParams{
 		PollInterval:        pollInterval,
-		UpdateInterval:      updateInterval,
+		ReportInterval:      reportInterval,
 		MetricsServerClient: metricsClient,
 	}
 	watchdog := NewWatchdog(watchdogParams)
 	watchdog.Start()
 	defer watchdog.Stop()
 
-	// wait updateInterval + 100 ms
-	time.Sleep(updateInterval + 100*time.Millisecond)
+	// wait reportInterval + 100 ms
+	time.Sleep(reportInterval + 100*time.Millisecond)
 
 	// check target requests on mock server
 	_, exists := incomingRequests[expectedURLPath]

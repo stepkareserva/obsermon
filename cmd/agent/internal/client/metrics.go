@@ -25,9 +25,12 @@ type MetricsClient struct {
 }
 
 func NewMetricsClient(s string) (*MetricsClient, error) {
-	parsedEndpoint, err := url.ParseRequestURI(s)
-	if err != nil || parsedEndpoint.Scheme == "" || parsedEndpoint.Host == "" {
-		return nil, fmt.Errorf("invalid server url")
+	u, err := url.ParseRequestURI(s)
+	if err != nil {
+		return nil, err
+	}
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return nil, fmt.Errorf("invalid endpoint scheme %s", u.Scheme)
 	}
 
 	client := resty.New()
