@@ -5,10 +5,14 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
+	"time"
 )
 
 func TestUpdate(t *testing.T) {
 	go main()
+
+	// waiting for server start
+	time.Sleep(1 * time.Second)
 
 	type PostTestItem struct {
 		URL      string
