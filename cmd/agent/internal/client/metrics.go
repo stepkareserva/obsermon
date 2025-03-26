@@ -24,8 +24,8 @@ type MetricsClient struct {
 	client *resty.Client
 }
 
-func NewMetricsClient(s string) (*MetricsClient, error) {
-	u, err := url.ParseRequestURI(s)
+func NewMetricsClient(endpoint string) (*MetricsClient, error) {
+	u, err := url.ParseRequestURI(endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func NewMetricsClient(s string) (*MetricsClient, error) {
 	}
 
 	client := resty.New()
-	client.SetBaseURL(s)
+	client.SetBaseURL(endpoint)
 
 	return &MetricsClient{client: client}, nil
 }

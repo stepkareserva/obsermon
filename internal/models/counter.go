@@ -13,6 +13,7 @@ type Counter struct {
 	Value CounterValue
 }
 
+// Q: maybe implement encoding.TextMarshaler/Unmarshaler?
 func (c *CounterValue) FromString(s string) error {
 	value, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
