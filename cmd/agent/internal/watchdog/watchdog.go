@@ -73,13 +73,15 @@ func (w *Watchdog) Stop() {
 
 func (w *Watchdog) metricsPoller() {
 	for {
-		time.Sleep(w.params.PollInterval)
+		timer := time.NewTimer(w.params.PollInterval)
+		defer timer.Stop()
+
 		select {
 		case <-w.ctx.Done():
 			close(w.metrics)
 			log.Println("Metrics updater stopped")
 			return
-		default:
+		case <-timer.C:
 			m, err := monitor.GetMetrics()
 			if err != nil {
 				// just skip because of what else shall we do
@@ -93,12 +95,14 @@ func (w *Watchdog) metricsPoller() {
 
 func (w *Watchdog) metricsReporter() {
 	for {
-		time.Sleep(w.params.ReportInterval)
+		timer := time.NewTimer(w.params.ReportInterval)
+		defer timer.Stop()
+
 		select {
 		case <-w.ctx.Done():
-			log.Println("Metrics updater stopped")
+			log.Println("Metrics reporter stopped")
 			return
-		default:
+		case <-timer.C:
 			metrics := w.processPolledMetrics()
 			if err := w.sendMetrics(metrics); err != nil {
 				// just skip because of what else shall we do
