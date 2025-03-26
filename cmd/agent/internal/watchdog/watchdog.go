@@ -3,6 +3,7 @@ package watchdog
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -28,7 +29,14 @@ type Watchdog struct {
 	wg     sync.WaitGroup
 }
 
-func NewWatchdog(params WatchdogParams) *Watchdog {
+func NewWatchdog(params WatchdogParams) (*Watchdog, error) {
+	if params.PollInterval <= 0 {
+		return nil, fmt.Errorf("invalid metrics poll interval")
+	}
+	if params.ReportInterval <= 0 {
+		return nil, fmt.Errorf("invalid metrics report interval")
+	}
+
 	chanCapacity := params.ReportInterval/params.PollInterval + 1
 	metrics := make(chan metrics.Metrics, chanCapacity)
 
@@ -41,7 +49,7 @@ func NewWatchdog(params WatchdogParams) *Watchdog {
 		cancel:  cancel,
 	}
 
-	return &watchdog
+	return &watchdog, nil
 }
 
 func (w *Watchdog) Start() {

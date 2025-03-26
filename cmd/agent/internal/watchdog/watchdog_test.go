@@ -37,7 +37,8 @@ func TestWatchdog(t *testing.T) {
 		ReportInterval:      reportInterval,
 		MetricsServerClient: metricsClient,
 	}
-	watchdog := NewWatchdog(watchdogParams)
+	watchdog, err := NewWatchdog(watchdogParams)
+	require.NoError(t, err)
 	watchdog.Start()
 	defer watchdog.Stop()
 
