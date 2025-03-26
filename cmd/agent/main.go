@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/stepkareserva/obsermon/cmd/agent/internal/client"
 	"github.com/stepkareserva/obsermon/cmd/agent/internal/config"
@@ -12,15 +14,15 @@ import (
 )
 
 func main() {
-	// reading params
-	cfg := config.ParseConfig()
-	if err := cfg.Validate(); err != nil {
-		log.Print(err)
+	// reading params from command line
+	cfg, err := readConfig()
+	if err != nil {
+		log.Println(err)
 		return
 	}
 
 	// metrics client
-	metricsClient, err := client.NewMetricsClient(cfg.Endpoint)
+	metricsClient, err := client.NewMetricsClient(cfg.EndpointURL())
 	if err != nil {
 		log.Printf("metrics client initialization error: %v", err)
 		return
@@ -28,8 +30,8 @@ func main() {
 
 	// watchdog
 	watchdogParams := watchdog.WatchdogParams{
-		PollInterval:        cfg.PollInterval,
-		ReportInterval:      cfg.ReportInterval,
+		PollInterval:        time.Duration(cfg.PollInterval()),
+		ReportInterval:      time.Duration(cfg.ReportInterval()),
 		MetricsServerClient: metricsClient,
 	}
 	watchdog := watchdog.NewWatchdog(watchdogParams)
@@ -50,4 +52,18 @@ func main() {
 	log.Println("Received interrupt signal. Shutting down agent...")
 	watchdog.Stop()
 	log.Println("Agent shut down")
+}
+
+func readConfig() (*config.Config, error) {
+	var cfg config.Config
+	if err := cfg.ParseCommandLine(); err != nil {
+		return nil, fmt.Errorf("error parsing command line: %w", err)
+	}
+	if err := cfg.ParseEnv(); err != nil {
+		return nil, fmt.Errorf("error parsing env: %w", err)
+	}
+	if err := cfg.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid config: %w", err)
+	}
+	return &cfg, nil
 }
