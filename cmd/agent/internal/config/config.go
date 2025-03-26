@@ -4,52 +4,72 @@ import (
 	"flag"
 	"fmt"
 	"net/url"
-	"strings"
+	"os"
 	"time"
+
+	"github.com/caarlos0/env/v6"
 )
 
 type Config struct {
-	Endpoint       string
-	PollInterval   time.Duration
-	ReportInterval time.Duration
+	// endpoint address, without protocol.
+	// to get endpoint URL call EndpointURL()
+	endpoint string `env:"ADDRESS"`
+	// pool interval in seconds.
+	// to get duration call PollInterval()
+	pollIntervalS int `env:"POLL_INTERVAL"`
+	// pool interval in seconds.
+	// to get duration call ReportInterval()
+	reportIntervalS int `env:"REPORT_INTERVAL"`
 }
 
-func ParseConfig() Config {
-	endpoint := flag.String("a", "localhost:8080",
+func (c *Config) EndpointURL() string {
+	return "http://" + c.endpoint
+}
+
+func (c *Config) PollInterval() time.Duration {
+	return time.Duration(c.pollIntervalS) * time.Second
+}
+
+func (c *Config) ReportInterval() time.Duration {
+	return time.Duration(c.reportIntervalS) * time.Second
+}
+
+func (c *Config) ParseCommandLine() error {
+
+	defaultEndpoint := "localhost:8080"
+	defaultPollInterval := 2
+	defaultReportInterval := 10
+
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
+	fs.StringVar(&c.endpoint, "a", defaultEndpoint,
 		"server endpoint tcp address, like :8080, 127.0.0.1:80, localhost:22 (without protocol)")
-	pollInterval := flag.Int("p", 2,
+	fs.IntVar(&c.pollIntervalS, "p", defaultPollInterval,
 		"poll interval, in seconds, positive integer")
-	reportInterval := flag.Int("r", 10,
+	fs.IntVar(&c.reportIntervalS, "r", defaultReportInterval,
 		"report interval, in seconds, positive integer")
 
-	flag.Parse()
-
-	// !!! add prefix http to endpoint path, if not exists.
-	// tests pass -a param without http prefix, but it's required
-	if !strings.Contains(*endpoint, "://") {
-		*endpoint = "http://" + *endpoint
+	if err := fs.Parse(os.Args[1:]); err != nil {
+		return err
 	}
 
-	return Config{
-		Endpoint:       *endpoint,
-		PollInterval:   time.Duration(*pollInterval) * time.Second,
-		ReportInterval: time.Duration(*reportInterval) * time.Second,
-	}
+	return nil
+}
+
+func (c *Config) ParseEnv() error {
+	return env.Parse(c)
 }
 
 func (c *Config) Validate() error {
-	u, err := url.ParseRequestURI(c.Endpoint)
+	_, err := url.ParseRequestURI(c.EndpointURL())
 	if err != nil {
 		return fmt.Errorf("invalid endpoint: %w", err)
 	}
-	if u.Scheme != "http" && u.Scheme != "https" {
-		return fmt.Errorf("unsuppoeted protocol scheme: %s", u.Scheme)
+	if c.PollInterval() <= 0 {
+		return fmt.Errorf("invalid poll interval %v", c.ReportInterval())
 	}
-	if c.PollInterval <= 0 {
-		return fmt.Errorf("invalid poll interval %s", c.ReportInterval)
-	}
-	if c.ReportInterval <= 0 {
-		return fmt.Errorf("invalid report interval %s", c.ReportInterval)
+	if c.ReportInterval() <= 0 {
+		return fmt.Errorf("invalid report interval %v", c.ReportInterval())
 	}
 	return nil
 }
