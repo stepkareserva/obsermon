@@ -43,11 +43,14 @@ func (c *Config) ParseCommandLine() error {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
 	fs.StringVar(&c.Endpoint, "a", defaultEndpoint,
-		"server endpoint tcp address, like :8080, 127.0.0.1:80, localhost:22 (without protocol)")
+		"server endpoint tcp address, like :8080, 127.0.0.1:80,\n"+
+			"localhost:22 (without protocol)")
 	fs.IntVar(&c.PollIntervalS, "p", defaultPollInterval,
-		"poll interval, in seconds, positive integer")
+		"poll (local metrics update) interval, in seconds,\n"+
+			"positive integer")
 	fs.IntVar(&c.ReportIntervalS, "r", defaultReportInterval,
-		"report interval, in seconds, positive integer")
+		"report (send metrics to server) interval, in seconds,\n"+
+			"positive integer")
 
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		return err
