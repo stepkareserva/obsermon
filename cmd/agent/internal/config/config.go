@@ -13,25 +13,25 @@ import (
 type Config struct {
 	// endpoint address, without protocol.
 	// to get endpoint URL call EndpointURL()
-	endpoint string `env:"ADDRESS"`
+	Endpoint string `env:"ADDRESS"`
 	// pool interval in seconds.
 	// to get duration call PollInterval()
-	pollIntervalS int `env:"POLL_INTERVAL"`
+	PollIntervalS int `env:"POLL_INTERVAL"`
 	// pool interval in seconds.
 	// to get duration call ReportInterval()
-	reportIntervalS int `env:"REPORT_INTERVAL"`
+	ReportIntervalS int `env:"REPORT_INTERVAL"`
 }
 
 func (c *Config) EndpointURL() string {
-	return "http://" + c.endpoint
+	return "http://" + c.Endpoint
 }
 
 func (c *Config) PollInterval() time.Duration {
-	return time.Duration(c.pollIntervalS) * time.Second
+	return time.Duration(c.PollIntervalS) * time.Second
 }
 
 func (c *Config) ReportInterval() time.Duration {
-	return time.Duration(c.reportIntervalS) * time.Second
+	return time.Duration(c.ReportIntervalS) * time.Second
 }
 
 func (c *Config) ParseCommandLine() error {
@@ -42,11 +42,11 @@ func (c *Config) ParseCommandLine() error {
 
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.StringVar(&c.endpoint, "a", defaultEndpoint,
+	fs.StringVar(&c.Endpoint, "a", defaultEndpoint,
 		"server endpoint tcp address, like :8080, 127.0.0.1:80, localhost:22 (without protocol)")
-	fs.IntVar(&c.pollIntervalS, "p", defaultPollInterval,
+	fs.IntVar(&c.PollIntervalS, "p", defaultPollInterval,
 		"poll interval, in seconds, positive integer")
-	fs.IntVar(&c.reportIntervalS, "r", defaultReportInterval,
+	fs.IntVar(&c.ReportIntervalS, "r", defaultReportInterval,
 		"report interval, in seconds, positive integer")
 
 	if err := fs.Parse(os.Args[1:]); err != nil {
