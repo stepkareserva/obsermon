@@ -27,7 +27,7 @@ func metricValuesHandler(s *server.Server) http.HandlerFunc {
 	<html>
 	<head>
 		<title>
-			String List
+			Obsermon metrics
 		</title>
 	    <style>
 			body {
