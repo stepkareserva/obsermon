@@ -8,6 +8,7 @@ import (
 	"github.com/stepkareserva/obsermon/internal/models"
 )
 
+// Q: maybe rename server -> core?
 type Server struct {
 	storage storage.Storage
 }
