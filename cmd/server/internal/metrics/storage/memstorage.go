@@ -11,7 +11,7 @@ var _ Storage = (*MemStorage)(nil)
 type MemStorage struct {
 	gauges   models.GaugesMap
 	counters models.CountersMap
-	lock     sync.Mutex
+	lock     sync.RWMutex
 }
 
 func NewMemStorage() *MemStorage {
@@ -30,16 +30,16 @@ func (m *MemStorage) SetGauge(val models.Gauge) error {
 }
 
 func (m *MemStorage) GetGauge(name string) (*models.Gauge, bool, error) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
+	m.lock.RLock()
+	defer m.lock.RUnlock()
 
 	val, exists := m.gauges[name]
 	return &models.Gauge{Name: name, Value: val}, exists, nil
 }
 
 func (m *MemStorage) ListGauges() (models.GaugesList, error) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
+	m.lock.RLock()
+	defer m.lock.RUnlock()
 
 	return m.gauges.List(), nil
 }
@@ -53,16 +53,16 @@ func (m *MemStorage) SetCounter(val models.Counter) error {
 }
 
 func (m *MemStorage) GetCounter(name string) (*models.Counter, bool, error) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
+	m.lock.RLock()
+	defer m.lock.RUnlock()
 
 	val, exists := m.counters[name]
 	return &models.Counter{Name: name, Value: val}, exists, nil
 }
 
 func (m *MemStorage) ListCounters() (models.CountersList, error) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
+	m.lock.RLock()
+	defer m.lock.RUnlock()
 
 	return m.counters.List(), nil
 }
