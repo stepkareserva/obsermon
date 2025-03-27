@@ -6,13 +6,13 @@ import (
 	"text/template"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/server"
+	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/service"
 	"github.com/stepkareserva/obsermon/internal/models"
 )
 
-func ValuesHandler(s *server.Server) (http.Handler, error) {
+func ValuesHandler(s *service.Service) (http.Handler, error) {
 	if s == nil {
-		return nil, fmt.Errorf("metrics server is nil")
+		return nil, fmt.Errorf("metrics service is nil")
 	}
 
 	r := chi.NewRouter()
@@ -21,7 +21,7 @@ func ValuesHandler(s *server.Server) (http.Handler, error) {
 	return r, nil
 }
 
-func metricValuesHandler(s *server.Server) http.HandlerFunc {
+func metricValuesHandler(s *service.Service) http.HandlerFunc {
 	var tmpl = template.Must(template.New("index").Parse(`
 	<!DOCTYPE html>
 	<html>

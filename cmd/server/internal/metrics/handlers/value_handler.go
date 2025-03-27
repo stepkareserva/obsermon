@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/server"
+	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/service"
 )
 
-func ValueHandler(s *server.Server) (http.Handler, error) {
+func ValueHandler(s *service.Service) (http.Handler, error) {
 	if s == nil {
 		return nil, fmt.Errorf("metrics server is nil")
 	}
@@ -25,7 +25,7 @@ func ValueHandler(s *server.Server) (http.Handler, error) {
 	return r, nil
 }
 
-func gaugeValueHandler(s *server.Server) http.HandlerFunc {
+func gaugeValueHandler(s *service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, ChiName)
 		gauge, exists, err := s.GetGauge(name)
@@ -48,7 +48,7 @@ func gaugeValueHandler(s *server.Server) http.HandlerFunc {
 	}
 }
 
-func counterValueHandler(s *server.Server) http.HandlerFunc {
+func counterValueHandler(s *service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, ChiName)
 		counter, exists, err := s.GetCounter(name)

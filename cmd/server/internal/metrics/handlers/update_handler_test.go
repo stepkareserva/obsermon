@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/server"
+	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/service"
 	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -76,9 +76,9 @@ func TestUpdateGauge(t *testing.T) {
 
 func mockUpdatesHandler(t *testing.T) http.Handler {
 	storage := storage.NewMemStorage()
-	server, err := server.NewServer(storage)
-	require.NoError(t, err, "server initialization error")
-	updateHandler, err := UpdateHandler(server)
+	service, err := service.NewService(storage)
+	require.NoError(t, err, "service initialization error")
+	updateHandler, err := UpdateHandler(service)
 	require.NoError(t, err, "update handler initialization error")
 	return updateHandler
 }
