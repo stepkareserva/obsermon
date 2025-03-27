@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -15,10 +14,9 @@ import (
 
 func main() {
 	// reading params from command line
-	cfg, err := readConfig()
+	cfg, err := config.Read()
 	if err != nil {
-		log.Println(err)
-		return
+		log.Fatal(err)
 	}
 
 	// metrics client
@@ -56,18 +54,4 @@ func main() {
 	log.Println("Received interrupt signal. Shutting down agent...")
 	watchdog.Stop()
 	log.Println("Agent shut down")
-}
-
-func readConfig() (*config.Config, error) {
-	var cfg config.Config
-	if err := cfg.ParseCommandLine(); err != nil {
-		return nil, fmt.Errorf("error parsing command line: %w", err)
-	}
-	if err := cfg.ParseEnv(); err != nil {
-		return nil, fmt.Errorf("error parsing env: %w", err)
-	}
-	if err := cfg.Validate(); err != nil {
-		return nil, fmt.Errorf("invalid config: %w", err)
-	}
-	return &cfg, nil
 }
