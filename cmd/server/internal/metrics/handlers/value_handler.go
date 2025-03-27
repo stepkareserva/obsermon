@@ -39,7 +39,7 @@ func gaugeValueHandler(s *service.Service) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Header().Set(contentType, contentTypeText)
 
 		if _, err := w.Write([]byte(gauge.Value.String())); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -62,7 +62,7 @@ func counterValueHandler(s *service.Service) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Header().Set(contentType, contentTypeText)
 		if _, err := w.Write([]byte(counter.Value.String())); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return

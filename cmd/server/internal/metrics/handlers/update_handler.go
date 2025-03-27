@@ -51,7 +51,7 @@ func updateGaugeHandler(s *service.Service) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Header().Set(contentType, contentTypeText)
 		w.WriteHeader(http.StatusOK)
 	}
 }
@@ -71,7 +71,7 @@ func updateCounterHandler(s *service.Service) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Header().Set(contentType, contentTypeHTML)
 		w.WriteHeader(http.StatusOK)
 	}
 }
