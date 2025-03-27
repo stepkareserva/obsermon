@@ -1,4 +1,4 @@
-package server
+package service
 
 import (
 	"fmt"
@@ -8,19 +8,18 @@ import (
 	"github.com/stepkareserva/obsermon/internal/models"
 )
 
-// Q: maybe rename server -> core?
-type Server struct {
+type Service struct {
 	storage storage.Storage
 }
 
-func NewServer(storage storage.Storage) (*Server, error) {
+func NewService(storage storage.Storage) (*Service, error) {
 	if storage == nil {
 		return nil, fmt.Errorf("metrics storage is nil")
 	}
-	return &Server{storage: storage}, nil
+	return &Service{storage: storage}, nil
 }
 
-func (s *Server) UpdateGauge(val models.Gauge) error {
+func (s *Service) UpdateGauge(val models.Gauge) error {
 	if err := s.checkValidity(); err != nil {
 		return err
 	}
@@ -28,7 +27,7 @@ func (s *Server) UpdateGauge(val models.Gauge) error {
 	return s.storage.SetGauge(val)
 }
 
-func (s *Server) GetGauge(name string) (*models.Gauge, bool, error) {
+func (s *Service) GetGauge(name string) (*models.Gauge, bool, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, false, err
 	}
@@ -36,7 +35,7 @@ func (s *Server) GetGauge(name string) (*models.Gauge, bool, error) {
 	return s.storage.GetGauge(name)
 }
 
-func (s *Server) ListGauges() ([]models.Gauge, error) {
+func (s *Service) ListGauges() ([]models.Gauge, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, err
 	}
@@ -52,7 +51,7 @@ func (s *Server) ListGauges() ([]models.Gauge, error) {
 	return gauges, nil
 }
 
-func (s *Server) UpdateCounter(val models.Counter) error {
+func (s *Service) UpdateCounter(val models.Counter) error {
 	if err := s.checkValidity(); err != nil {
 		return err
 	}
@@ -72,7 +71,7 @@ func (s *Server) UpdateCounter(val models.Counter) error {
 	return s.storage.SetCounter(*current)
 }
 
-func (s *Server) GetCounter(name string) (*models.Counter, bool, error) {
+func (s *Service) GetCounter(name string) (*models.Counter, bool, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, false, err
 	}
@@ -80,7 +79,7 @@ func (s *Server) GetCounter(name string) (*models.Counter, bool, error) {
 	return s.storage.GetCounter(name)
 }
 
-func (s *Server) ListCounters() ([]models.Counter, error) {
+func (s *Service) ListCounters() ([]models.Counter, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, err
 	}
@@ -97,9 +96,9 @@ func (s *Server) ListCounters() ([]models.Counter, error) {
 	return counters, nil
 }
 
-func (s *Server) checkValidity() error {
+func (s *Service) checkValidity() error {
 	if s == nil || s.storage == nil {
-		return fmt.Errorf("Server not exists")
+		return fmt.Errorf("Service not exists")
 	}
 	return nil
 }

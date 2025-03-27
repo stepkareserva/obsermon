@@ -9,7 +9,7 @@ import (
 
 	"github.com/stepkareserva/obsermon/cmd/server/internal/config"
 	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/handlers"
-	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/server"
+	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/service"
 	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/storage"
 )
 
@@ -23,14 +23,14 @@ func main() {
 
 	// initialize storage and controller
 	storage := storage.NewMemStorage()
-	server, err := server.NewServer(storage)
+	service, err := service.NewService(storage)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
 	// initialize handler
-	handler, err := createHandler(server)
+	handler, err := createHandler(service)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -55,7 +55,7 @@ func readConfig() (*config.Config, error) {
 	return &cfg, nil
 }
 
-func createHandler(s *server.Server) (http.Handler, error) {
+func createHandler(s *service.Service) (http.Handler, error) {
 
 	updateHandler, err := handlers.UpdateHandler(s)
 	if err != nil {

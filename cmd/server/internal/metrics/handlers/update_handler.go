@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/server"
+	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/service"
 	"github.com/stepkareserva/obsermon/internal/models"
 )
 
@@ -20,9 +20,9 @@ const (
 	ChiValue  = "value"
 )
 
-func UpdateHandler(s *server.Server) (http.Handler, error) {
+func UpdateHandler(s *service.Service) (http.Handler, error) {
 	if s == nil {
-		return nil, fmt.Errorf("metrics server is nil")
+		return nil, fmt.Errorf("metrics service is nil")
 	}
 
 	r := chi.NewRouter()
@@ -37,7 +37,7 @@ func UpdateHandler(s *server.Server) (http.Handler, error) {
 	return r, nil
 }
 
-func updateGaugeHandler(s *server.Server) http.HandlerFunc {
+func updateGaugeHandler(s *service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, ChiName)
 		var value models.GaugeValue
@@ -56,7 +56,7 @@ func updateGaugeHandler(s *server.Server) http.HandlerFunc {
 	}
 }
 
-func updateCounterHandler(s *server.Server) http.HandlerFunc {
+func updateCounterHandler(s *service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, ChiName)
 		var value models.CounterValue

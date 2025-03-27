@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/server"
+	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/service"
 	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -75,11 +75,11 @@ func TestValuesHandler(t *testing.T) {
 
 func mockValuesHandler(t *testing.T) http.Handler {
 	storage := storage.NewMemStorage()
-	server, err := server.NewServer(storage)
-	require.NoError(t, err, "server initialization error")
-	updateHandler, err := UpdateHandler(server)
+	service, err := service.NewService(storage)
+	require.NoError(t, err, "service initialization error")
+	updateHandler, err := UpdateHandler(service)
 	require.NoError(t, err, "update handler initialization error")
-	valuesHandler, err := ValuesHandler(server)
+	valuesHandler, err := ValuesHandler(service)
 	require.NoError(t, err, "value handler initialization error")
 
 	r := chi.NewRouter()

@@ -6,7 +6,7 @@ This is small [`server`](https://github.com/stepkareserva/obsermon/tree/main/cmd
 
 Package also contains  [`agent`](https://github.com/stepkareserva/obsermon/tree/main/cmd/agent) as sample of client compatible with server
 
-## Server usage
+## Service usage
 
 ### CLI
 
@@ -44,7 +44,7 @@ Env params overrides command line params, if exist:
 - `POLL_INTERVAL` - same as CLI `-p` 
 - `REPORT_INTERVAL` - same as CLI `-r`
 
-## Server API
+## Service API
 
 **WIP** learn REST description rules
 
