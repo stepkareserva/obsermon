@@ -6,39 +6,39 @@ import (
 	"strings"
 )
 
-type Error struct {
+type HandlerError struct {
 	StatusCode int
 	Message    string
 }
 
 var (
-	ErrInvalidMetricType = Error{
+	ErrInvalidMetricType = HandlerError{
 		StatusCode: http.StatusBadRequest,
 		Message:    "Request contains invalid metric type",
 	}
 
-	ErrInvalidMetricValue = Error{
+	ErrInvalidMetricValue = HandlerError{
 		StatusCode: http.StatusBadRequest,
 		Message:    "Invalid metric value",
 	}
 
-	ErrInternalServerError = Error{
+	ErrInternalServerError = HandlerError{
 		StatusCode: http.StatusInternalServerError,
 		Message:    "Internal server error",
 	}
 
-	ErrMissingMetricName = Error{
+	ErrMissingMetricName = HandlerError{
 		StatusCode: http.StatusNotFound,
 		Message:    "Metric name is missing",
 	}
 
-	ErrMetricNotFound = Error{
+	ErrMetricNotFound = HandlerError{
 		StatusCode: http.StatusNotFound,
 		Message:    "Metric not found",
 	}
 )
 
-func WriteError(w http.ResponseWriter, err Error, details ...string) {
+func WriteError(w http.ResponseWriter, err HandlerError, details ...string) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(err.StatusCode)
 
