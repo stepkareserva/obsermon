@@ -22,6 +22,20 @@ type Config struct {
 	ReportIntervalS int `env:"REPORT_INTERVAL"`
 }
 
+func Read() (*Config, error) {
+	var c Config
+	if err := c.parseCommandLine(); err != nil {
+		return nil, fmt.Errorf("error parsing command line: %w", err)
+	}
+	if err := c.parseEnv(); err != nil {
+		return nil, fmt.Errorf("error parsing env: %w", err)
+	}
+	if err := c.validate(); err != nil {
+		return nil, fmt.Errorf("invalid config: %w", err)
+	}
+	return &c, nil
+}
+
 func (c *Config) EndpointURL() string {
 	return "http://" + c.Endpoint
 }
@@ -34,7 +48,7 @@ func (c *Config) ReportInterval() time.Duration {
 	return time.Duration(c.ReportIntervalS) * time.Second
 }
 
-func (c *Config) ParseCommandLine() error {
+func (c *Config) parseCommandLine() error {
 
 	defaultEndpoint := "localhost:8080"
 	defaultPollInterval := 2
@@ -59,11 +73,11 @@ func (c *Config) ParseCommandLine() error {
 	return nil
 }
 
-func (c *Config) ParseEnv() error {
+func (c *Config) parseEnv() error {
 	return env.Parse(c)
 }
 
-func (c *Config) Validate() error {
+func (c *Config) validate() error {
 	_, err := url.ParseRequestURI(c.EndpointURL())
 	if err != nil {
 		return fmt.Errorf("invalid endpoint: %w", err)
