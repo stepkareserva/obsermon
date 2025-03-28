@@ -23,3 +23,7 @@ vendor/
 # IDEs directories
 .idea
 .vscode
+
+
+# OSX thumbs
+.DS_Store
