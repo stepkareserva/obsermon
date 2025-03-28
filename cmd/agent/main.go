@@ -13,9 +13,12 @@ import (
 )
 
 func main() {
-	// reading params from command line
-	cfg, err := config.Read()
+	// load and validate config
+	cfg, err := config.LoadConfig()
 	if err != nil {
+		log.Fatal(err)
+	}
+	if err = config.Validate(*cfg); err != nil {
 		log.Fatal(err)
 	}
 
@@ -50,7 +53,7 @@ func main() {
 	log.Println("Press Ctrl+C to stop the agent...")
 	<-sigChan
 
-	// shut down the server
+	// shut down agent
 	log.Println("Received interrupt signal. Shutting down agent...")
 	watchdog.Stop()
 	log.Println("Agent shut down")
