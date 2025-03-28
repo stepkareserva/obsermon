@@ -7,9 +7,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/stepkareserva/obsermon/cmd/agent/internal/client"
-	"github.com/stepkareserva/obsermon/cmd/agent/internal/config"
-	"github.com/stepkareserva/obsermon/cmd/agent/internal/watchdog"
+	"github.com/stepkareserva/obsermon/internal/agent/client"
+	"github.com/stepkareserva/obsermon/internal/agent/config"
+	"github.com/stepkareserva/obsermon/internal/agent/watchdog"
 )
 
 func main() {

@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/stepkareserva/obsermon/cmd/agent/internal/client"
-	"github.com/stepkareserva/obsermon/cmd/agent/internal/metrics"
-	"github.com/stepkareserva/obsermon/cmd/agent/internal/monitor"
+	"github.com/stepkareserva/obsermon/internal/agent/client"
+	"github.com/stepkareserva/obsermon/internal/agent/metrics"
+	"github.com/stepkareserva/obsermon/internal/agent/monitor"
 )
 
 type WatchdogParams struct {

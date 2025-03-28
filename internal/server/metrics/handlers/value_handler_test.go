@@ -8,83 +8,94 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/service"
-	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/storage"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-type ValuesExpected struct {
-	code        int
-	contentType string
+type ValueExpected struct {
+	code  int
+	value string
 }
-type ValuesTestCase struct {
+type ValueTestCase struct {
 	updateRequest string
-	expected      ValuesExpected
+	valueRequest  string
+	expected      ValueExpected
 }
 
-func TestValuesHandler(t *testing.T) {
+func TestValueHandler(t *testing.T) {
 
-	testCases := []ValuesTestCase{
+	testCases := []ValueTestCase{
 		// correct counter
 		{
 			updateRequest: "/update/counter/name/2",
-			expected: ValuesExpected{
-				code:        http.StatusOK,
-				contentType: "text/html; charset=utf-8",
+			valueRequest:  "/value/counter/name",
+			expected: ValueExpected{
+				code:  http.StatusOK,
+				value: "2",
 			},
 		},
 		// correct gauge
 		{
 			updateRequest: "/update/gauge/name/2.5",
-			expected: ValuesExpected{
-				code:        http.StatusOK,
-				contentType: "text/html; charset=utf-8",
+			valueRequest:  "/value/gauge/name",
+			expected: ValueExpected{
+				code:  http.StatusOK,
+				value: "2.5",
+			},
+		},
+		// incorrect counter
+		{
+			updateRequest: "/update/counter/name/2",
+			valueRequest:  "/value/counter/othername",
+			expected: ValueExpected{
+				code:  http.StatusNotFound,
+				value: "",
 			},
 		},
 	}
 
 	for _, test := range testCases {
-		valueHandler := mockValuesHandler(t)
+		valueHandler := mockValueHandler(t)
 		ts := httptest.NewServer(valueHandler)
 		defer ts.Close()
 
-		t.Run(fmt.Sprintf("test '%s'", test.updateRequest), func(t *testing.T) {
+		t.Run(fmt.Sprintf("test '%s'", test.valueRequest), func(t *testing.T) {
 			// update counter
 			res, err := http.Post(ts.URL+test.updateRequest, "text/plain", nil)
 			require.NoError(t, err)
 			defer res.Body.Close()
 			require.Equal(t, http.StatusOK, res.StatusCode)
 
-			// get values
-			res, err = http.Get(ts.URL + "/")
+			// get counter value
+			res, err = http.Get(ts.URL + test.valueRequest)
 			require.NoError(t, err)
 			defer res.Body.Close()
 
-			// check status and contentType if status is ok
+			// check status and responce if status is ok
 			assert.Equal(t, test.expected.code, res.StatusCode)
-			contentType := res.Header.Get("Content-Type")
-			_, err = io.ReadAll(res.Body)
+			body, err := io.ReadAll(res.Body)
 			require.NoError(t, err)
 			if test.expected.code == http.StatusOK {
-				assert.Equal(t, test.expected.contentType, contentType)
+				assert.Equal(t, test.expected.value, string(body))
 			}
 		})
 	}
 }
 
-func mockValuesHandler(t *testing.T) http.Handler {
+func mockValueHandler(t *testing.T) http.Handler {
 	storage := storage.NewMemStorage()
 	service, err := service.NewService(storage)
 	require.NoError(t, err, "service initialization error")
 	updateHandler, err := UpdateHandler(service)
 	require.NoError(t, err, "update handler initialization error")
-	valuesHandler, err := ValuesHandler(service)
+	valueHandler, err := ValueHandler(service)
 	require.NoError(t, err, "value handler initialization error")
 
 	r := chi.NewRouter()
 	r.Mount("/update", updateHandler)
-	r.Mount("/", valuesHandler)
+	r.Mount("/value", valueHandler)
 
 	return r
 }

@@ -6,8 +6,8 @@ import (
 	"text/template"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/service"
 	"github.com/stepkareserva/obsermon/internal/models"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
 )
 
 func ValuesHandler(s *service.Service) (http.Handler, error) {
