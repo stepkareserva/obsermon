@@ -1,13 +1,7 @@
 package config
 
 import (
-	"flag"
-	"fmt"
-	"net/url"
-	"os"
 	"time"
-
-	"github.com/caarlos0/env/v6"
 )
 
 type Config struct {
@@ -22,20 +16,6 @@ type Config struct {
 	ReportIntervalS int `env:"REPORT_INTERVAL"`
 }
 
-func Read() (*Config, error) {
-	var c Config
-	if err := c.parseCommandLine(); err != nil {
-		return nil, fmt.Errorf("error parsing command line: %w", err)
-	}
-	if err := c.parseEnv(); err != nil {
-		return nil, fmt.Errorf("error parsing env: %w", err)
-	}
-	if err := c.validate(); err != nil {
-		return nil, fmt.Errorf("invalid config: %w", err)
-	}
-	return &c, nil
-}
-
 func (c *Config) EndpointURL() string {
 	return "http://" + c.Endpoint
 }
@@ -46,47 +26,4 @@ func (c *Config) PollInterval() time.Duration {
 
 func (c *Config) ReportInterval() time.Duration {
 	return time.Duration(c.ReportIntervalS) * time.Second
-}
-
-func (c *Config) parseCommandLine() error {
-
-	defaultEndpoint := "localhost:8080"
-	defaultPollInterval := 2
-	defaultReportInterval := 10
-
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-
-	fs.StringVar(&c.Endpoint, "a", defaultEndpoint,
-		"server endpoint tcp address, like :8080, 127.0.0.1:80,\n"+
-			"localhost:22 (without protocol)")
-	fs.IntVar(&c.PollIntervalS, "p", defaultPollInterval,
-		"poll (local metrics update) interval, in seconds,\n"+
-			"positive integer")
-	fs.IntVar(&c.ReportIntervalS, "r", defaultReportInterval,
-		"report (send metrics to server) interval, in seconds,\n"+
-			"positive integer")
-
-	if err := fs.Parse(os.Args[1:]); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (c *Config) parseEnv() error {
-	return env.Parse(c)
-}
-
-func (c *Config) validate() error {
-	_, err := url.ParseRequestURI(c.EndpointURL())
-	if err != nil {
-		return fmt.Errorf("invalid endpoint: %w", err)
-	}
-	if c.PollInterval() <= 0 {
-		return fmt.Errorf("invalid poll interval %v", c.ReportInterval())
-	}
-	if c.ReportInterval() <= 0 {
-		return fmt.Errorf("invalid report interval %v", c.ReportInterval())
-	}
-	return nil
 }
