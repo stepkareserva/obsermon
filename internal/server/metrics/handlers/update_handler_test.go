@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/service"
-	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/storage"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

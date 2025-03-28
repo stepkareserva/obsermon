@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"runtime"
 
-	"github.com/stepkareserva/obsermon/cmd/agent/internal/metrics"
+	"github.com/stepkareserva/obsermon/internal/agent/metrics"
 	"github.com/stepkareserva/obsermon/internal/models"
 )
 

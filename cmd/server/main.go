@@ -7,10 +7,10 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/stepkareserva/obsermon/cmd/server/internal/config"
-	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/handlers"
-	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/service"
-	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/storage"
+	"github.com/stepkareserva/obsermon/internal/server/config"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/storage"
 )
 
 func main() {

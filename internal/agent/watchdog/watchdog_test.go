@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stepkareserva/obsermon/cmd/agent/internal/client"
-	"github.com/stepkareserva/obsermon/cmd/agent/internal/monitor"
+	"github.com/stepkareserva/obsermon/internal/agent/client"
+	"github.com/stepkareserva/obsermon/internal/agent/monitor"
 	"github.com/stretchr/testify/require"
 )
 

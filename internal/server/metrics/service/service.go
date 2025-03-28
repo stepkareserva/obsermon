@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/stepkareserva/obsermon/cmd/server/internal/metrics/storage"
 	"github.com/stepkareserva/obsermon/internal/models"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/storage"
 )
 
 type Service struct {
