@@ -29,7 +29,7 @@ type Watchdog struct {
 	wg     sync.WaitGroup
 }
 
-func NewWatchdog(params WatchdogParams) (*Watchdog, error) {
+func New(params WatchdogParams) (*Watchdog, error) {
 	if params.PollInterval <= 0 {
 		return nil, fmt.Errorf("invalid metrics poll interval")
 	}
@@ -113,7 +113,7 @@ func (w *Watchdog) metricsReporter() {
 }
 
 func (w *Watchdog) processPolledMetrics() metrics.Metrics {
-	metrics := metrics.NewMetrics()
+	metrics := metrics.New()
 
 	for {
 		select {

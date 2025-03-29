@@ -12,7 +12,7 @@ type Service struct {
 	storage storage.Storage
 }
 
-func NewService(storage storage.Storage) (*Service, error) {
+func New(storage storage.Storage) (*Service, error) {
 	if storage == nil {
 		return nil, fmt.Errorf("metrics storage is nil")
 	}

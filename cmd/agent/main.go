@@ -23,7 +23,7 @@ func main() {
 	}
 
 	// metrics client
-	metricsClient, err := client.NewMetricsClient(cfg.EndpointURL())
+	metricsClient, err := client.New(cfg.EndpointURL())
 	if err != nil {
 		log.Printf("metrics client initialization error: %v", err)
 		return
@@ -35,7 +35,7 @@ func main() {
 		ReportInterval:      time.Duration(cfg.ReportInterval()),
 		MetricsServerClient: metricsClient,
 	}
-	watchdog, err := watchdog.NewWatchdog(watchdogParams)
+	watchdog, err := watchdog.New(watchdogParams)
 	if err != nil {
 		log.Printf("watchdog initialization error: %v", err)
 		return

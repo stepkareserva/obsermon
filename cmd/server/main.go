@@ -23,7 +23,7 @@ func main() {
 
 	// initialize storage and controller
 	storage := storage.NewMemStorage()
-	service, err := service.NewService(storage)
+	service, err := service.New(storage)
 	if err != nil {
 		log.Fatal(err)
 		return

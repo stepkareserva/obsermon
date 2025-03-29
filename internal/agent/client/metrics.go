@@ -24,7 +24,7 @@ type MetricsClient struct {
 	client *resty.Client
 }
 
-func NewMetricsClient(endpoint string) (*MetricsClient, error) {
+func New(endpoint string) (*MetricsClient, error) {
 	u, err := url.ParseRequestURI(endpoint)
 	if err != nil {
 		return nil, err
