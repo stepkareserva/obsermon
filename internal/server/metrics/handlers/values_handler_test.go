@@ -75,7 +75,7 @@ func TestValuesHandler(t *testing.T) {
 
 func mockValuesHandler(t *testing.T) http.Handler {
 	storage := storage.NewMemStorage()
-	service, err := service.NewService(storage)
+	service, err := service.New(storage)
 	require.NoError(t, err, "service initialization error")
 	updateHandler, err := UpdateHandler(service)
 	require.NoError(t, err, "update handler initialization error")

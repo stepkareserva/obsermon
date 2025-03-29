@@ -9,7 +9,7 @@ type Metrics struct {
 	Counters models.CountersMap
 }
 
-func NewMetrics() Metrics {
+func New() Metrics {
 	return Metrics{
 		Gauges:   models.GaugesMap{},
 		Counters: models.CountersMap{},
