@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 type GaugeValue float64
@@ -23,7 +24,12 @@ func (g *GaugeValue) FromString(s string) error {
 }
 
 func (g *GaugeValue) String() string {
-	return strconv.FormatFloat(float64(*g), 'f', -1, 64)
+	s := strconv.FormatFloat(float64(*g), 'f', -1, 64)
+	// solution as good as challenge
+	if !strings.Contains(s, ".") {
+		s += "."
+	}
+	return s
 }
 
 // ? maybe not here?
