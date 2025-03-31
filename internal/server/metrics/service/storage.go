@@ -1,4 +1,4 @@
-package storage
+package service
 
 import "github.com/stepkareserva/obsermon/internal/models"
 

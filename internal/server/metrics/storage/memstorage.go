@@ -4,9 +4,10 @@ import (
 	"sync"
 
 	"github.com/stepkareserva/obsermon/internal/models"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
 )
 
-var _ Storage = (*MemStorage)(nil)
+var _ service.Storage = (*MemStorage)(nil)
 
 type MemStorage struct {
 	gauges   models.GaugesMap

@@ -5,14 +5,13 @@ import (
 	"sort"
 
 	"github.com/stepkareserva/obsermon/internal/models"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/storage"
 )
 
 type Service struct {
-	storage storage.Storage
+	storage Storage
 }
 
-func New(storage storage.Storage) (*Service, error) {
+func New(storage Storage) (*Service, error) {
 	if storage == nil {
 		return nil, fmt.Errorf("metrics storage is nil")
 	}
