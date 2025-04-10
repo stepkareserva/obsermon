@@ -10,6 +10,9 @@ Package also contains  [`agent`](https://github.com/stepkareserva/obsermon/tree/
 
 ### CLI
 
+readme fix
+
+
 Run server: `go run cmd/server/main.go`
 
 Params: 
