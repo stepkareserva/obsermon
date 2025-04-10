@@ -16,16 +16,18 @@ func main() {
 	// load and validate config
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("config loading: %v", err)
+		return
 	}
 	if err = config.Validate(*cfg); err != nil {
-		log.Fatal(err)
+		log.Printf("config validation: %v", err)
+		return
 	}
 
 	// metrics client
 	metricsClient, err := client.New(cfg.EndpointURL())
 	if err != nil {
-		log.Printf("metrics client initialization error: %v", err)
+		log.Printf("metrics client initialization: %v", err)
 		return
 	}
 
@@ -37,7 +39,7 @@ func main() {
 	}
 	watchdog, err := watchdog.New(watchdogParams)
 	if err != nil {
-		log.Printf("watchdog initialization error: %v", err)
+		log.Printf("watchdog initialization: %v", err)
 		return
 	}
 

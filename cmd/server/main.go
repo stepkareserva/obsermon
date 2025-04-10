@@ -1,11 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
-
-	"github.com/go-chi/chi/v5"
 
 	"github.com/stepkareserva/obsermon/internal/server/config"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
@@ -14,10 +11,14 @@ import (
 )
 
 func main() {
-	// reading params
-	cfg, err := readConfig()
+	// load and validate config
+	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Println(err)
+		log.Printf("config loading: %v", err)
+		return
+	}
+	if err = config.Validate(*cfg); err != nil {
+		log.Printf("config validation: %v", err)
 		return
 	}
 
@@ -25,56 +26,22 @@ func main() {
 	storage := storage.NewMemStorage()
 	service, err := service.New(storage)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("service initialization: %v", err)
 		return
 	}
 
 	// initialize handler
-	handler, err := createHandler(service)
+	handler, err := handlers.New(service)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("handlers initialization: %v", err)
 		return
 	}
 
 	// run server
 	log.Printf("Server is running on %s", cfg.Endpoint)
-	log.Fatal(http.ListenAndServe(cfg.Endpoint, handler))
-}
-
-func readConfig() (*config.Config, error) {
-	var cfg config.Config
-	if err := cfg.ParseCommandLine(); err != nil {
-		return nil, fmt.Errorf("error parsing command line: %w", err)
-	}
-	if err := cfg.ParseEnv(); err != nil {
-		return nil, fmt.Errorf("error parsing env: %w", err)
-	}
-	if err := cfg.Validate(); err != nil {
-		return nil, fmt.Errorf("invalid config: %w", err)
-	}
-	return &cfg, nil
-}
-
-func createHandler(s *service.Service) (http.Handler, error) {
-
-	updateHandler, err := handlers.UpdateHandler(s)
+	err = http.ListenAndServe(cfg.Endpoint, handler)
 	if err != nil {
-		return nil, err
+		log.Printf("server running: %v", err)
+		return
 	}
-	valueHandler, err := handlers.ValueHandler(s)
-	if err != nil {
-		return nil, err
-	}
-
-	valuesHandler, err := handlers.ValuesHandler(s)
-	if err != nil {
-		return nil, err
-	}
-
-	r := chi.NewRouter()
-	r.Mount("/update", updateHandler)
-	r.Mount("/value", valueHandler)
-	r.Mount("/", valuesHandler)
-
-	return r, nil
 }
