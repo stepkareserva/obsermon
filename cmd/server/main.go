@@ -1,24 +1,34 @@
 package main
 
 import (
-	"log"
+	stdlog "log"
 	"net/http"
 
 	"github.com/stepkareserva/obsermon/internal/server/config"
+	"github.com/stepkareserva/obsermon/internal/server/logging"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/storage"
+	"go.uber.org/zap"
 )
 
 func main() {
+	// create logger
+	logger, err := logging.NewZapLogger(logging.LevelProd)
+	if err != nil {
+		stdlog.Print(err)
+		return
+	}
+	defer logger.Sync()
+
 	// load and validate config
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Printf("config loading: %v", err)
+		logger.Error("config loading", zap.Error(err))
 		return
 	}
 	if err = config.Validate(*cfg); err != nil {
-		log.Printf("config validation: %v", err)
+		logger.Error("config validation", zap.Error(err))
 		return
 	}
 
@@ -26,22 +36,22 @@ func main() {
 	storage := storage.NewMemStorage()
 	service, err := service.New(storage)
 	if err != nil {
-		log.Printf("service initialization: %v", err)
+		logger.Error("service initialization", zap.Error(err))
 		return
 	}
 
 	// initialize handler
-	handler, err := handlers.New(service)
+	handler, err := handlers.New(service, logger)
 	if err != nil {
-		log.Printf("handlers initialization: %v", err)
+		logger.Error("handlers initialization", zap.Error(err))
 		return
 	}
 
 	// run server
-	log.Printf("Server is running on %s", cfg.Endpoint)
+	logger.Info("server is running", zap.String("endpoint", cfg.Endpoint))
 	err = http.ListenAndServe(cfg.Endpoint, handler)
 	if err != nil {
-		log.Printf("server running: %v", err)
+		logger.Info("server starting", zap.Error(err))
 		return
 	}
 }
