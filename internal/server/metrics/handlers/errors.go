@@ -36,6 +36,16 @@ var (
 		StatusCode: http.StatusNotFound,
 		Message:    "Metric not found",
 	}
+
+	ErrUnsupportedContentType = HandlerError{
+		StatusCode: http.StatusUnsupportedMediaType,
+		Message:    "Content-Type header is not supported",
+	}
+
+	ErrInvalidRequestJSON = HandlerError{
+		StatusCode: http.StatusBadRequest,
+		Message:    "Invalid request JSON content",
+	}
 )
 
 func WriteError(w http.ResponseWriter, err HandlerError, details ...string) {
