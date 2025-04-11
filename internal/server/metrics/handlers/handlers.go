@@ -33,6 +33,7 @@ func New(s Service, l *zap.Logger) (http.Handler, error) {
 	if l != nil {
 		r.Use(middleware.Logger(l))
 	}
+	r.Use(middleware.Buffering())
 
 	r.Mount("/update", updateHandler)
 	r.Mount("/value", valueHandler)
