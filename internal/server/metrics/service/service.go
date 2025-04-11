@@ -98,6 +98,54 @@ func (s *Service) ListCounters() ([]models.Counter, error) {
 	return counters, nil
 }
 
+func (s *Service) UpdateMetric(val models.Metrics) error {
+	if err := s.checkValidity(); err != nil {
+		return err
+	}
+
+	switch val.MType {
+	case models.MetricTypeCounter:
+		counter, err := val.Counter()
+		if err != nil {
+			return err
+		}
+		return s.UpdateCounter(*counter)
+	case models.MetricTypeGauge:
+		gauge, err := val.Gauge()
+		if err != nil {
+			return err
+		}
+		return s.UpdateGauge(*gauge)
+	default:
+		return fmt.Errorf("unknown metric type")
+	}
+}
+
+func (s *Service) GetMetric(t models.MetricType, name string) (*models.Metrics, bool, error) {
+	if err := s.checkValidity(); err != nil {
+		return nil, false, err
+	}
+
+	switch t {
+	case models.MetricTypeCounter:
+		c, exists, err := s.GetCounter(name)
+		if err != nil || !exists {
+			return nil, exists, err
+		}
+		m := models.CounterMetric(*c)
+		return &m, true, nil
+	case models.MetricTypeGauge:
+		g, exists, err := s.GetGauge(name)
+		if err != nil || !exists {
+			return nil, exists, err
+		}
+		m := models.GaugeMetric(*g)
+		return &m, true, nil
+	default:
+		return nil, false, fmt.Errorf("unknown metric type")
+	}
+}
+
 func (s *Service) checkValidity() error {
 	if s == nil || s.storage == nil {
 		return fmt.Errorf("Service not exists")
