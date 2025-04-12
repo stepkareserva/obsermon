@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	hc "github.com/stepkareserva/obsermon/internal/server/httpconst"
 )
 
 func Compression() func(next http.Handler) http.Handler {
@@ -44,11 +46,15 @@ func Compression() func(next http.Handler) http.Handler {
 }
 
 func isCompressedRequest(r *http.Request) bool {
-	return lookupHeaderComponent(r.Header.Values("Content-Encoding"), "gzip")
+	return lookupHeaderComponent(
+		r.Header.Values(hc.ContentEncoding),
+		hc.GZipEncoding)
 }
 
 func compressedResponseSupported(r *http.Request) bool {
-	return lookupHeaderComponent(r.Header.Values("Accept-Encoding"), "gzip")
+	return lookupHeaderComponent(
+		r.Header.Values(hc.AcceptEncoding),
+		hc.GZipEncoding)
 }
 
 func lookupHeaderComponent(header []string, target string) bool {
@@ -143,8 +149,8 @@ func (c *compressedWriter) Write(data []byte) (int, error) {
 
 func (c *compressedWriter) WriteHeader(status int) {
 	c.status = status
-	if c.supportContentCompress(c.Header().Values("Content-Type")) {
-		c.Header().Set("Content-Encoding", "gzip")
+	if c.supportContentCompress(c.Header().Values(hc.ContentType)) {
+		c.Header().Set(hc.ContentEncoding, hc.GZipEncoding)
 	}
 	c.ResponseWriter.WriteHeader(status)
 }
@@ -158,9 +164,8 @@ func (c *compressedWriter) Close() error {
 
 func (c *compressedWriter) supportContentCompress(contentType []string) bool {
 	compressableContent := []string{
-		"application/json",
-		"text/html",
-		"text/html; charset=utf-8",
+		hc.ContentTypeJSON,
+		hc.ContentTypeHTML,
 	}
 	for _, c := range contentType {
 		if lookupHeaderComponent(compressableContent, c) {
