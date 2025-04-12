@@ -24,72 +24,72 @@ func newGZipWriter(w http.ResponseWriter) (*gzipWriter, error) {
 	}, nil
 }
 
-func (c *gzipWriter) Write(data []byte) (int, error) {
-	if err := c.checkValidity(); err != nil {
+func (g *gzipWriter) Write(data []byte) (int, error) {
+	if err := g.checkValidity(); err != nil {
 		return 0, err
 	}
 	// part of http.ResponceWriter's interface contract:
 	// it writes StatusOK on Write if it was not called before.
-	if c.status == 0 {
-		c.WriteHeader(http.StatusOK)
+	if g.status == 0 {
+		g.WriteHeader(http.StatusOK)
 	}
 
 	// compress if compressor exists
-	if c.compressor != nil {
-		return c.compressor.Write(data)
+	if g.compressor != nil {
+		return g.compressor.Write(data)
 	} else {
-		return c.ResponseWriter.Write(data)
+		return g.ResponseWriter.Write(data)
 	}
 }
 
-func (c *gzipWriter) WriteHeader(status int) {
-	c.status = status
+func (g *gzipWriter) WriteHeader(status int) {
+	g.status = status
 
-	useCompression := !c.isErrorStatus(status) &&
-		c.supportContentCompress(c.Header().Get(hc.ContentType))
+	useCompression := !g.isErrorStatus(status) &&
+		g.supportContentCompress(g.Header().Get(hc.ContentType))
 
 	if useCompression {
-		c.Header().Set(hc.ContentEncoding, hc.GZipEncoding)
-		c.compressor = gzip.NewWriter(c.ResponseWriter)
+		g.Header().Set(hc.ContentEncoding, hc.GZipEncoding)
+		g.compressor = gzip.NewWriter(g.ResponseWriter)
 	} else {
-		c.compressor = nil
+		g.compressor = nil
 	}
 
-	c.ResponseWriter.WriteHeader(status)
+	g.ResponseWriter.WriteHeader(status)
 }
 
-func (w *gzipWriter) isErrorStatus(status int) bool {
+func (g *gzipWriter) isErrorStatus(status int) bool {
 	return status >= 400
 }
 
-func (c *gzipWriter) Close() error {
-	if err := c.checkValidity(); err != nil {
+func (g *gzipWriter) Close() error {
+	if err := g.checkValidity(); err != nil {
 		return err
 	}
-	if c.compressor != nil {
-		return c.compressor.Close()
+	if g.compressor != nil {
+		return g.compressor.Close()
 	}
 	return nil
 }
 
-func (c *gzipWriter) supportContentCompress(contentType string) bool {
+func (g *gzipWriter) supportContentCompress(contentType string) bool {
 	compressableContent := []string{
 		hc.ContentTypeJSON,
 		hc.ContentTypeJSONU,
 		hc.ContentTypeHTML,
 		hc.ContentTypeHTMLU,
 	}
-	for _, c := range compressableContent {
-		if contentType == c {
+	for _, g := range compressableContent {
+		if contentType == g {
 			return true
 		}
 	}
 	return false
 }
 
-func (c *gzipWriter) checkValidity() error {
-	if c == nil || c.ResponseWriter == nil {
-		return fmt.Errorf("Compressed writer not exists")
+func (g *gzipWriter) checkValidity() error {
+	if g == nil || g.ResponseWriter == nil {
+		return fmt.Errorf("compressed writer not exists")
 	}
 	return nil
 }
