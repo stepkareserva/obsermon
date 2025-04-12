@@ -9,17 +9,6 @@ import (
 	"github.com/stepkareserva/obsermon/internal/models"
 )
 
-const (
-	// metrics for url
-	MetricGauge   = "gauge"
-	MetricCounter = "counter"
-
-	// names of chi routing url params to be extracted
-	URLMetric = "metric"
-	URLName   = "name"
-	URLValue  = "value"
-)
-
 type MetricsClient struct {
 	client *resty.Client
 }
@@ -40,31 +29,20 @@ func New(endpoint string) (*MetricsClient, error) {
 }
 
 func (c *MetricsClient) UpdateCounter(value models.Counter) error {
-	pathParams := map[string]string{
-		URLMetric: MetricCounter,
-		URLName:   value.Name,
-		URLValue:  value.Value.String(),
-	}
-
-	return c.sendUpdateRequest(pathParams)
+	metric := models.CounterMetric(value)
+	return c.sendUpdateRequest(metric)
 }
 
 func (c *MetricsClient) UpdateGauge(value models.Gauge) error {
-	pathParams := map[string]string{
-		URLMetric: MetricGauge,
-		URLName:   value.Name,
-		URLValue:  value.Value.String(),
-	}
-
-	return c.sendUpdateRequest(pathParams)
+	metric := models.GaugeMetric(value)
+	return c.sendUpdateRequest(metric)
 }
 
-func (c *MetricsClient) sendUpdateRequest(pathParams map[string]string) error {
+func (c *MetricsClient) sendUpdateRequest(metric models.Metrics) error {
 	resp, err := c.client.R().
-		SetPathParams(pathParams).
-		SetHeader("Content-Type", "text/plain").
-		SetBody(http.NoBody).
-		Post(fmt.Sprintf("/update/{%s}/{%s}/{%s}", URLMetric, URLName, URLValue))
+		SetHeader("Content-Type", "application/json").
+		SetBody(metric).
+		Post("/update")
 
 	if err != nil {
 		return fmt.Errorf("could not send request: %w", err)
