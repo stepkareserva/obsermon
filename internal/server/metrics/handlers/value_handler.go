@@ -9,6 +9,8 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/stepkareserva/obsermon/internal/models"
+
+	hc "github.com/stepkareserva/obsermon/internal/server/httpconst"
 )
 
 func ValueHandler(s Service) (http.Handler, error) {
@@ -43,7 +45,7 @@ func gaugeValueURLHandler(s Service) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set(contentType, contentTypeText)
+		w.Header().Set(hc.ContentType, hc.ContentTypeText)
 		if _, err := w.Write([]byte(gauge.Value.String())); err != nil {
 			WriteError(w, ErrInternalServerError)
 			return
@@ -65,7 +67,7 @@ func counterValueURLHandler(s Service) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set(contentType, contentTypeText)
+		w.Header().Set(hc.ContentType, hc.ContentTypeText)
 		if _, err := w.Write([]byte(counter.Value.String())); err != nil {
 			WriteError(w, ErrInternalServerError)
 			return
@@ -81,7 +83,7 @@ func unknownMetricValueURLHandler() http.HandlerFunc {
 
 func valueMetricJSONHandler(s Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get(contentType) != contentTypeJSON {
+		if r.Header.Get(hc.ContentType) != hc.ContentTypeJSON {
 			WriteError(w, ErrUnsupportedContentType)
 			return
 		}
@@ -103,7 +105,7 @@ func valueMetricJSONHandler(s Service) http.HandlerFunc {
 			WriteError(w, ErrMetricNotFound)
 			return
 		}
-		w.Header().Set(contentType, contentTypeJSON)
+		w.Header().Set(hc.ContentType, hc.ContentTypeJSON)
 		if err = json.NewEncoder(w).Encode(m); err != nil {
 			WriteError(w, ErrInternalServerError)
 			return
