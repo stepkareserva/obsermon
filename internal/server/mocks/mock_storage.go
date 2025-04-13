@@ -71,6 +71,20 @@ func (mr *MockGaugeStorageMockRecorder) ListGauges() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGauges", reflect.TypeOf((*MockGaugeStorage)(nil).ListGauges))
 }
 
+// ReplaceGauges mocks base method.
+func (m *MockGaugeStorage) ReplaceGauges(val models.GaugesList) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReplaceGauges", val)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ReplaceGauges indicates an expected call of ReplaceGauges.
+func (mr *MockGaugeStorageMockRecorder) ReplaceGauges(val any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplaceGauges", reflect.TypeOf((*MockGaugeStorage)(nil).ReplaceGauges), val)
+}
+
 // SetGauge mocks base method.
 func (m *MockGaugeStorage) SetGauge(val models.Gauge) error {
 	m.ctrl.T.Helper()
@@ -138,6 +152,20 @@ func (m *MockCounterStorage) ListCounters() (models.CountersList, error) {
 func (mr *MockCounterStorageMockRecorder) ListCounters() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCounters", reflect.TypeOf((*MockCounterStorage)(nil).ListCounters))
+}
+
+// ReplaceCounters mocks base method.
+func (m *MockCounterStorage) ReplaceCounters(val models.CountersList) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReplaceCounters", val)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ReplaceCounters indicates an expected call of ReplaceCounters.
+func (mr *MockCounterStorageMockRecorder) ReplaceCounters(val any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplaceCounters", reflect.TypeOf((*MockCounterStorage)(nil).ReplaceCounters), val)
 }
 
 // SetCounter mocks base method.
@@ -238,6 +266,34 @@ func (m *MockStorage) ListGauges() (models.GaugesList, error) {
 func (mr *MockStorageMockRecorder) ListGauges() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGauges", reflect.TypeOf((*MockStorage)(nil).ListGauges))
+}
+
+// ReplaceCounters mocks base method.
+func (m *MockStorage) ReplaceCounters(val models.CountersList) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReplaceCounters", val)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ReplaceCounters indicates an expected call of ReplaceCounters.
+func (mr *MockStorageMockRecorder) ReplaceCounters(val any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplaceCounters", reflect.TypeOf((*MockStorage)(nil).ReplaceCounters), val)
+}
+
+// ReplaceGauges mocks base method.
+func (m *MockStorage) ReplaceGauges(val models.GaugesList) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReplaceGauges", val)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ReplaceGauges indicates an expected call of ReplaceGauges.
+func (mr *MockStorageMockRecorder) ReplaceGauges(val any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplaceGauges", reflect.TypeOf((*MockStorage)(nil).ReplaceGauges), val)
 }
 
 // SetCounter mocks base method.

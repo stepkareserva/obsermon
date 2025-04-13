@@ -57,10 +57,10 @@ func (mr *MockGaugesServiceMockRecorder) GetGauge(name any) *gomock.Call {
 }
 
 // ListGauges mocks base method.
-func (m *MockGaugesService) ListGauges() ([]models.Gauge, error) {
+func (m *MockGaugesService) ListGauges() (models.GaugesList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListGauges")
-	ret0, _ := ret[0].([]models.Gauge)
+	ret0, _ := ret[0].(models.GaugesList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -126,10 +126,10 @@ func (mr *MockCountersServiceMockRecorder) GetCounter(name any) *gomock.Call {
 }
 
 // ListCounters mocks base method.
-func (m *MockCountersService) ListCounters() ([]models.Counter, error) {
+func (m *MockCountersService) ListCounters() (models.CountersList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListCounters")
-	ret0, _ := ret[0].([]models.Counter)
+	ret0, _ := ret[0].(models.CountersList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -281,10 +281,10 @@ func (mr *MockServiceMockRecorder) GetMetric(t, name any) *gomock.Call {
 }
 
 // ListCounters mocks base method.
-func (m *MockService) ListCounters() ([]models.Counter, error) {
+func (m *MockService) ListCounters() (models.CountersList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListCounters")
-	ret0, _ := ret[0].([]models.Counter)
+	ret0, _ := ret[0].(models.CountersList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -296,10 +296,10 @@ func (mr *MockServiceMockRecorder) ListCounters() *gomock.Call {
 }
 
 // ListGauges mocks base method.
-func (m *MockService) ListGauges() ([]models.Gauge, error) {
+func (m *MockService) ListGauges() (models.GaugesList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListGauges")
-	ret0, _ := ret[0].([]models.Gauge)
+	ret0, _ := ret[0].(models.GaugesList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
