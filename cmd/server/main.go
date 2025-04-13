@@ -54,7 +54,10 @@ func main() {
 	}
 
 	// run server
-	logger.Info("server is running", zap.String("endpoint", cfg.Endpoint))
+	logger.Info("server is running",
+		zap.String("endpoint", cfg.Endpoint),
+		zap.String("storage", cfg.FileStoragePath),
+	)
 	err = http.ListenAndServe(cfg.Endpoint, handler)
 	if err != nil {
 		logger.Info("server starting", zap.Error(err))
