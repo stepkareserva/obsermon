@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"os/signal"
@@ -31,6 +32,19 @@ func main() {
 		return
 	}
 
+	// context to stop on interription
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// goroutine to handle interrupt signals
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		log.Printf("Press Ctrl+C to stop the agent...")
+		sig := <-sigChan
+		log.Printf("interruption signal received: %v, shutting down agent...", sig)
+		cancel()
+	}()
+
 	// watchdog
 	watchdogParams := watchdog.WatchdogParams{
 		PollInterval:        time.Duration(cfg.PollInterval()),
@@ -42,21 +56,7 @@ func main() {
 		log.Printf("watchdog initialization: %v", err)
 		return
 	}
+	watchdog.Start(ctx)
 
-	// run watchdog in goroutine
-	go func() {
-		log.Println("Running watchdog goroutine...")
-		watchdog.Start()
-	}()
-
-	// wait for interrupt signal
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	log.Println("Press Ctrl+C to stop the agent...")
-	<-sigChan
-
-	// shut down agent
-	log.Println("Received interrupt signal. Shutting down agent...")
-	watchdog.Stop()
 	log.Println("Agent shut down")
 }

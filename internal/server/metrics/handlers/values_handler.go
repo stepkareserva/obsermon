@@ -7,10 +7,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/stepkareserva/obsermon/internal/models"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
 )
 
-func ValuesHandler(s *service.Service) (http.Handler, error) {
+func ValuesHandler(s Service) (http.Handler, error) {
 	if s == nil {
 		return nil, fmt.Errorf("metrics service is nil")
 	}
@@ -21,7 +20,7 @@ func ValuesHandler(s *service.Service) (http.Handler, error) {
 	return r, nil
 }
 
-func metricValuesHandler(s *service.Service) http.HandlerFunc {
+func metricValuesHandler(s Service) http.HandlerFunc {
 	var tmpl = template.Must(template.New("index").Parse(`
 	<!DOCTYPE html>
 	<html>

@@ -23,10 +23,6 @@ type Watchdog struct {
 	params WatchdogParams
 
 	metrics chan metrics.Metrics
-
-	ctx    context.Context
-	cancel context.CancelFunc
-	wg     sync.WaitGroup
 }
 
 func New(params WatchdogParams) (*Watchdog, error) {
@@ -40,44 +36,43 @@ func New(params WatchdogParams) (*Watchdog, error) {
 	chanCapacity := params.ReportInterval/params.PollInterval + 1
 	metrics := make(chan metrics.Metrics, chanCapacity)
 
-	ctx, cancel := context.WithCancel(context.Background())
-
 	watchdog := Watchdog{
 		params:  params,
 		metrics: metrics,
-		ctx:     ctx,
-		cancel:  cancel,
 	}
 
 	return &watchdog, nil
 }
 
-func (w *Watchdog) Start() {
-	w.wg.Add(2)
+func (w *Watchdog) Start(ctx context.Context) {
+	var wg sync.WaitGroup
+	wg.Add(2)
 
 	go func() {
-		defer w.wg.Done()
-		w.metricsPoller()
+		defer wg.Done()
+		w.metricsPoller(ctx)
 	}()
 
 	go func() {
-		defer w.wg.Done()
-		w.metricsReporter()
+		defer wg.Done()
+		w.metricsReporter(ctx)
 	}()
+
+	wg.Wait()
 }
 
-func (w *Watchdog) Stop() {
+/*func (w *Watchdog) Stop() {
 	w.cancel()
 	w.wg.Wait()
-}
+}*/
 
-func (w *Watchdog) metricsPoller() {
+func (w *Watchdog) metricsPoller(ctx context.Context) {
 	for {
 		timer := time.NewTimer(w.params.PollInterval)
 		defer timer.Stop()
 
 		select {
-		case <-w.ctx.Done():
+		case <-ctx.Done():
 			close(w.metrics)
 			log.Println("Metrics updater stopped")
 			return
@@ -93,13 +88,13 @@ func (w *Watchdog) metricsPoller() {
 	}
 }
 
-func (w *Watchdog) metricsReporter() {
+func (w *Watchdog) metricsReporter(ctx context.Context) {
 	for {
 		timer := time.NewTimer(w.params.ReportInterval)
 		defer timer.Stop()
 
 		select {
-		case <-w.ctx.Done():
+		case <-ctx.Done():
 			log.Println("Metrics reporter stopped")
 			return
 		case <-timer.C:

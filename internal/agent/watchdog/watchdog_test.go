@@ -1,6 +1,7 @@
 package watchdog
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -37,13 +38,14 @@ func TestWatchdog(t *testing.T) {
 		ReportInterval:      reportInterval,
 		MetricsServerClient: metricsClient,
 	}
+
+	runningTime := reportInterval + 100*time.Millisecond
+	ctx, cancel := context.WithTimeout(context.Background(), runningTime)
+	defer cancel()
+
 	watchdog, err := New(watchdogParams)
 	require.NoError(t, err)
-	watchdog.Start()
-	defer watchdog.Stop()
-
-	// wait reportInterval + 100 ms
-	time.Sleep(reportInterval + 100*time.Millisecond)
+	watchdog.Start(ctx)
 
 	// check target requests on mock server
 	_, exists := incomingRequests[expectedURLPath]

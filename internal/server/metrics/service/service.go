@@ -5,11 +5,14 @@ import (
 	"sort"
 
 	"github.com/stepkareserva/obsermon/internal/models"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
 )
 
 type Service struct {
 	storage Storage
 }
+
+var _ handlers.Service = (*Service)(nil)
 
 func New(storage Storage) (*Service, error) {
 	if storage == nil {
