@@ -14,6 +14,8 @@ type CounterStorage interface {
 	ListCounters() (models.CountersList, error)
 }
 
+//go:generate mockgen -source=$GOFILE -destination=../../mocks/mock_storage.go -package=mocks
+
 type Storage interface {
 	GaugeStorage
 	CounterStorage

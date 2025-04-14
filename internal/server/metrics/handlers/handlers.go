@@ -4,10 +4,9 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
 )
 
-func New(s *service.Service) (http.Handler, error) {
+func New(s Service) (http.Handler, error) {
 	updateHandler, err := UpdateHandler(s)
 	if err != nil {
 		return nil, err
