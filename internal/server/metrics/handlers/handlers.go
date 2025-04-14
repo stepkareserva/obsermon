@@ -1,15 +1,16 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/stepkareserva/obsermon/internal/server/logging"
 	"github.com/stepkareserva/obsermon/internal/server/middleware"
-	"go.uber.org/zap"
 )
 
-func New(s Service, l *zap.Logger) (http.Handler, error) {
+func New(ctx context.Context, s Service) (http.Handler, error) {
 	if s == nil {
 		return nil, fmt.Errorf("service not exist")
 	}
@@ -30,8 +31,8 @@ func New(s Service, l *zap.Logger) (http.Handler, error) {
 
 	r := chi.NewRouter()
 
-	if l != nil {
-		r.Use(middleware.Logger(l))
+	if logger := logging.FromContext(ctx); logger != nil {
+		r.Use(middleware.Logger(logger))
 	}
 	r.Use(middleware.Buffering())
 

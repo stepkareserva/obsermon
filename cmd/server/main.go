@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	stdlog "log"
 	"net/http"
 
@@ -13,6 +14,8 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
+
 	// create logger
 	logger, err := logging.NewZapLogger(logging.LevelProd)
 	if err != nil {
@@ -20,6 +23,9 @@ func main() {
 		return
 	}
 	defer logger.Sync()
+
+	// add logger to context
+	ctx = logging.WithLogger(ctx, logger)
 
 	// load and validate config
 	cfg, err := config.LoadConfig()
@@ -41,7 +47,7 @@ func main() {
 	}
 
 	// initialize handler
-	handler, err := handlers.New(service, logger)
+	handler, err := handlers.New(ctx, service)
 	if err != nil {
 		logger.Error("handlers initialization", zap.Error(err))
 		return
