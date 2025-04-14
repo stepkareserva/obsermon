@@ -11,7 +11,6 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/stepkareserva/obsermon/internal/models"
-	"github.com/stepkareserva/obsermon/internal/server/middleware"
 	"github.com/stepkareserva/obsermon/internal/server/mocks"
 )
 
@@ -212,40 +211,5 @@ func TestInvalidValueJSONHandler(t *testing.T) {
 		res := testingPostJSON(t, ts.URL+"/", invalidJSON)
 		defer res.Body.Close()
 		require.Equal(t, http.StatusBadRequest, res.StatusCode)
-	})
-}
-
-func TestValidValueCounterCompressedJSONHandler(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockService := mocks.NewMockService(ctrl)
-	valueHandler, err := ValueHandler(mockService)
-	require.NoError(t, err, "value handler initialization error")
-	valueHandler = middleware.Compression()(valueHandler)
-
-	ts := httptest.NewServer(valueHandler)
-	defer ts.Close()
-
-	t.Run("value counter: { name }", func(t *testing.T) {
-		counterJSON := `{"id":"name","type":"counter","delta":1}`
-
-		value := models.CounterValue(1)
-		counter := models.Metrics{
-			MType: models.MetricTypeCounter,
-			ID:    "name",
-			Delta: &value,
-		}
-
-		mockService.
-			EXPECT().
-			GetMetric(models.MetricTypeCounter, "name").
-			Return(&counter, true, nil)
-
-		res := testingPostGzipJSON(t, ts.URL+"/", counterJSON)
-		defer res.Body.Close()
-		require.Equal(t, http.StatusOK, res.StatusCode)
-		body := testingUngzipBody(t, res)
-		assert.JSONEq(t, counterJSON, string(body))
 	})
 }

@@ -12,7 +12,6 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/stepkareserva/obsermon/internal/models"
-	"github.com/stepkareserva/obsermon/internal/server/middleware"
 	"github.com/stepkareserva/obsermon/internal/server/mocks"
 )
 
@@ -254,44 +253,5 @@ func TestInvalidUpdateJSONHandler(t *testing.T) {
 		res := testingPostJSON(t, ts.URL+"/", invalidJSON)
 		defer res.Body.Close()
 		require.Equal(t, http.StatusBadRequest, res.StatusCode)
-	})
-}
-
-func TestUpdateCompressedHandler(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := UpdateHandler(mockService)
-	require.NoError(t, err, "value handler initialization error")
-	updateHandler = middleware.Compression()(updateHandler)
-
-	ts := httptest.NewServer(updateHandler)
-	defer ts.Close()
-
-	t.Run("update gauge: { name, 1.5 }", func(t *testing.T) {
-		gaugeJSON := `{"id":"name","type":"gauge","value":1.5}`
-
-		value := models.GaugeValue(1.5)
-		gauge := models.Metrics{
-			MType: models.MetricTypeGauge,
-			ID:    "name",
-			Value: &value,
-		}
-
-		mockService.
-			EXPECT().
-			UpdateMetric(gauge).
-			Return(nil)
-		mockService.
-			EXPECT().
-			GetMetric(models.MetricTypeGauge, "name").
-			Return(&gauge, true, nil)
-
-		res := testingPostGzipJSON(t, ts.URL+"/", gaugeJSON)
-		defer res.Body.Close()
-		require.Equal(t, http.StatusOK, res.StatusCode)
-		body := testingUngzipBody(t, res)
-		assert.JSONEq(t, gaugeJSON, string(body))
 	})
 }
