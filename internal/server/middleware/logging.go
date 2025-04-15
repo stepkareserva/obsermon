@@ -14,7 +14,7 @@ func Logger(logger *zap.Logger) func(http.Handler) http.Handler {
 			start := time.Now()
 
 			var responseInfo responseInfo
-			next.ServeHTTP(withResponceInfo(w, &responseInfo), r)
+			next.ServeHTTP(withResponseInfo(w, &responseInfo), r)
 
 			duration := time.Since(start)
 
@@ -37,22 +37,22 @@ type responseInfo struct {
 	err    error
 }
 
-func withResponceInfo(w http.ResponseWriter, info *responseInfo) http.ResponseWriter {
-	return &responceMiddleware{
+func withResponseInfo(w http.ResponseWriter, info *responseInfo) http.ResponseWriter {
+	return &responseMiddleware{
 		ResponseWriter: w,
 		info:           info,
 	}
 }
 
-type responceMiddleware struct {
+type responseMiddleware struct {
 	http.ResponseWriter
 	info *responseInfo
 }
 
-var _ http.ResponseWriter = (*responceMiddleware)(nil)
+var _ http.ResponseWriter = (*responseMiddleware)(nil)
 
-func (m *responceMiddleware) Write(data []byte) (int, error) {
-	// part of http.ResponceWriter's interface contract:
+func (m *responseMiddleware) Write(data []byte) (int, error) {
+	// part of http.ResponseWriter's interface contract:
 	// it writes StatusOK on Write if it was not called before.
 	// due to lack of go's «inheritance» we can not intercept
 	// such WriteHeader call from m.writer.Write (it calls directly)
@@ -66,7 +66,7 @@ func (m *responceMiddleware) Write(data []byte) (int, error) {
 	return size, err
 }
 
-func (m *responceMiddleware) WriteHeader(status int) {
+func (m *responseMiddleware) WriteHeader(status int) {
 	m.ResponseWriter.WriteHeader(status)
 	m.info.status = status
 }

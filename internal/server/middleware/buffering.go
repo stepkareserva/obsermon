@@ -34,7 +34,7 @@ type bufferingWriter struct {
 var _ http.ResponseWriter = (*bufferingWriter)(nil)
 
 func (w *bufferingWriter) Write(data []byte) (int, error) {
-	// part of http.ResponceWriter's interface contract:
+	// part of http.ResponseWriter's interface contract:
 	// it writes StatusOK on Write if it was not called before.
 	if w.status == 0 {
 		w.status = http.StatusOK
@@ -47,7 +47,7 @@ func (w *bufferingWriter) WriteHeader(status int) {
 	w.status = status
 	// clean buffer if error occurs to sending
 	// only upcoming error content to client
-	// without underwritten responce content
+	// without underwritten response content
 	if isErrorStatus(status) {
 		w.buf.Reset()
 	}
@@ -61,7 +61,7 @@ func (w *bufferingWriter) FlushToClient() {
 	w.ResponseWriter.WriteHeader(w.status)
 	if _, err := w.ResponseWriter.Write(w.buf.Bytes()); err != nil {
 		// write error to log? pass logger here throughtout context?
-		log.Printf("responce sending error: %v", err)
+		log.Printf("response sending error: %v", err)
 	}
 	w.buf.Reset()
 }
