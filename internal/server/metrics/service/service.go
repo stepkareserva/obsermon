@@ -37,7 +37,7 @@ func (s *Service) GetGauge(name string) (*models.Gauge, bool, error) {
 	return s.storage.GetGauge(name)
 }
 
-func (s *Service) ListGauges() ([]models.Gauge, error) {
+func (s *Service) ListGauges() (models.GaugesList, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, err
 	}
@@ -51,6 +51,13 @@ func (s *Service) ListGauges() ([]models.Gauge, error) {
 	})
 
 	return gauges, nil
+}
+
+func (s *Service) ReplaceGauges(val models.GaugesList) error {
+	if err := s.checkValidity(); err != nil {
+		return err
+	}
+	return s.storage.ReplaceGauges(val)
 }
 
 func (s *Service) UpdateCounter(val models.Counter) error {
@@ -81,7 +88,7 @@ func (s *Service) GetCounter(name string) (*models.Counter, bool, error) {
 	return s.storage.GetCounter(name)
 }
 
-func (s *Service) ListCounters() ([]models.Counter, error) {
+func (s *Service) ListCounters() (models.CountersList, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, err
 	}
@@ -96,6 +103,13 @@ func (s *Service) ListCounters() ([]models.Counter, error) {
 	})
 
 	return counters, nil
+}
+
+func (s *Service) ReplaceCounters(val models.CountersList) error {
+	if err := s.checkValidity(); err != nil {
+		return err
+	}
+	return s.storage.ReplaceCounters(val)
 }
 
 func (s *Service) UpdateMetric(val models.Metrics) error {
