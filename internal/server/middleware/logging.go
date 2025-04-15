@@ -7,7 +7,8 @@ import (
 	"go.uber.org/zap"
 )
 
-func Logger(logger *zap.Logger) func(http.Handler) http.Handler {
+// create middleware for requests and responses logging
+func Logger(logger *zap.Logger) Middleware {
 
 	return func(next http.Handler) http.Handler {
 		logFn := func(w http.ResponseWriter, r *http.Request) {

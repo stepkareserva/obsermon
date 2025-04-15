@@ -7,7 +7,8 @@ import (
 	"go.uber.org/zap/buffer"
 )
 
-func Buffering() func(next http.Handler) http.Handler {
+// create middleware for buffered-writing responses
+func Buffering() Middleware {
 	return func(next http.Handler) http.Handler {
 		buffering := func(w http.ResponseWriter, r *http.Request) {
 			bw := withBuffering(w)
