@@ -148,7 +148,6 @@ func (s *Service) GetMetric(t models.MetricType, name string) (*models.Metrics, 
 	}
 }
 
-// GetState implements persistence.Stateful.
 func (s *Service) GetState() (*persistence.State, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, err
@@ -169,7 +168,6 @@ func (s *Service) GetState() (*persistence.State, error) {
 	}, nil
 }
 
-// LoadState implements persistence.Stateful.
 func (s *Service) LoadState(state persistence.State) error {
 	if err := s.checkValidity(); err != nil {
 		return err
