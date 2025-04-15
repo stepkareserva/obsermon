@@ -88,9 +88,9 @@ func metricValuesHandler(s Service) http.HandlerFunc {
 			Counters: counters,
 		}
 
-		// Q: maybe some package with such constants exists?
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set(contentType, contentTypeHTML)
 		if err := tmpl.Execute(w, templateData); err != nil {
+			WriteError(w, ErrInternalServerError)
 			return
 		}
 	}
