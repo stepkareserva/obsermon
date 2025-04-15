@@ -39,10 +39,11 @@ func New(cfg ServiceConfig) (*Service, error) {
 		stopCh:      make(chan struct{}),
 	}
 
-	// restore if required
+	// restore if required and possible
 	if cfg.Restore {
 		if err := service.restore(); err != nil {
-			return nil, err
+			// fail but ok ignore it
+			service.logger.Warn("service config restoring", zap.Error(err))
 		}
 	}
 
