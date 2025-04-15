@@ -1,11 +1,16 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator"
+
 	"github.com/stepkareserva/obsermon/internal/models"
+
+	hc "github.com/stepkareserva/obsermon/internal/server/httpconst"
 )
 
 const (
@@ -27,16 +32,17 @@ func UpdateHandler(s Service) (http.Handler, error) {
 	r := chi.NewRouter()
 
 	r.Post(fmt.Sprintf("/%s/{%s}/{%s}", MetricGauge, ChiName, ChiValue),
-		updateGaugeHandler(s))
+		updateGaugeURLHandler(s))
 	r.Post(fmt.Sprintf("/%s/{%s}/{%s}", MetricCounter, ChiName, ChiValue),
-		updateCounterHandler(s))
+		updateCounterURLHandler(s))
 	r.Post(fmt.Sprintf("/{%s}/{%s}/{%s}", ChiMetric, ChiName, ChiValue),
-		updateUnknownMetricHandler())
+		updateUnknownMetricURLHandler())
+	r.Post("/", updateMetricJSONHandler(s))
 
 	return r, nil
 }
 
-func updateGaugeHandler(s Service) http.HandlerFunc {
+func updateGaugeURLHandler(s Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, ChiName)
 		var value models.GaugeValue
@@ -50,12 +56,12 @@ func updateGaugeHandler(s Service) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set(contentType, contentTypeText)
+		w.Header().Set(hc.ContentType, hc.ContentTypeText)
 		w.WriteHeader(http.StatusOK)
 	}
 }
 
-func updateCounterHandler(s Service) http.HandlerFunc {
+func updateCounterURLHandler(s Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, ChiName)
 		var value models.CounterValue
@@ -70,13 +76,54 @@ func updateCounterHandler(s Service) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set(contentType, contentTypeHTML)
+		w.Header().Set(hc.ContentType, hc.ContentTypeHTML)
 		w.WriteHeader(http.StatusOK)
 	}
 }
 
-func updateUnknownMetricHandler() http.HandlerFunc {
+func updateUnknownMetricURLHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, ErrInvalidMetricType, chi.URLParam(r, ChiMetric))
+	}
+}
+
+func updateMetricJSONHandler(s Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get(hc.ContentType) != hc.ContentTypeJSON {
+			WriteError(w, ErrUnsupportedContentType)
+			return
+		}
+		var request models.UpdateMetricRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			WriteError(w, ErrInvalidRequestJSON)
+			return
+		}
+		if err := validator.New().Struct(request); err != nil {
+			WriteError(w, ErrInvalidRequestJSON)
+			return
+		}
+		if err := s.UpdateMetric(request); err != nil {
+			WriteError(w, ErrInternalServerError)
+			return
+		}
+		// update and return updated metrics in the same request
+		// may be bottleneck in scenarious where updates are
+		// frequent and value requests are rate.
+		// in such scenarious we can only collect metrics on
+		// update and aggregate on value requests.
+		// but now updated metric value should be returned as
+		// part of update request's response, so it keep in mind.
+		// for better performance methods UpdateMetric and
+		// UpdateAndExtractMetric required, i think, but...
+		m, exists, err := s.GetMetric(request.MType, request.ID)
+		if err != nil || !exists {
+			WriteError(w, ErrInternalServerError)
+			return
+		}
+		w.Header().Set(hc.ContentType, hc.ContentTypeJSON)
+		if err = json.NewEncoder(w).Encode(m); err != nil {
+			WriteError(w, ErrInternalServerError)
+			return
+		}
 	}
 }

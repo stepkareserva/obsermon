@@ -6,6 +6,7 @@ import (
 
 	"github.com/stepkareserva/obsermon/internal/models"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/persistence"
 )
 
 type Service struct {
@@ -13,6 +14,7 @@ type Service struct {
 }
 
 var _ handlers.Service = (*Service)(nil)
+var _ persistence.Stateful = (*Service)(nil)
 
 func New(storage Storage) (*Service, error) {
 	if storage == nil {
@@ -37,7 +39,7 @@ func (s *Service) GetGauge(name string) (*models.Gauge, bool, error) {
 	return s.storage.GetGauge(name)
 }
 
-func (s *Service) ListGauges() ([]models.Gauge, error) {
+func (s *Service) ListGauges() (models.GaugesList, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, err
 	}
@@ -81,7 +83,7 @@ func (s *Service) GetCounter(name string) (*models.Counter, bool, error) {
 	return s.storage.GetCounter(name)
 }
 
-func (s *Service) ListCounters() ([]models.Counter, error) {
+func (s *Service) ListCounters() (models.CountersList, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, err
 	}
@@ -96,6 +98,87 @@ func (s *Service) ListCounters() ([]models.Counter, error) {
 	})
 
 	return counters, nil
+}
+
+func (s *Service) UpdateMetric(val models.Metrics) error {
+	if err := s.checkValidity(); err != nil {
+		return err
+	}
+
+	switch val.MType {
+	case models.MetricTypeCounter:
+		counter, err := val.Counter()
+		if err != nil {
+			return err
+		}
+		return s.UpdateCounter(*counter)
+	case models.MetricTypeGauge:
+		gauge, err := val.Gauge()
+		if err != nil {
+			return err
+		}
+		return s.UpdateGauge(*gauge)
+	default:
+		return fmt.Errorf("unknown metric type")
+	}
+}
+
+func (s *Service) GetMetric(t models.MetricType, name string) (*models.Metrics, bool, error) {
+	if err := s.checkValidity(); err != nil {
+		return nil, false, err
+	}
+
+	switch t {
+	case models.MetricTypeCounter:
+		c, exists, err := s.GetCounter(name)
+		if err != nil || !exists {
+			return nil, exists, err
+		}
+		m := models.CounterMetric(*c)
+		return &m, true, nil
+	case models.MetricTypeGauge:
+		g, exists, err := s.GetGauge(name)
+		if err != nil || !exists {
+			return nil, exists, err
+		}
+		m := models.GaugeMetric(*g)
+		return &m, true, nil
+	default:
+		return nil, false, fmt.Errorf("unknown metric type")
+	}
+}
+
+func (s *Service) GetState() (*persistence.State, error) {
+	if err := s.checkValidity(); err != nil {
+		return nil, err
+	}
+
+	counters, err := s.storage.ListCounters()
+	if err != nil {
+		return nil, err
+	}
+	gauges, err := s.storage.ListGauges()
+	if err != nil {
+		return nil, err
+	}
+
+	return &persistence.State{
+		Counters: counters,
+		Gauges:   gauges,
+	}, nil
+}
+
+func (s *Service) LoadState(state persistence.State) error {
+	if err := s.checkValidity(); err != nil {
+		return err
+	}
+	if err := s.storage.ReplaceCounters(state.Counters); err != nil {
+		return err
+	}
+	if err := s.storage.ReplaceGauges(state.Gauges); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *Service) checkValidity() error {

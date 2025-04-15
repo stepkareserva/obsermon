@@ -2,14 +2,12 @@ package watchdog
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/stepkareserva/obsermon/internal/agent/client"
-	"github.com/stepkareserva/obsermon/internal/agent/monitor"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,8 +15,7 @@ func TestWatchdog(t *testing.T) {
 	// test params
 	pollInterval := 300 * time.Millisecond
 	reportInterval := 1 * time.Second
-	expectedPollCount := 3
-	expectedURLPath := fmt.Sprintf("/update/counter/%s/%d", monitor.PollCount, expectedPollCount)
+	expectedURLPath := "/update"
 
 	// mock server just collect all incoming requests
 	incomingRequests := make(map[string]struct{})
