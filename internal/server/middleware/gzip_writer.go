@@ -28,7 +28,7 @@ func (g *gzipWriter) Write(data []byte) (int, error) {
 	if err := g.checkValidity(); err != nil {
 		return 0, err
 	}
-	// part of http.ResponceWriter's interface contract:
+	// part of http.ResponseWriter's interface contract:
 	// it writes StatusOK on Write if it was not called before.
 	if g.status == 0 {
 		g.WriteHeader(http.StatusOK)

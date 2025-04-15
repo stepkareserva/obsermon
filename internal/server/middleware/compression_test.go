@@ -71,7 +71,7 @@ func TestRequestUncompressed(t *testing.T) {
 	require.Equal(t, "Hello, World", string(requestBody))
 }
 
-func TestResponceCompression(t *testing.T) {
+func TestResponseCompression(t *testing.T) {
 	mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := io.ReadAll(r.Body)
 		require.NoError(t, err)
@@ -94,7 +94,7 @@ func TestResponceCompression(t *testing.T) {
 	require.Equal(t, `{"Hello":"World"}`, string(body))
 }
 
-func TestResponceUncompressed(t *testing.T) {
+func TestResponseUncompressed(t *testing.T) {
 	mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := io.ReadAll(r.Body)
 		require.NoError(t, err)

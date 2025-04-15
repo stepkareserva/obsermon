@@ -22,7 +22,7 @@ func Compression() func(next http.Handler) http.Handler {
 				defer cr.Close()
 			}
 
-			// client supports compression - replace responce writer
+			// client supports compression - replace response writer
 			if compressedResponseSupported(r) {
 				cw, err := newGZipWriter(w)
 				if err != nil {

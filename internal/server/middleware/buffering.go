@@ -48,7 +48,7 @@ func (w *bufferingWriter) WriteHeader(status int) {
 	w.status = status
 	// clean buffer if error occurs to sending
 	// only upcoming error content to client
-	// without underwritten responce content
+	// without underwritten response content
 	if w.isErrorStatus(status) {
 		w.buf.Reset()
 	}
