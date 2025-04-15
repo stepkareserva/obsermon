@@ -104,6 +104,15 @@ func updateMetricJSONHandler(s Service) http.HandlerFunc {
 			WriteError(w, ErrInternalServerError)
 			return
 		}
+		// update and return updated metrics in the same request
+		// may be bottleneck in scenarious where updates are
+		// frequent and value requests are rate.
+		// in such scenarious we can only collect metrics on
+		// update and aggregate on value requests.
+		// but now updated metric value should be returned as
+		// part of update request's response, so it keep in mind.
+		// for better performance methods UpdateMetric and
+		// UpdateAndExtractMetric required, i think, but...
 		m, exists, err := s.GetMetric(request.MType, request.ID)
 		if err != nil || !exists {
 			WriteError(w, ErrInternalServerError)
