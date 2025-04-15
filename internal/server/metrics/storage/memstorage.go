@@ -45,6 +45,14 @@ func (m *MemStorage) ListGauges() (models.GaugesList, error) {
 	return m.gauges.List(), nil
 }
 
+func (m *MemStorage) ReplaceGauges(val models.GaugesList) error {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	m.gauges = val.Map()
+	return nil
+}
+
 func (m *MemStorage) SetCounter(val models.Counter) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
@@ -66,4 +74,12 @@ func (m *MemStorage) ListCounters() (models.CountersList, error) {
 	defer m.lock.RUnlock()
 
 	return m.counters.List(), nil
+}
+
+func (m *MemStorage) ReplaceCounters(val models.CountersList) error {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	m.counters = val.Map()
+	return nil
 }
