@@ -50,8 +50,10 @@ Env params overrides command line params, if exist:
 
 - `POST /update/counter/name/value` - update counter, value is int
 - `POST /update/gauge/name/value` - update gauge, value is float
-- `GET /counter/name/value` - get counter value, 404 if not exists
-- `GET /gauge/name/value` - get gauge value, 404 if not exists
+- `POST /update` - update counter or gauge
+- `GET /value/counter/name` - get counter value, 404 if not exists
+- `GET /value/gauge/name` - get gauge value, 404 if not exists
+- `POST /value` - GET(lol) counter or gauge
 - `GET /` - html page with all counters and gauges
 
 ## Monitoring page example

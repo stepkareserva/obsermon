@@ -14,9 +14,15 @@ type CountersService interface {
 	ListCounters() ([]models.Counter, error)
 }
 
+type MetricsService interface {
+	UpdateMetric(val models.Metrics) error
+	GetMetric(t models.MetricType, name string) (*models.Metrics, bool, error)
+}
+
 //go:generate mockgen -source=$GOFILE -destination=../../mocks/mock_service.go -package=mocks
 
 type Service interface {
 	GaugesService
 	CountersService
+	MetricsService
 }
