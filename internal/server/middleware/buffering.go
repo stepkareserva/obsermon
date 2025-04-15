@@ -49,12 +49,12 @@ func (w *bufferingWriter) WriteHeader(status int) {
 	// clean buffer if error occurs to sending
 	// only upcoming error content to client
 	// without underwritten response content
-	if isErrorStatus(status) {
+	if w.isErrorStatus(status) {
 		w.buf.Reset()
 	}
 }
 
-func isErrorStatus(status int) bool {
+func (w *bufferingWriter) isErrorStatus(status int) bool {
 	return status >= 400
 }
 

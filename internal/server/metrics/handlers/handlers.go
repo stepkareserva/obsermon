@@ -34,6 +34,7 @@ func New(ctx context.Context, s Service) (http.Handler, error) {
 	if logger := logging.FromContext(ctx); logger != nil {
 		r.Use(middleware.Logger(logger))
 	}
+	r.Use(middleware.Compression())
 	r.Use(middleware.Buffering())
 
 	r.Mount("/update", updateHandler)

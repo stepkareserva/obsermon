@@ -9,6 +9,8 @@ import (
 	"github.com/go-playground/validator"
 
 	"github.com/stepkareserva/obsermon/internal/models"
+
+	hc "github.com/stepkareserva/obsermon/internal/server/httpconst"
 )
 
 const (
@@ -54,7 +56,7 @@ func updateGaugeURLHandler(s Service) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set(contentType, contentTypeText)
+		w.Header().Set(hc.ContentType, hc.ContentTypeText)
 		w.WriteHeader(http.StatusOK)
 	}
 }
@@ -74,7 +76,7 @@ func updateCounterURLHandler(s Service) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set(contentType, contentTypeHTML)
+		w.Header().Set(hc.ContentType, hc.ContentTypeHTML)
 		w.WriteHeader(http.StatusOK)
 	}
 }
@@ -87,7 +89,7 @@ func updateUnknownMetricURLHandler() http.HandlerFunc {
 
 func updateMetricJSONHandler(s Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get(contentType) != contentTypeJSON {
+		if r.Header.Get(hc.ContentType) != hc.ContentTypeJSON {
 			WriteError(w, ErrUnsupportedContentType)
 			return
 		}
@@ -118,7 +120,7 @@ func updateMetricJSONHandler(s Service) http.HandlerFunc {
 			WriteError(w, ErrInternalServerError)
 			return
 		}
-		w.Header().Set(contentType, contentTypeJSON)
+		w.Header().Set(hc.ContentType, hc.ContentTypeJSON)
 		if err = json.NewEncoder(w).Encode(m); err != nil {
 			WriteError(w, ErrInternalServerError)
 			return

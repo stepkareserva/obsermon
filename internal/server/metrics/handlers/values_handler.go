@@ -7,6 +7,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/stepkareserva/obsermon/internal/models"
+
+	hc "github.com/stepkareserva/obsermon/internal/server/httpconst"
 )
 
 func ValuesHandler(s Service) (http.Handler, error) {
@@ -88,7 +90,7 @@ func metricValuesHandler(s Service) http.HandlerFunc {
 			Counters: counters,
 		}
 
-		w.Header().Set(contentType, contentTypeHTML)
+		w.Header().Set(hc.ContentType, hc.ContentTypeHTML)
 		if err := tmpl.Execute(w, templateData); err != nil {
 			WriteError(w, ErrInternalServerError)
 			return
