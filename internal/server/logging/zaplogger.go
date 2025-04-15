@@ -18,7 +18,7 @@ func NewZapLogger(level Level) (*zap.Logger, error) {
 	switch level {
 	case LevelDev:
 		cfg = zap.NewDevelopmentConfig()
-		options = append(options, zap.WithCaller(true))
+		options = append(options, zap.WithCaller(false))
 	case LevelProd:
 		cfg = zap.NewProductionConfig()
 		options = append(options, zap.WithCaller(false))
