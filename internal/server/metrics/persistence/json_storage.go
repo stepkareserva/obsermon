@@ -41,6 +41,7 @@ func (s *JSONStateStorage) StoreState(state State) error {
 	defer os.Remove(file.Name())
 
 	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
 	if err := encoder.Encode(state); err != nil {
 		return fmt.Errorf("storage encoding: %w", err)
 	}
