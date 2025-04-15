@@ -7,7 +7,7 @@ import (
 	hc "github.com/stepkareserva/obsermon/internal/server/httpconst"
 )
 
-func Compression() func(next http.Handler) http.Handler {
+func Compression() Middleware {
 	return func(next http.Handler) http.Handler {
 		compression := func(w http.ResponseWriter, r *http.Request) {
 			// handle zipped request - replace request body to unzipped
