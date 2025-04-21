@@ -19,13 +19,21 @@ func Logger(logger *zap.Logger) Middleware {
 
 			duration := time.Since(start)
 
-			logger.Info("request",
-				zap.String("uri", r.RequestURI),
-				zap.String("method", r.Method),
-				zap.Int("status", responseInfo.status),
-				zap.Duration("duration", duration),
-				zap.Int("size", responseInfo.size),
-			)
+			if responseInfo.err == nil {
+				logger.Info("request",
+					zap.String("uri", r.RequestURI),
+					zap.String("method", r.Method),
+					zap.Int("status", responseInfo.status),
+					zap.Duration("duration", duration),
+					zap.Int("size", responseInfo.size),
+				)
+			} else {
+				logger.Error("request",
+					zap.String("uri", r.RequestURI),
+					zap.String("method", r.Method),
+					zap.Error(responseInfo.err),
+				)
+			}
 		}
 
 		return http.HandlerFunc(logFn)
