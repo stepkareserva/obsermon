@@ -121,17 +121,16 @@ func (s *Service) syncStoringLoop() {
 	}
 }
 
-func (s *Service) store() error {
+func (s *Service) store() {
 	state, err := s.BaseService.GetState()
 	if err != nil {
-		return err
+		s.logger.Error("service state request", zap.Error(err))
+		return
 	}
 	if err = s.sstorage.StoreState(*state); err != nil {
 		s.logger.Error("service state storing", zap.Error(err))
-		return err
 	}
 	s.logger.Info("service state stored")
-	return nil
 }
 
 func (s *Service) UpdateGauge(val models.Gauge) error {

@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 )
@@ -16,29 +17,31 @@ func NewJSONStateStorage(path string) JSONStateStorage {
 	return JSONStateStorage{path: path}
 }
 
-func (s *JSONStateStorage) LoadState() (*State, error) {
+func (s *JSONStateStorage) LoadState() (state *State, err error) {
 	file, err := os.Open(s.path)
 	if err != nil {
 		return nil, fmt.Errorf("storage file opening: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if errClose := file.Close(); errClose != nil {
+			err = errors.Join(err, fmt.Errorf("storage file closing: %w", errClose))
+		}
+	}()
 
 	decoder := json.NewDecoder(file)
-	var state State
-	if err := decoder.Decode(&state); err != nil {
+	if err = decoder.Decode(&state); err != nil {
 		return nil, fmt.Errorf("storage decoding: %w", err)
 	}
-	return &state, nil
+	return
 }
 
 func (s *JSONStateStorage) StoreState(state State) error {
 	// write to temp file, then move it to destination,
 	// to avoid half-written file
-	file, err := os.CreateTemp("", "")
-	if err != nil {
-		return fmt.Errorf("storage file creation: %w", err)
+	file, creationErr := os.CreateTemp("", "")
+	if creationErr != nil {
+		return fmt.Errorf("storage file creation: %w", creationErr)
 	}
-	defer os.Remove(file.Name())
 
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
@@ -49,8 +52,11 @@ func (s *JSONStateStorage) StoreState(state State) error {
 		return fmt.Errorf("storage file closing: %w", err)
 	}
 
-	if err := os.Rename(file.Name(), s.path); err != nil {
-		return fmt.Errorf("storage file replacing: %w", err)
+	if renameErr := os.Rename(file.Name(), s.path); renameErr != nil {
+		if removeErr := os.Remove(file.Name()); removeErr != nil {
+			return fmt.Errorf("storage file replacing: %w", errors.Join(renameErr, removeErr))
+		}
+		return fmt.Errorf("storage file replacing: %w", renameErr)
 	}
 
 	return nil

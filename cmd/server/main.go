@@ -20,13 +20,18 @@ import (
 )
 
 func main() {
-	// create logger
+	// create logger. use std logger to log logger errors,
+	// because who log the logger
 	logger, err := logging.NewZapLogger(logging.LevelDev)
 	if err != nil {
 		stdlog.Print(err)
 		return
 	}
-	defer logger.Sync()
+	defer func() {
+		if err := logger.Sync(); err != nil {
+			stdlog.Print(err)
+		}
+	}()
 
 	// create gentle cancelling to context
 	ctx := gracefulCancellingCtx(logger)
@@ -114,7 +119,7 @@ func runServer(service handlers.Service, cfg config.Config, ctx context.Context)
 	logger := logging.FromContext(ctx)
 
 	// create handlers
-	handler, err := handlers.New(ctx, service)
+	handler, err := handlers.New(ctx, service, logger)
 	if err != nil {
 		return nil, fmt.Errorf("handlers initialization: %w", err)
 	}
@@ -127,7 +132,9 @@ func runServer(service handlers.Service, cfg config.Config, ctx context.Context)
 	)
 
 	go func() {
-		server.ListenAndServe()
+		if err := server.ListenAndServe(); err != nil {
+			logger.Error("server listening", zap.Error(err))
+		}
 	}()
 
 	return &server, nil

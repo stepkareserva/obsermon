@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
+	"go.uber.org/zap"
 
 	"github.com/stepkareserva/obsermon/internal/models"
 	"github.com/stepkareserva/obsermon/internal/server/mocks"
@@ -20,7 +21,7 @@ func TestValidValueCounterHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := ValueHandler(mockService)
+	updateHandler, err := ValueHandler(mockService, zap.NewNop())
 	require.NoError(t, err, "value handler initialization error")
 
 	ts := httptest.NewServer(updateHandler)
@@ -37,7 +38,7 @@ func TestValidValueCounterHandler(t *testing.T) {
 			}, true, nil)
 
 		res := testingGetURL(t, ts.URL+"/counter/name")
-		defer res.Body.Close()
+		defer safeCloseRes(t, res)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
@@ -50,7 +51,7 @@ func TestNotFoundValueCounterHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	valueHandler, err := ValueHandler(mockService)
+	valueHandler, err := ValueHandler(mockService, zap.NewNop())
 	require.NoError(t, err, "value handler initialization error")
 
 	ts := httptest.NewServer(valueHandler)
@@ -64,7 +65,7 @@ func TestNotFoundValueCounterHandler(t *testing.T) {
 			Return(nil, false, nil)
 
 		res := testingGetURL(t, ts.URL+"/counter/name")
-		defer res.Body.Close()
+		defer safeCloseRes(t, res)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 	})
 }
@@ -75,7 +76,7 @@ func TestValidValueGaugeHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	valueHandler, err := ValueHandler(mockService)
+	valueHandler, err := ValueHandler(mockService, zap.NewNop())
 	require.NoError(t, err, "value handler initialization error")
 
 	ts := httptest.NewServer(valueHandler)
@@ -92,7 +93,7 @@ func TestValidValueGaugeHandler(t *testing.T) {
 			}, true, nil)
 
 		res := testingGetURL(t, ts.URL+"/gauge/name")
-		defer res.Body.Close()
+		defer safeCloseRes(t, res)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
@@ -105,7 +106,7 @@ func TestNotFoundValueGaugeHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := ValueHandler(mockService)
+	updateHandler, err := ValueHandler(mockService, zap.NewNop())
 	require.NoError(t, err, "value handler initialization error")
 
 	ts := httptest.NewServer(updateHandler)
@@ -119,7 +120,7 @@ func TestNotFoundValueGaugeHandler(t *testing.T) {
 			Return(nil, false, nil)
 
 		res := testingGetURL(t, ts.URL+"/gauge/name")
-		defer res.Body.Close()
+		defer safeCloseRes(t, res)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 	})
 }
@@ -129,7 +130,7 @@ func TestValidValueCounterJSONHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	valueHandler, err := ValueHandler(mockService)
+	valueHandler, err := ValueHandler(mockService, zap.NewNop())
 	require.NoError(t, err, "value handler initialization error")
 
 	ts := httptest.NewServer(valueHandler)
@@ -151,7 +152,7 @@ func TestValidValueCounterJSONHandler(t *testing.T) {
 			Return(&counter, true, nil)
 
 		res := testingPostJSON(t, ts.URL+"/", counterJSON)
-		defer res.Body.Close()
+		defer safeCloseRes(t, res)
 		require.Equal(t, http.StatusOK, res.StatusCode)
 		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
@@ -164,7 +165,7 @@ func TestValidValueGaugeJSONHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	valueHandler, err := ValueHandler(mockService)
+	valueHandler, err := ValueHandler(mockService, zap.NewNop())
 	require.NoError(t, err, "value handler initialization error")
 
 	ts := httptest.NewServer(valueHandler)
@@ -186,7 +187,7 @@ func TestValidValueGaugeJSONHandler(t *testing.T) {
 			Return(&gauge, true, nil)
 
 		res := testingPostJSON(t, ts.URL+"/", gaugeJSON)
-		defer res.Body.Close()
+		defer safeCloseRes(t, res)
 		require.Equal(t, http.StatusOK, res.StatusCode)
 		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
@@ -199,7 +200,7 @@ func TestInvalidValueJSONHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	valueHandler, err := ValueHandler(mockService)
+	valueHandler, err := ValueHandler(mockService, zap.NewNop())
 	require.NoError(t, err, "update handler initialization error")
 
 	ts := httptest.NewServer(valueHandler)
@@ -209,7 +210,7 @@ func TestInvalidValueJSONHandler(t *testing.T) {
 		invalidJSON := "{}"
 
 		res := testingPostJSON(t, ts.URL+"/", invalidJSON)
-		defer res.Body.Close()
+		defer safeCloseRes(t, res)
 		require.Equal(t, http.StatusBadRequest, res.StatusCode)
 	})
 }

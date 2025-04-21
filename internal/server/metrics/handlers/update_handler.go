@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator"
+	"go.uber.org/zap"
 
 	"github.com/stepkareserva/obsermon/internal/models"
 
@@ -24,7 +25,7 @@ const (
 	ChiValue  = "value"
 )
 
-func UpdateHandler(s Service) (http.Handler, error) {
+func UpdateHandler(s Service, log *zap.Logger) (http.Handler, error) {
 	if s == nil {
 		return nil, fmt.Errorf("metrics service is nil")
 	}
@@ -32,27 +33,27 @@ func UpdateHandler(s Service) (http.Handler, error) {
 	r := chi.NewRouter()
 
 	r.Post(fmt.Sprintf("/%s/{%s}/{%s}", MetricGauge, ChiName, ChiValue),
-		updateGaugeURLHandler(s))
+		updateGaugeURLHandler(s, log))
 	r.Post(fmt.Sprintf("/%s/{%s}/{%s}", MetricCounter, ChiName, ChiValue),
-		updateCounterURLHandler(s))
+		updateCounterURLHandler(s, log))
 	r.Post(fmt.Sprintf("/{%s}/{%s}/{%s}", ChiMetric, ChiName, ChiValue),
-		updateUnknownMetricURLHandler())
-	r.Post("/", updateMetricJSONHandler(s))
+		updateUnknownMetricURLHandler(log))
+	r.Post("/", updateMetricJSONHandler(s, log))
 
 	return r, nil
 }
 
-func updateGaugeURLHandler(s Service) http.HandlerFunc {
+func updateGaugeURLHandler(s Service, log *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, ChiName)
 		var value models.GaugeValue
 		if err := value.FromString(chi.URLParam(r, ChiValue)); err != nil {
-			WriteError(w, ErrInvalidMetricValue)
+			WriteError(w, ErrInvalidMetricValue, log)
 			return
 		}
 		gauge := models.Gauge{Name: name, Value: value}
 		if err := s.UpdateGauge(gauge); err != nil {
-			WriteError(w, ErrInternalServerError)
+			WriteError(w, ErrInternalServerError, log)
 			return
 		}
 
@@ -61,18 +62,18 @@ func updateGaugeURLHandler(s Service) http.HandlerFunc {
 	}
 }
 
-func updateCounterURLHandler(s Service) http.HandlerFunc {
+func updateCounterURLHandler(s Service, log *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, ChiName)
 		var value models.CounterValue
 		if err := value.FromString(chi.URLParam(r, ChiValue)); err != nil {
-			WriteError(w, ErrInvalidMetricValue)
+			WriteError(w, ErrInvalidMetricValue, log)
 			return
 		}
 
 		counter := models.Counter{Name: name, Value: value}
 		if err := s.UpdateCounter(counter); err != nil {
-			WriteError(w, ErrInternalServerError)
+			WriteError(w, ErrInternalServerError, log)
 			return
 		}
 
@@ -81,29 +82,29 @@ func updateCounterURLHandler(s Service) http.HandlerFunc {
 	}
 }
 
-func updateUnknownMetricURLHandler() http.HandlerFunc {
+func updateUnknownMetricURLHandler(log *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		WriteError(w, ErrInvalidMetricType, chi.URLParam(r, ChiMetric))
+		WriteError(w, ErrInvalidMetricType, log, chi.URLParam(r, ChiMetric))
 	}
 }
 
-func updateMetricJSONHandler(s Service) http.HandlerFunc {
+func updateMetricJSONHandler(s Service, log *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get(hc.ContentType) != hc.ContentTypeJSON {
-			WriteError(w, ErrUnsupportedContentType)
+			WriteError(w, ErrUnsupportedContentType, log)
 			return
 		}
 		var request models.UpdateMetricRequest
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-			WriteError(w, ErrInvalidRequestJSON)
+			WriteError(w, ErrInvalidRequestJSON, log)
 			return
 		}
 		if err := validator.New().Struct(request); err != nil {
-			WriteError(w, ErrInvalidRequestJSON)
+			WriteError(w, ErrInvalidRequestJSON, log)
 			return
 		}
 		if err := s.UpdateMetric(request); err != nil {
-			WriteError(w, ErrInternalServerError)
+			WriteError(w, ErrInternalServerError, log)
 			return
 		}
 		// update and return updated metrics in the same request
@@ -117,12 +118,12 @@ func updateMetricJSONHandler(s Service) http.HandlerFunc {
 		// UpdateAndExtractMetric required, i think, but...
 		m, exists, err := s.GetMetric(request.MType, request.ID)
 		if err != nil || !exists {
-			WriteError(w, ErrInternalServerError)
+			WriteError(w, ErrInternalServerError, log)
 			return
 		}
 		w.Header().Set(hc.ContentType, hc.ContentTypeJSON)
 		if err = json.NewEncoder(w).Encode(m); err != nil {
-			WriteError(w, ErrInternalServerError)
+			WriteError(w, ErrInternalServerError, log)
 			return
 		}
 	}

@@ -7,22 +7,23 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/stepkareserva/obsermon/internal/models"
+	"go.uber.org/zap"
 
 	hc "github.com/stepkareserva/obsermon/internal/server/httpconst"
 )
 
-func ValuesHandler(s Service) (http.Handler, error) {
+func ValuesHandler(s Service, log *zap.Logger) (http.Handler, error) {
 	if s == nil {
 		return nil, fmt.Errorf("metrics service is nil")
 	}
 
 	r := chi.NewRouter()
-	r.Get("/", metricValuesHandler(s))
+	r.Get("/", metricValuesHandler(s, log))
 
 	return r, nil
 }
 
-func metricValuesHandler(s Service) http.HandlerFunc {
+func metricValuesHandler(s Service, log *zap.Logger) http.HandlerFunc {
 	var tmpl = template.Must(template.New("index").Parse(`
 	<!DOCTYPE html>
 	<html>
@@ -72,13 +73,13 @@ func metricValuesHandler(s Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		gauges, err := s.ListGauges()
 		if err != nil {
-			WriteError(w, ErrInternalServerError)
+			WriteError(w, ErrInternalServerError, log)
 			return
 		}
 
 		counters, err := s.ListCounters()
 		if err != nil {
-			WriteError(w, ErrInternalServerError)
+			WriteError(w, ErrInternalServerError, log)
 			return
 		}
 
@@ -92,7 +93,7 @@ func metricValuesHandler(s Service) http.HandlerFunc {
 
 		w.Header().Set(hc.ContentType, hc.ContentTypeHTML)
 		if err := tmpl.Execute(w, templateData); err != nil {
-			WriteError(w, ErrInternalServerError)
+			WriteError(w, ErrInternalServerError, log)
 			return
 		}
 	}
