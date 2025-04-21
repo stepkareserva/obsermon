@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
+	"go.uber.org/zap"
 
 	"github.com/stepkareserva/obsermon/internal/models"
 	"github.com/stepkareserva/obsermon/internal/server/mocks"
@@ -21,7 +23,7 @@ func TestValidUpdateCounterHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := UpdateHandler(mockService)
+	updateHandler, err := updateHandler(context.Background(), mockService, zap.NewNop())
 	require.NoError(t, err, "update handler initialization error")
 
 	ts := httptest.NewServer(updateHandler)
@@ -35,10 +37,13 @@ func TestValidUpdateCounterHandler(t *testing.T) {
 				Name:  "name",
 				Value: 1,
 			})).
-			Return(nil)
+			Return(&models.Counter{
+				Name:  "name",
+				Value: 1,
+			}, nil)
 
 		res := testingPostURL(t, ts.URL+"/counter/name/1")
-		defer res.Body.Close()
+		defer safeCloseRes(t, res)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
 }
@@ -48,7 +53,7 @@ func TestInvalidUpdateCounterHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := UpdateHandler(mockService)
+	updateHandler, err := updateHandler(context.Background(), mockService, zap.NewNop())
 	require.NoError(t, err, "update handler initialization error")
 
 	ts := httptest.NewServer(updateHandler)
@@ -62,7 +67,7 @@ func TestInvalidUpdateCounterHandler(t *testing.T) {
 	for _, req := range invalidRequests {
 		t.Run(fmt.Sprintf("test %s", req), func(t *testing.T) {
 			res := testingPostURL(t, ts.URL+req)
-			defer res.Body.Close()
+			defer safeCloseRes(t, res)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 		})
 	}
@@ -73,7 +78,7 @@ func TestNotFoundUpdateCounterHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := UpdateHandler(mockService)
+	updateHandler, err := updateHandler(context.Background(), mockService, zap.NewNop())
 	require.NoError(t, err, "update handler initialization error")
 
 	ts := httptest.NewServer(updateHandler)
@@ -81,7 +86,7 @@ func TestNotFoundUpdateCounterHandler(t *testing.T) {
 
 	t.Run("test /counter/", func(t *testing.T) {
 		res := testingPostURL(t, ts.URL+"/counter/")
-		defer res.Body.Close()
+		defer safeCloseRes(t, res)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 	})
 }
@@ -92,7 +97,7 @@ func TestValidUpdateGaugeHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := UpdateHandler(mockService)
+	updateHandler, err := updateHandler(context.Background(), mockService, zap.NewNop())
 	require.NoError(t, err, "update handler initialization error")
 
 	ts := httptest.NewServer(updateHandler)
@@ -106,11 +111,14 @@ func TestValidUpdateGaugeHandler(t *testing.T) {
 				Name:  "name",
 				Value: 1.0,
 			})).
-			Return(nil)
+			Return(&models.Gauge{
+				Name:  "name",
+				Value: 1.0,
+			}, nil)
 
 		res := testingPostURL(t, ts.URL+"/gauge/name/1.0")
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer safeCloseRes(t, res)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
 }
@@ -120,7 +128,7 @@ func TestInvalidUpdateGaugeHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := UpdateHandler(mockService)
+	updateHandler, err := updateHandler(context.Background(), mockService, zap.NewNop())
 	require.NoError(t, err, "update handler initialization error")
 
 	ts := httptest.NewServer(updateHandler)
@@ -133,7 +141,7 @@ func TestInvalidUpdateGaugeHandler(t *testing.T) {
 	for _, req := range invalidRequests {
 		t.Run(fmt.Sprintf("test %s", req), func(t *testing.T) {
 			res := testingPostURL(t, ts.URL+req)
-			defer res.Body.Close()
+			defer safeCloseRes(t, res)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 		})
 	}
@@ -144,7 +152,7 @@ func TestNotFoundUpdateGaugeHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := UpdateHandler(mockService)
+	updateHandler, err := updateHandler(context.Background(), mockService, zap.NewNop())
 	require.NoError(t, err, "update handler initialization error")
 
 	ts := httptest.NewServer(updateHandler)
@@ -152,7 +160,7 @@ func TestNotFoundUpdateGaugeHandler(t *testing.T) {
 
 	t.Run("test /gauge/", func(t *testing.T) {
 		res := testingPostURL(t, ts.URL+"/gauge/")
-		defer res.Body.Close()
+		defer safeCloseRes(t, res)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 	})
 }
@@ -163,7 +171,7 @@ func TestValidUpdateCounterJSONHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := UpdateHandler(mockService)
+	updateHandler, err := updateHandler(context.Background(), mockService, zap.NewNop())
 	require.NoError(t, err, "update handler initialization error")
 
 	ts := httptest.NewServer(updateHandler)
@@ -182,14 +190,10 @@ func TestValidUpdateCounterJSONHandler(t *testing.T) {
 		mockService.
 			EXPECT().
 			UpdateMetric(counter).
-			Return(nil)
-		mockService.
-			EXPECT().
-			GetMetric(models.MetricTypeCounter, "name").
-			Return(&counter, true, nil)
+			Return(&counter, nil)
 
 		res := testingPostJSON(t, ts.URL+"/", counterJSON)
-		defer res.Body.Close()
+		defer safeCloseRes(t, res)
 		require.Equal(t, http.StatusOK, res.StatusCode)
 		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
@@ -202,7 +206,7 @@ func TestValidUpdateGaugeJSONHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := UpdateHandler(mockService)
+	updateHandler, err := updateHandler(context.Background(), mockService, zap.NewNop())
 	require.NoError(t, err, "update handler initialization error")
 
 	ts := httptest.NewServer(updateHandler)
@@ -221,14 +225,10 @@ func TestValidUpdateGaugeJSONHandler(t *testing.T) {
 		mockService.
 			EXPECT().
 			UpdateMetric(gauge).
-			Return(nil)
-		mockService.
-			EXPECT().
-			GetMetric(models.MetricTypeGauge, "name").
-			Return(&gauge, true, nil)
+			Return(&gauge, nil)
 
 		res := testingPostJSON(t, ts.URL+"/", gaugeJSON)
-		defer res.Body.Close()
+		defer safeCloseRes(t, res)
 		require.Equal(t, http.StatusOK, res.StatusCode)
 		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
@@ -241,7 +241,7 @@ func TestInvalidUpdateJSONHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := UpdateHandler(mockService)
+	updateHandler, err := updateHandler(context.Background(), mockService, zap.NewNop())
 	require.NoError(t, err, "update handler initialization error")
 
 	ts := httptest.NewServer(updateHandler)
@@ -251,7 +251,7 @@ func TestInvalidUpdateJSONHandler(t *testing.T) {
 		invalidJSON := "{}"
 
 		res := testingPostJSON(t, ts.URL+"/", invalidJSON)
-		defer res.Body.Close()
+		defer safeCloseRes(t, res)
 		require.Equal(t, http.StatusBadRequest, res.StatusCode)
 	})
 }

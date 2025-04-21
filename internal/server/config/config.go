@@ -1,12 +1,15 @@
 package config
 
-import "time"
+import (
+	"time"
+)
 
 type Config struct {
-	Endpoint        string `env:"ADDRESS"`
-	StoreIntervalS  int    `env:"STORE_INTERVAL"`
-	FileStoragePath string `env:"FILE_STORAGE_PATH"`
-	Restore         bool   `env:"RESTORE"`
+	Endpoint        string  `env:"ADDRESS"`
+	StoreIntervalS  int     `env:"STORE_INTERVAL"`
+	FileStoragePath string  `env:"FILE_STORAGE_PATH"`
+	Restore         bool    `env:"RESTORE"`
+	Mode            AppMode `env:"MODE"`
 }
 
 func (c *Config) StoreInterval() time.Duration {

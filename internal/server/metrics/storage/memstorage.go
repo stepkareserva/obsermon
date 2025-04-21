@@ -30,7 +30,7 @@ func (m *MemStorage) SetGauge(val models.Gauge) error {
 	return nil
 }
 
-func (m *MemStorage) GetGauge(name string) (*models.Gauge, bool, error) {
+func (m *MemStorage) FindGauge(name string) (*models.Gauge, bool, error) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
@@ -61,7 +61,7 @@ func (m *MemStorage) SetCounter(val models.Counter) error {
 	return nil
 }
 
-func (m *MemStorage) GetCounter(name string) (*models.Counter, bool, error) {
+func (m *MemStorage) FindCounter(name string) (*models.Counter, bool, error) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 

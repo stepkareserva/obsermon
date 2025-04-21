@@ -41,3 +41,11 @@ func testingGetGzipURL(t *testing.T, url string) *http.Response {
 
 	return res
 }
+
+func safeCloseRes(t *testing.T, res *http.Response) {
+	if res == nil {
+		return
+	}
+	err := res.Body.Close()
+	require.NoError(t, err)
+}

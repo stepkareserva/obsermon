@@ -37,9 +37,8 @@ func (g *gzipWriter) Write(data []byte) (int, error) {
 	// compress if compressor exists
 	if g.compressor != nil {
 		return g.compressor.Write(data)
-	} else {
-		return g.ResponseWriter.Write(data)
 	}
+	return g.ResponseWriter.Write(data)
 }
 
 func (g *gzipWriter) WriteHeader(status int) {
@@ -59,7 +58,7 @@ func (g *gzipWriter) WriteHeader(status int) {
 }
 
 func (g *gzipWriter) isErrorStatus(status int) bool {
-	return status >= 400
+	return status >= http.StatusBadRequest
 }
 
 func (g *gzipWriter) Close() error {

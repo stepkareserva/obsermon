@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 func TestRequestCompression(t *testing.T) {
@@ -27,14 +28,17 @@ func TestRequestCompression(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	compressedHandler := Compression()(mockHandler)
+	compressedHandler := Compression(zap.NewNop())(mockHandler)
 
 	ts := httptest.NewServer(compressedHandler)
 	defer ts.Close()
 
 	// post gzip request
 	res := testingPostGzipJSON(t, ts.URL, `{"Hello":"World"}`)
-	defer res.Body.Close()
+	defer func() {
+		err := res.Body.Close()
+		require.NoError(t, err)
+	}()
 
 	// check request unzipped
 	require.Equal(t, "gzip", contentEncoding)
@@ -55,7 +59,7 @@ func TestRequestUncompressed(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	compressedHandler := Compression()(mockHandler)
+	compressedHandler := Compression(zap.NewNop())(mockHandler)
 
 	ts := httptest.NewServer(compressedHandler)
 	defer ts.Close()
@@ -63,7 +67,10 @@ func TestRequestUncompressed(t *testing.T) {
 	// post gzip request
 	res, err := http.Post(ts.URL, "text/plain", strings.NewReader("Hello, World"))
 	require.NoError(t, err)
-	defer res.Body.Close()
+	defer func() {
+		err := res.Body.Close()
+		require.NoError(t, err)
+	}()
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	// check request unzipped
@@ -77,17 +84,21 @@ func TestResponseCompression(t *testing.T) {
 		require.NoError(t, err)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"Hello":"World"}`))
+		_, err = w.Write([]byte(`{"Hello":"World"}`))
+		require.NoError(t, err)
 	})
 
-	compressedHandler := Compression()(mockHandler)
+	compressedHandler := Compression(zap.NewNop())(mockHandler)
 
 	ts := httptest.NewServer(compressedHandler)
 	defer ts.Close()
 
 	// post gzip request
 	res := testingPostGzipJSON(t, ts.URL, `{}`)
-	defer res.Body.Close()
+	defer func() {
+		err := res.Body.Close()
+		require.NoError(t, err)
+	}()
 
 	require.Equal(t, "gzip", res.Header.Get("Content-Encoding"))
 	body := testingUngzipBody(t, res)
@@ -100,17 +111,21 @@ func TestResponseUncompressed(t *testing.T) {
 		require.NoError(t, err)
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Hello, World"))
+		_, err = w.Write([]byte("Hello, World"))
+		require.NoError(t, err)
 	})
 
-	compressedHandler := Compression()(mockHandler)
+	compressedHandler := Compression(zap.NewNop())(mockHandler)
 
 	ts := httptest.NewServer(compressedHandler)
 	defer ts.Close()
 
 	// post gzip request
 	res := testingPostGzipJSON(t, ts.URL, `{}`)
-	defer res.Body.Close()
+	defer func() {
+		err := res.Body.Close()
+		require.NoError(t, err)
+	}()
 
 	require.Equal(t, "", res.Header.Get("Content-Encoding"))
 	body, err := io.ReadAll(res.Body)

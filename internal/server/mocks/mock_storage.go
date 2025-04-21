@@ -40,20 +40,20 @@ func (m *MockGaugeStorage) EXPECT() *MockGaugeStorageMockRecorder {
 	return m.recorder
 }
 
-// GetGauge mocks base method.
-func (m *MockGaugeStorage) GetGauge(name string) (*models.Gauge, bool, error) {
+// FindGauge mocks base method.
+func (m *MockGaugeStorage) FindGauge(name string) (*models.Gauge, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGauge", name)
+	ret := m.ctrl.Call(m, "FindGauge", name)
 	ret0, _ := ret[0].(*models.Gauge)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// GetGauge indicates an expected call of GetGauge.
-func (mr *MockGaugeStorageMockRecorder) GetGauge(name any) *gomock.Call {
+// FindGauge indicates an expected call of FindGauge.
+func (mr *MockGaugeStorageMockRecorder) FindGauge(name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGauge", reflect.TypeOf((*MockGaugeStorage)(nil).GetGauge), name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindGauge", reflect.TypeOf((*MockGaugeStorage)(nil).FindGauge), name)
 }
 
 // ListGauges mocks base method.
@@ -123,20 +123,20 @@ func (m *MockCounterStorage) EXPECT() *MockCounterStorageMockRecorder {
 	return m.recorder
 }
 
-// GetCounter mocks base method.
-func (m *MockCounterStorage) GetCounter(name string) (*models.Counter, bool, error) {
+// FindCounter mocks base method.
+func (m *MockCounterStorage) FindCounter(name string) (*models.Counter, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCounter", name)
+	ret := m.ctrl.Call(m, "FindCounter", name)
 	ret0, _ := ret[0].(*models.Counter)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// GetCounter indicates an expected call of GetCounter.
-func (mr *MockCounterStorageMockRecorder) GetCounter(name any) *gomock.Call {
+// FindCounter indicates an expected call of FindCounter.
+func (mr *MockCounterStorageMockRecorder) FindCounter(name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCounter", reflect.TypeOf((*MockCounterStorage)(nil).GetCounter), name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCounter", reflect.TypeOf((*MockCounterStorage)(nil).FindCounter), name)
 }
 
 // ListCounters mocks base method.
@@ -206,36 +206,36 @@ func (m *MockStorage) EXPECT() *MockStorageMockRecorder {
 	return m.recorder
 }
 
-// GetCounter mocks base method.
-func (m *MockStorage) GetCounter(name string) (*models.Counter, bool, error) {
+// FindCounter mocks base method.
+func (m *MockStorage) FindCounter(name string) (*models.Counter, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCounter", name)
+	ret := m.ctrl.Call(m, "FindCounter", name)
 	ret0, _ := ret[0].(*models.Counter)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// GetCounter indicates an expected call of GetCounter.
-func (mr *MockStorageMockRecorder) GetCounter(name any) *gomock.Call {
+// FindCounter indicates an expected call of FindCounter.
+func (mr *MockStorageMockRecorder) FindCounter(name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCounter", reflect.TypeOf((*MockStorage)(nil).GetCounter), name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCounter", reflect.TypeOf((*MockStorage)(nil).FindCounter), name)
 }
 
-// GetGauge mocks base method.
-func (m *MockStorage) GetGauge(name string) (*models.Gauge, bool, error) {
+// FindGauge mocks base method.
+func (m *MockStorage) FindGauge(name string) (*models.Gauge, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGauge", name)
+	ret := m.ctrl.Call(m, "FindGauge", name)
 	ret0, _ := ret[0].(*models.Gauge)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// GetGauge indicates an expected call of GetGauge.
-func (mr *MockStorageMockRecorder) GetGauge(name any) *gomock.Call {
+// FindGauge indicates an expected call of FindGauge.
+func (mr *MockStorageMockRecorder) FindGauge(name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGauge", reflect.TypeOf((*MockStorage)(nil).GetGauge), name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindGauge", reflect.TypeOf((*MockStorage)(nil).FindGauge), name)
 }
 
 // ListCounters mocks base method.

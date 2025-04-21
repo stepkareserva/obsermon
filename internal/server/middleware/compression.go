@@ -5,9 +5,14 @@ import (
 	"strings"
 
 	hc "github.com/stepkareserva/obsermon/internal/server/httpconst"
+	"go.uber.org/zap"
 )
 
-func Compression() Middleware {
+func Compression(log *zap.Logger) Middleware {
+	if log == nil {
+		log = zap.NewNop()
+	}
+
 	return func(next http.Handler) http.Handler {
 		compression := func(w http.ResponseWriter, r *http.Request) {
 			// handle zipped request - replace request body to unzipped
@@ -19,7 +24,11 @@ func Compression() Middleware {
 				}
 				r.Body = cr
 				// don't move this code block out of this function!
-				defer cr.Close()
+				defer func() {
+					if err := cr.Close(); err != nil {
+						log.Error("compressed reader closing", zap.Error(err))
+					}
+				}()
 			}
 
 			// client supports compression - replace response writer
@@ -31,7 +40,11 @@ func Compression() Middleware {
 				}
 				w = cw
 				// don't move this code block out of this function!
-				defer cw.Close()
+				defer func() {
+					if err := cw.Close(); err != nil {
+						log.Error("compressed writer closing", zap.Error(err))
+					}
+				}()
 			}
 
 			next.ServeHTTP(w, r)
