@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/stepkareserva/obsermon/internal/server/logging"
 	"github.com/stepkareserva/obsermon/internal/server/middleware"
 	"go.uber.org/zap"
 )
@@ -31,11 +30,10 @@ func New(ctx context.Context, s Service, log *zap.Logger) (http.Handler, error) 
 	}
 
 	r := chi.NewRouter()
-	logger := logging.FromContext(ctx)
-	if logger != nil {
-		r.Use(middleware.Logger(logger))
+	if log != nil {
+		r.Use(middleware.Logger(log))
 	}
-	r.Use(middleware.Compression(logger))
+	r.Use(middleware.Compression(log))
 	r.Use(middleware.Buffering())
 
 	r.Mount("/update", updateHandler)
