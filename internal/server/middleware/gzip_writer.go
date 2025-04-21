@@ -58,7 +58,7 @@ func (g *gzipWriter) WriteHeader(status int) {
 }
 
 func (g *gzipWriter) isErrorStatus(status int) bool {
-	return status >= 400
+	return status >= http.StatusBadRequest
 }
 
 func (g *gzipWriter) Close() error {

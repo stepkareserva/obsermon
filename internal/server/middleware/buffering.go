@@ -55,7 +55,7 @@ func (w *bufferingWriter) WriteHeader(status int) {
 }
 
 func (w *bufferingWriter) isErrorStatus(status int) bool {
-	return status >= 400
+	return status >= http.StatusBadRequest
 }
 
 func (w *bufferingWriter) FlushToClient() {
