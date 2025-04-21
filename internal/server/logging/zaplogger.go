@@ -3,23 +3,24 @@ package logging
 import (
 	"fmt"
 
+	"github.com/stepkareserva/obsermon/internal/server/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-func New(level Level) (*zap.Logger, error) {
-	if level == LevelNoop {
+func New(m config.AppMode) (*zap.Logger, error) {
+	if m == config.Quiet {
 		return zap.NewNop(), nil
 	}
 
 	var cfg zap.Config
 	var options []zap.Option
 
-	switch level {
-	case LevelDev:
+	switch m {
+	case config.Dev:
 		cfg = zap.NewDevelopmentConfig()
 		options = append(options, zap.WithCaller(false))
-	case LevelProd:
+	case config.Prod:
 		cfg = zap.NewProductionConfig()
 		options = append(options, zap.WithCaller(false))
 	default:

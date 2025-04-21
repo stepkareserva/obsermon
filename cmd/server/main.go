@@ -20,9 +20,16 @@ import (
 )
 
 func main() {
+	// load and validate config
+	cfg, err := loadConfig()
+	if err != nil {
+		stdlog.Printf("config loading: %v", err)
+		return
+	}
+
 	// create log. use std log to log log errors,
 	// because who log the log
-	log, err := logging.New(logging.LevelDev)
+	log, err := logging.New(cfg.Mode)
 	if err != nil {
 		stdlog.Print(err)
 		return
@@ -37,13 +44,6 @@ func main() {
 	ctx, err := gracefulCancellingCtx(log)
 	if err != nil {
 		log.Error("graceful cancelling init", zap.Error(err))
-	}
-
-	// load and validate config
-	cfg, err := loadConfig()
-	if err != nil {
-		log.Error("config loading", zap.Error(err))
-		return
 	}
 
 	// initialize service
@@ -78,7 +78,7 @@ func gracefulCancellingCtx(log *zap.Logger) (context.Context, error) {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		log.Info("Press Ctrl+C to stop the agent...")
+		log.Info("Press Ctrl+C to stop the server...")
 		sig := <-sigChan
 		log.Info(fmt.Sprintf("interruption signal received: %v, shutting down server...", sig))
 		cancel()
