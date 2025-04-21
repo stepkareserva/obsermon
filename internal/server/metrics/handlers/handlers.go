@@ -15,16 +15,16 @@ func New(ctx context.Context, s Service, log *zap.Logger) (http.Handler, error) 
 		return nil, fmt.Errorf("service not exist")
 	}
 
-	updateHandler, err := UpdateHandler(s, log)
+	updateHandler, err := updateHandler(s, log)
 	if err != nil {
 		return nil, err
 	}
-	valueHandler, err := ValueHandler(s, log)
+	valueHandler, err := valueHandler(s, log)
 	if err != nil {
 		return nil, err
 	}
 
-	valuesHandler, err := ValuesHandler(s, log)
+	valuesHandler, err := valuesHandler(s, log)
 	if err != nil {
 		return nil, err
 	}
@@ -39,6 +39,53 @@ func New(ctx context.Context, s Service, log *zap.Logger) (http.Handler, error) 
 	r.Mount("/update", updateHandler)
 	r.Mount("/value", valueHandler)
 	r.Mount("/", valuesHandler)
+
+	return r, nil
+}
+
+func updateHandler(s Service, log *zap.Logger) (http.Handler, error) {
+	if s == nil {
+		return nil, fmt.Errorf("metrics service is nil")
+	}
+
+	r := chi.NewRouter()
+
+	r.Post(fmt.Sprintf("/%s/{%s}/{%s}", MetricGauge, ChiName, ChiValue),
+		updateGaugeURLHandler(s, log))
+	r.Post(fmt.Sprintf("/%s/{%s}/{%s}", MetricCounter, ChiName, ChiValue),
+		updateCounterURLHandler(s, log))
+	r.Post(fmt.Sprintf("/{%s}/{%s}/{%s}", ChiMetric, ChiName, ChiValue),
+		updateUnknownMetricURLHandler(log))
+	r.Post("/", updateMetricJSONHandler(s, log))
+
+	return r, nil
+}
+
+func valueHandler(s Service, log *zap.Logger) (http.Handler, error) {
+	if s == nil {
+		return nil, fmt.Errorf("metrics server is nil")
+	}
+
+	r := chi.NewRouter()
+
+	r.Get(fmt.Sprintf("/%s/{%s}", MetricGauge, ChiName),
+		gaugeValueURLHandler(s, log))
+	r.Get(fmt.Sprintf("/%s/{%s}", MetricCounter, ChiName),
+		counterValueURLHandler(s, log))
+	r.Get(fmt.Sprintf("/{%s}/{%s}", ChiMetric, ChiName),
+		unknownMetricValueURLHandler(log))
+	r.Post("/", valueMetricJSONHandler(s, log))
+
+	return r, nil
+}
+
+func valuesHandler(s Service, log *zap.Logger) (http.Handler, error) {
+	if s == nil {
+		return nil, fmt.Errorf("metrics service is nil")
+	}
+
+	r := chi.NewRouter()
+	r.Get("/", metricValuesHandler(s, log))
 
 	return r, nil
 }

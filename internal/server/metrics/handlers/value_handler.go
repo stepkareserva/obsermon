@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -13,24 +12,6 @@ import (
 
 	hc "github.com/stepkareserva/obsermon/internal/server/httpconst"
 )
-
-func ValueHandler(s Service, log *zap.Logger) (http.Handler, error) {
-	if s == nil {
-		return nil, fmt.Errorf("metrics server is nil")
-	}
-
-	r := chi.NewRouter()
-
-	r.Get(fmt.Sprintf("/%s/{%s}", MetricGauge, ChiName),
-		gaugeValueURLHandler(s, log))
-	r.Get(fmt.Sprintf("/%s/{%s}", MetricCounter, ChiName),
-		counterValueURLHandler(s, log))
-	r.Get(fmt.Sprintf("/{%s}/{%s}", ChiMetric, ChiName),
-		unknownMetricValueURLHandler(log))
-	r.Post("/", valueMetricJSONHandler(s, log))
-
-	return r, nil
-}
 
 func gaugeValueURLHandler(s Service, log *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -24,24 +23,6 @@ const (
 	ChiName   = "name"
 	ChiValue  = "value"
 )
-
-func UpdateHandler(s Service, log *zap.Logger) (http.Handler, error) {
-	if s == nil {
-		return nil, fmt.Errorf("metrics service is nil")
-	}
-
-	r := chi.NewRouter()
-
-	r.Post(fmt.Sprintf("/%s/{%s}/{%s}", MetricGauge, ChiName, ChiValue),
-		updateGaugeURLHandler(s, log))
-	r.Post(fmt.Sprintf("/%s/{%s}/{%s}", MetricCounter, ChiName, ChiValue),
-		updateCounterURLHandler(s, log))
-	r.Post(fmt.Sprintf("/{%s}/{%s}/{%s}", ChiMetric, ChiName, ChiValue),
-		updateUnknownMetricURLHandler(log))
-	r.Post("/", updateMetricJSONHandler(s, log))
-
-	return r, nil
-}
 
 func updateGaugeURLHandler(s Service, log *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

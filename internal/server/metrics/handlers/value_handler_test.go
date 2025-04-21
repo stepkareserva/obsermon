@@ -21,7 +21,7 @@ func TestValidValueCounterHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := ValueHandler(mockService, zap.NewNop())
+	updateHandler, err := valueHandler(mockService, zap.NewNop())
 	require.NoError(t, err, "value handler initialization error")
 
 	ts := httptest.NewServer(updateHandler)
@@ -51,7 +51,7 @@ func TestNotFoundValueCounterHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	valueHandler, err := ValueHandler(mockService, zap.NewNop())
+	valueHandler, err := valueHandler(mockService, zap.NewNop())
 	require.NoError(t, err, "value handler initialization error")
 
 	ts := httptest.NewServer(valueHandler)
@@ -76,7 +76,7 @@ func TestValidValueGaugeHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	valueHandler, err := ValueHandler(mockService, zap.NewNop())
+	valueHandler, err := valueHandler(mockService, zap.NewNop())
 	require.NoError(t, err, "value handler initialization error")
 
 	ts := httptest.NewServer(valueHandler)
@@ -106,7 +106,7 @@ func TestNotFoundValueGaugeHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := ValueHandler(mockService, zap.NewNop())
+	updateHandler, err := valueHandler(mockService, zap.NewNop())
 	require.NoError(t, err, "value handler initialization error")
 
 	ts := httptest.NewServer(updateHandler)
@@ -130,7 +130,7 @@ func TestValidValueCounterJSONHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	valueHandler, err := ValueHandler(mockService, zap.NewNop())
+	valueHandler, err := valueHandler(mockService, zap.NewNop())
 	require.NoError(t, err, "value handler initialization error")
 
 	ts := httptest.NewServer(valueHandler)
@@ -165,7 +165,7 @@ func TestValidValueGaugeJSONHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	valueHandler, err := ValueHandler(mockService, zap.NewNop())
+	valueHandler, err := valueHandler(mockService, zap.NewNop())
 	require.NoError(t, err, "value handler initialization error")
 
 	ts := httptest.NewServer(valueHandler)
@@ -200,7 +200,7 @@ func TestInvalidValueJSONHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	valueHandler, err := ValueHandler(mockService, zap.NewNop())
+	valueHandler, err := valueHandler(mockService, zap.NewNop())
 	require.NoError(t, err, "update handler initialization error")
 
 	ts := httptest.NewServer(valueHandler)
