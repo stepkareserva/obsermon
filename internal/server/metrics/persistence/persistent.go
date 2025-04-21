@@ -121,48 +121,46 @@ func (s *Service) syncStoringLoop() {
 	}
 }
 
-func (s *Service) store() error {
+func (s *Service) store() {
 	state, err := s.BaseService.GetState()
 	if err != nil {
-		return err
+		s.logger.Error("service state request", zap.Error(err))
+		return
 	}
 	if err = s.sstorage.StoreState(*state); err != nil {
 		s.logger.Error("service state storing", zap.Error(err))
-		return err
 	}
 	s.logger.Info("service state stored")
-	return nil
 }
 
-func (s *Service) UpdateGauge(val models.Gauge) error {
-	if err := s.BaseService.UpdateGauge(val); err != nil {
-		return err
+func (s *Service) UpdateGauge(val models.Gauge) (*models.Gauge, error) {
+	updated, err := s.BaseService.UpdateGauge(val)
+
+	if err == nil {
+		s.onUpdate()
 	}
 
-	s.onUpdate()
-
-	return nil
+	return updated, err
 }
 
-func (s *Service) UpdateCounter(val models.Counter) error {
-	s.logger.Info("update counter")
-	if err := s.BaseService.UpdateCounter(val); err != nil {
-		return err
+func (s *Service) UpdateCounter(val models.Counter) (*models.Counter, error) {
+	updated, err := s.BaseService.UpdateCounter(val)
+
+	if err == nil {
+		s.onUpdate()
 	}
 
-	s.onUpdate()
-
-	return nil
+	return updated, err
 }
 
-func (s *Service) UpdateMetric(val models.Metrics) error {
-	if err := s.BaseService.UpdateMetric(val); err != nil {
-		return err
+func (s *Service) UpdateMetric(val models.Metrics) (*models.Metrics, error) {
+	updated, err := s.BaseService.UpdateMetric(val)
+
+	if err == nil {
+		s.onUpdate()
 	}
 
-	s.onUpdate()
-
-	return nil
+	return updated, err
 }
 
 func (s *Service) onUpdate() {

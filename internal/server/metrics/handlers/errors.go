@@ -48,10 +48,13 @@ var (
 	}
 )
 
-func WriteError(w http.ResponseWriter, err HandlerError, details ...string) {
+func WriteError(w http.ResponseWriter, err HandlerError, details ...string) error {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(err.StatusCode)
 
 	errText := fmt.Sprintln(err.Message, strings.Join(details, " "))
-	w.Write([]byte(errText))
+	if _, err := w.Write([]byte(errText)); err != nil {
+		return fmt.Errorf("writing error: %w", err)
+	}
+	return nil
 }

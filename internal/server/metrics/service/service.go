@@ -23,20 +23,24 @@ func New(storage Storage) (*Service, error) {
 	return &Service{storage: storage}, nil
 }
 
-func (s *Service) UpdateGauge(val models.Gauge) error {
+func (s *Service) UpdateGauge(val models.Gauge) (*models.Gauge, error) {
 	if err := s.checkValidity(); err != nil {
-		return err
+		return nil, err
 	}
 
-	return s.storage.SetGauge(val)
+	if err := s.storage.SetGauge(val); err != nil {
+		return nil, err
+	}
+
+	return &val, nil
 }
 
-func (s *Service) GetGauge(name string) (*models.Gauge, bool, error) {
+func (s *Service) FindGauge(name string) (*models.Gauge, bool, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, false, err
 	}
 
-	return s.storage.GetGauge(name)
+	return s.storage.FindGauge(name)
 }
 
 func (s *Service) ListGauges() (models.GaugesList, error) {
@@ -55,32 +59,38 @@ func (s *Service) ListGauges() (models.GaugesList, error) {
 	return gauges, nil
 }
 
-func (s *Service) UpdateCounter(val models.Counter) error {
+func (s *Service) UpdateCounter(val models.Counter) (*models.Counter, error) {
 	if err := s.checkValidity(); err != nil {
-		return err
+		return nil, err
 	}
 
-	current, exists, err := s.storage.GetCounter(val.Name)
+	current, exists, err := s.storage.FindCounter(val.Name)
 	if err != nil {
-		return err
+		return nil, err
 	}
+
 	if !exists {
-		return s.storage.SetCounter(val)
+		if err := s.storage.SetCounter(val); err != nil {
+			return nil, err
+		}
+		return &val, nil
 	}
 
 	if err = current.Value.Update(val.Value); err != nil {
-		return err
+		return nil, err
 	}
-
-	return s.storage.SetCounter(*current)
+	if err = s.storage.SetCounter(*current); err != nil {
+		return nil, err
+	}
+	return &val, nil
 }
 
-func (s *Service) GetCounter(name string) (*models.Counter, bool, error) {
+func (s *Service) FindCounter(name string) (*models.Counter, bool, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, false, err
 	}
 
-	return s.storage.GetCounter(name)
+	return s.storage.FindCounter(name)
 }
 
 func (s *Service) ListCounters() (models.CountersList, error) {
@@ -100,44 +110,54 @@ func (s *Service) ListCounters() (models.CountersList, error) {
 	return counters, nil
 }
 
-func (s *Service) UpdateMetric(val models.Metrics) error {
+func (s *Service) UpdateMetric(val models.Metrics) (*models.Metrics, error) {
 	if err := s.checkValidity(); err != nil {
-		return err
+		return nil, err
 	}
 
 	switch val.MType {
 	case models.MetricTypeCounter:
 		counter, err := val.Counter()
 		if err != nil {
-			return err
+			return nil, err
 		}
-		return s.UpdateCounter(*counter)
+		updated, err := s.UpdateCounter(*counter)
+		if err != nil {
+			return nil, err
+		}
+		updatedMetric := models.CounterMetric(*updated)
+		return &updatedMetric, nil
 	case models.MetricTypeGauge:
 		gauge, err := val.Gauge()
 		if err != nil {
-			return err
+			return nil, err
 		}
-		return s.UpdateGauge(*gauge)
+		updated, err := s.UpdateGauge(*gauge)
+		if err != nil {
+			return nil, err
+		}
+		updatedMetric := models.GaugeMetric(*updated)
+		return &updatedMetric, nil
 	default:
-		return fmt.Errorf("unknown metric type")
+		return nil, fmt.Errorf("unknown metric type")
 	}
 }
 
-func (s *Service) GetMetric(t models.MetricType, name string) (*models.Metrics, bool, error) {
+func (s *Service) FindMetric(t models.MetricType, name string) (*models.Metrics, bool, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, false, err
 	}
 
 	switch t {
 	case models.MetricTypeCounter:
-		c, exists, err := s.GetCounter(name)
+		c, exists, err := s.FindCounter(name)
 		if err != nil || !exists {
 			return nil, exists, err
 		}
 		m := models.CounterMetric(*c)
 		return &m, true, nil
 	case models.MetricTypeGauge:
-		g, exists, err := s.GetGauge(name)
+		g, exists, err := s.FindGauge(name)
 		if err != nil || !exists {
 			return nil, exists, err
 		}

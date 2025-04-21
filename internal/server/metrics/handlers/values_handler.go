@@ -1,28 +1,33 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"text/template"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/stepkareserva/obsermon/internal/models"
+	"go.uber.org/zap"
 
 	hc "github.com/stepkareserva/obsermon/internal/server/httpconst"
 )
 
-func ValuesHandler(s Service) (http.Handler, error) {
-	if s == nil {
-		return nil, fmt.Errorf("metrics service is nil")
-	}
-
-	r := chi.NewRouter()
-	r.Get("/", metricValuesHandler(s))
-
-	return r, nil
+type ValuesHandler struct {
+	service Service
+	ErrorsWriter
 }
 
-func metricValuesHandler(s Service) http.HandlerFunc {
+func NewValuesHandler(s Service, log *zap.Logger) (*ValuesHandler, error) {
+	if s == nil {
+		return nil, fmt.Errorf("service not exists")
+	}
+	return &ValuesHandler{
+		service:      s,
+		ErrorsWriter: NewErrorsWriter(log),
+	}, nil
+}
+
+func (h *ValuesHandler) MetricValuesHandler(ctx context.Context) http.HandlerFunc {
 	var tmpl = template.Must(template.New("index").Parse(`
 	<!DOCTYPE html>
 	<html>
@@ -70,15 +75,15 @@ func metricValuesHandler(s Service) http.HandlerFunc {
 	</html>`))
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		gauges, err := s.ListGauges()
+		gauges, err := h.service.ListGauges()
 		if err != nil {
-			WriteError(w, ErrInternalServerError)
+			h.WriteError(w, ErrInternalServerError)
 			return
 		}
 
-		counters, err := s.ListCounters()
+		counters, err := h.service.ListCounters()
 		if err != nil {
-			WriteError(w, ErrInternalServerError)
+			h.WriteError(w, ErrInternalServerError)
 			return
 		}
 
@@ -92,7 +97,7 @@ func metricValuesHandler(s Service) http.HandlerFunc {
 
 		w.Header().Set(hc.ContentType, hc.ContentTypeHTML)
 		if err := tmpl.Execute(w, templateData); err != nil {
-			WriteError(w, ErrInternalServerError)
+			h.WriteError(w, ErrInternalServerError)
 			return
 		}
 	}

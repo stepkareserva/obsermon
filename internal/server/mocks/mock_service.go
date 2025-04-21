@@ -40,20 +40,20 @@ func (m *MockGaugesService) EXPECT() *MockGaugesServiceMockRecorder {
 	return m.recorder
 }
 
-// GetGauge mocks base method.
-func (m *MockGaugesService) GetGauge(name string) (*models.Gauge, bool, error) {
+// FindGauge mocks base method.
+func (m *MockGaugesService) FindGauge(name string) (*models.Gauge, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGauge", name)
+	ret := m.ctrl.Call(m, "FindGauge", name)
 	ret0, _ := ret[0].(*models.Gauge)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// GetGauge indicates an expected call of GetGauge.
-func (mr *MockGaugesServiceMockRecorder) GetGauge(name any) *gomock.Call {
+// FindGauge indicates an expected call of FindGauge.
+func (mr *MockGaugesServiceMockRecorder) FindGauge(name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGauge", reflect.TypeOf((*MockGaugesService)(nil).GetGauge), name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindGauge", reflect.TypeOf((*MockGaugesService)(nil).FindGauge), name)
 }
 
 // ListGauges mocks base method.
@@ -72,11 +72,12 @@ func (mr *MockGaugesServiceMockRecorder) ListGauges() *gomock.Call {
 }
 
 // UpdateGauge mocks base method.
-func (m *MockGaugesService) UpdateGauge(val models.Gauge) error {
+func (m *MockGaugesService) UpdateGauge(val models.Gauge) (*models.Gauge, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateGauge", val)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*models.Gauge)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateGauge indicates an expected call of UpdateGauge.
@@ -109,20 +110,20 @@ func (m *MockCountersService) EXPECT() *MockCountersServiceMockRecorder {
 	return m.recorder
 }
 
-// GetCounter mocks base method.
-func (m *MockCountersService) GetCounter(name string) (*models.Counter, bool, error) {
+// FindCounter mocks base method.
+func (m *MockCountersService) FindCounter(name string) (*models.Counter, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCounter", name)
+	ret := m.ctrl.Call(m, "FindCounter", name)
 	ret0, _ := ret[0].(*models.Counter)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// GetCounter indicates an expected call of GetCounter.
-func (mr *MockCountersServiceMockRecorder) GetCounter(name any) *gomock.Call {
+// FindCounter indicates an expected call of FindCounter.
+func (mr *MockCountersServiceMockRecorder) FindCounter(name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCounter", reflect.TypeOf((*MockCountersService)(nil).GetCounter), name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCounter", reflect.TypeOf((*MockCountersService)(nil).FindCounter), name)
 }
 
 // ListCounters mocks base method.
@@ -141,11 +142,12 @@ func (mr *MockCountersServiceMockRecorder) ListCounters() *gomock.Call {
 }
 
 // UpdateCounter mocks base method.
-func (m *MockCountersService) UpdateCounter(val models.Counter) error {
+func (m *MockCountersService) UpdateCounter(val models.Counter) (*models.Counter, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateCounter", val)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*models.Counter)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateCounter indicates an expected call of UpdateCounter.
@@ -178,28 +180,29 @@ func (m *MockMetricsService) EXPECT() *MockMetricsServiceMockRecorder {
 	return m.recorder
 }
 
-// GetMetric mocks base method.
-func (m *MockMetricsService) GetMetric(t models.MetricType, name string) (*models.Metrics, bool, error) {
+// FindMetric mocks base method.
+func (m *MockMetricsService) FindMetric(t models.MetricType, name string) (*models.Metrics, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMetric", t, name)
+	ret := m.ctrl.Call(m, "FindMetric", t, name)
 	ret0, _ := ret[0].(*models.Metrics)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// GetMetric indicates an expected call of GetMetric.
-func (mr *MockMetricsServiceMockRecorder) GetMetric(t, name any) *gomock.Call {
+// FindMetric indicates an expected call of FindMetric.
+func (mr *MockMetricsServiceMockRecorder) FindMetric(t, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetric", reflect.TypeOf((*MockMetricsService)(nil).GetMetric), t, name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMetric", reflect.TypeOf((*MockMetricsService)(nil).FindMetric), t, name)
 }
 
 // UpdateMetric mocks base method.
-func (m *MockMetricsService) UpdateMetric(val models.Metrics) error {
+func (m *MockMetricsService) UpdateMetric(val models.Metrics) (*models.Metrics, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateMetric", val)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*models.Metrics)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateMetric indicates an expected call of UpdateMetric.
@@ -232,52 +235,52 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 	return m.recorder
 }
 
-// GetCounter mocks base method.
-func (m *MockService) GetCounter(name string) (*models.Counter, bool, error) {
+// FindCounter mocks base method.
+func (m *MockService) FindCounter(name string) (*models.Counter, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCounter", name)
+	ret := m.ctrl.Call(m, "FindCounter", name)
 	ret0, _ := ret[0].(*models.Counter)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// GetCounter indicates an expected call of GetCounter.
-func (mr *MockServiceMockRecorder) GetCounter(name any) *gomock.Call {
+// FindCounter indicates an expected call of FindCounter.
+func (mr *MockServiceMockRecorder) FindCounter(name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCounter", reflect.TypeOf((*MockService)(nil).GetCounter), name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCounter", reflect.TypeOf((*MockService)(nil).FindCounter), name)
 }
 
-// GetGauge mocks base method.
-func (m *MockService) GetGauge(name string) (*models.Gauge, bool, error) {
+// FindGauge mocks base method.
+func (m *MockService) FindGauge(name string) (*models.Gauge, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGauge", name)
+	ret := m.ctrl.Call(m, "FindGauge", name)
 	ret0, _ := ret[0].(*models.Gauge)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// GetGauge indicates an expected call of GetGauge.
-func (mr *MockServiceMockRecorder) GetGauge(name any) *gomock.Call {
+// FindGauge indicates an expected call of FindGauge.
+func (mr *MockServiceMockRecorder) FindGauge(name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGauge", reflect.TypeOf((*MockService)(nil).GetGauge), name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindGauge", reflect.TypeOf((*MockService)(nil).FindGauge), name)
 }
 
-// GetMetric mocks base method.
-func (m *MockService) GetMetric(t models.MetricType, name string) (*models.Metrics, bool, error) {
+// FindMetric mocks base method.
+func (m *MockService) FindMetric(t models.MetricType, name string) (*models.Metrics, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMetric", t, name)
+	ret := m.ctrl.Call(m, "FindMetric", t, name)
 	ret0, _ := ret[0].(*models.Metrics)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// GetMetric indicates an expected call of GetMetric.
-func (mr *MockServiceMockRecorder) GetMetric(t, name any) *gomock.Call {
+// FindMetric indicates an expected call of FindMetric.
+func (mr *MockServiceMockRecorder) FindMetric(t, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetric", reflect.TypeOf((*MockService)(nil).GetMetric), t, name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMetric", reflect.TypeOf((*MockService)(nil).FindMetric), t, name)
 }
 
 // ListCounters mocks base method.
@@ -311,11 +314,12 @@ func (mr *MockServiceMockRecorder) ListGauges() *gomock.Call {
 }
 
 // UpdateCounter mocks base method.
-func (m *MockService) UpdateCounter(val models.Counter) error {
+func (m *MockService) UpdateCounter(val models.Counter) (*models.Counter, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateCounter", val)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*models.Counter)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateCounter indicates an expected call of UpdateCounter.
@@ -325,11 +329,12 @@ func (mr *MockServiceMockRecorder) UpdateCounter(val any) *gomock.Call {
 }
 
 // UpdateGauge mocks base method.
-func (m *MockService) UpdateGauge(val models.Gauge) error {
+func (m *MockService) UpdateGauge(val models.Gauge) (*models.Gauge, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateGauge", val)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*models.Gauge)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateGauge indicates an expected call of UpdateGauge.
@@ -339,11 +344,12 @@ func (mr *MockServiceMockRecorder) UpdateGauge(val any) *gomock.Call {
 }
 
 // UpdateMetric mocks base method.
-func (m *MockService) UpdateMetric(val models.Metrics) error {
+func (m *MockService) UpdateMetric(val models.Metrics) (*models.Metrics, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateMetric", val)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*models.Metrics)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateMetric indicates an expected call of UpdateMetric.

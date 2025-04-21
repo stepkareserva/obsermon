@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -9,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
+	"go.uber.org/zap"
 
 	"github.com/stepkareserva/obsermon/internal/models"
 	"github.com/stepkareserva/obsermon/internal/server/mocks"
@@ -19,7 +21,7 @@ func TestValuesHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	valuesHandler, err := ValuesHandler(mockService)
+	valuesHandler, err := valuesHandler(context.Background(), mockService, zap.NewNop())
 	require.NoError(t, err, "value handler initialization error")
 
 	ts := httptest.NewServer(valuesHandler)
@@ -39,7 +41,7 @@ func TestValuesHandler(t *testing.T) {
 
 		// get values
 		res := testingGetURL(t, ts.URL+"/")
-		defer res.Body.Close()
+		defer safeCloseRes(t, res)
 
 		// check status and contentType if status is ok
 		assert.Equal(t, http.StatusOK, res.StatusCode)

@@ -26,6 +26,7 @@ func defaultConfig() *Config {
 		StoreIntervalS:  300,
 		FileStoragePath: defaultStoragePath(),
 		Restore:         false,
+		Mode:            Prod,
 	}
 }
 
@@ -66,6 +67,9 @@ func readCLIParams(c *Config) error {
 
 	fs.BoolVar(&c.Restore, "r", c.Restore,
 		"restore server state from storage file")
+
+	fs.Var(&c.Mode, "m",
+		"app mode, quiet/dev/prod")
 
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		return err
