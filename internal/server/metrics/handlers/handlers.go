@@ -34,7 +34,7 @@ func New(ctx context.Context, s Service, log *zap.Logger) (http.Handler, error) 
 		r.Use(middleware.Logger(log))
 	}
 	r.Use(middleware.Compression(log))
-	r.Use(middleware.Buffering())
+	r.Use(middleware.Buffering(log))
 
 	r.Mount("/update", updateHandler)
 	r.Mount("/value", valueHandler)

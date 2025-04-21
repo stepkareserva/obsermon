@@ -54,7 +54,7 @@ func main() {
 	}
 
 	// run server in goroutine
-	server, err := runServer(service, *cfg, ctx, log)
+	server, err := runServer(ctx, service, cfg, log)
 	if err != nil {
 		log.Error("server starting", zap.Error(err))
 		return
@@ -130,9 +130,9 @@ func initService(cfg *config.Config, log *zap.Logger) (*persistence.Service, err
 }
 
 func runServer(
-	service handlers.Service,
-	cfg config.Config,
 	ctx context.Context,
+	service handlers.Service,
+	cfg *config.Config,
 	log *zap.Logger,
 ) (*http.Server, error) {
 	if service == nil {
@@ -140,6 +140,9 @@ func runServer(
 	}
 	if log == nil {
 		return nil, fmt.Errorf("log not exists")
+	}
+	if cfg == nil {
+		return nil, fmt.Errorf("config not exists")
 	}
 
 	// create handlers
