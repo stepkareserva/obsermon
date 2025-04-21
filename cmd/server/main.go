@@ -22,7 +22,7 @@ import (
 func main() {
 	// create logger. use std logger to log logger errors,
 	// because who log the logger
-	logger, err := logging.NewZapLogger(logging.LevelDev)
+	logger, err := logging.New(logging.LevelDev)
 	if err != nil {
 		stdlog.Print(err)
 		return

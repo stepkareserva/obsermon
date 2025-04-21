@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func NewZapLogger(level Level) (*zap.Logger, error) {
+func New(level Level) (*zap.Logger, error) {
 	if level == LevelNoop {
 		return zap.NewNop(), nil
 	}
