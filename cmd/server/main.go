@@ -43,14 +43,14 @@ func main() {
 	// initialize service
 	service, err := initService(cfg, logger)
 	if err != nil {
-		logger.Error("handlers initialization", zap.Error(err))
+		logger.Error("service initialization", zap.Error(err))
 		return
 	}
 
 	// run server in goroutine
 	server, err := runServer(service, *cfg, ctx)
 	if err != nil {
-		logger.Error("server initialization", zap.Error(err))
+		logger.Error("server starting", zap.Error(err))
 		return
 	}
 
