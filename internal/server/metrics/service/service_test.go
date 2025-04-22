@@ -34,7 +34,7 @@ func TestGaugeService(t *testing.T) {
 				Value: 1.0,
 			}, true, nil)
 
-		gauge, err := service.UpdateGauge(models.Gauge{Name: "name", Value: 1.0})
+		_, err := service.UpdateGauge(models.Gauge{Name: "name", Value: 1.0})
 		assert.NoError(t, err)
 		gauge, exists, err := service.FindGauge("name")
 		assert.NoError(t, err)

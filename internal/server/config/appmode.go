@@ -10,11 +10,11 @@ const (
 	Prod  AppMode = "prod"
 )
 
-func (a *AppMode) IsValid() bool {
-	if a == nil {
+func (m *AppMode) IsValid() bool {
+	if m == nil {
 		return false
 	}
-	switch *a {
+	switch *m {
 	case Quiet, Dev, Prod:
 		return true
 	}
