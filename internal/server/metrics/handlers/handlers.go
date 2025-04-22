@@ -15,16 +15,16 @@ func New(ctx context.Context, s Service, log *zap.Logger) (http.Handler, error) 
 		return nil, fmt.Errorf("service not exist")
 	}
 
-	updateHandler, err := updateHandler(s, log)
+	updateHandler, err := updateHandler(ctx, s, log)
 	if err != nil {
 		return nil, err
 	}
-	valueHandler, err := valueHandler(s, log)
+	valueHandler, err := valueHandler(ctx, s, log)
 	if err != nil {
 		return nil, err
 	}
 
-	valuesHandler, err := valuesHandler(s, log)
+	valuesHandler, err := valuesHandler(ctx, s, log)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func New(ctx context.Context, s Service, log *zap.Logger) (http.Handler, error) 
 	return r, nil
 }
 
-func updateHandler(s Service, log *zap.Logger) (http.Handler, error) {
+func updateHandler(ctx context.Context, s Service, log *zap.Logger) (http.Handler, error) {
 	if s == nil {
 		return nil, fmt.Errorf("metrics service is nil")
 	}
@@ -51,17 +51,17 @@ func updateHandler(s Service, log *zap.Logger) (http.Handler, error) {
 	r := chi.NewRouter()
 
 	r.Post(fmt.Sprintf("/%s/{%s}/{%s}", MetricGauge, ChiName, ChiValue),
-		updateGaugeURLHandler(s, log))
+		updateGaugeURLHandler(ctx, s, log))
 	r.Post(fmt.Sprintf("/%s/{%s}/{%s}", MetricCounter, ChiName, ChiValue),
-		updateCounterURLHandler(s, log))
+		updateCounterURLHandler(ctx, s, log))
 	r.Post(fmt.Sprintf("/{%s}/{%s}/{%s}", ChiMetric, ChiName, ChiValue),
-		updateUnknownMetricURLHandler(log))
-	r.Post("/", updateMetricJSONHandler(s, log))
+		updateUnknownMetricURLHandler(ctx, log))
+	r.Post("/", updateMetricJSONHandler(ctx, s, log))
 
 	return r, nil
 }
 
-func valueHandler(s Service, log *zap.Logger) (http.Handler, error) {
+func valueHandler(ctx context.Context, s Service, log *zap.Logger) (http.Handler, error) {
 	if s == nil {
 		return nil, fmt.Errorf("metrics server is nil")
 	}
@@ -69,23 +69,23 @@ func valueHandler(s Service, log *zap.Logger) (http.Handler, error) {
 	r := chi.NewRouter()
 
 	r.Get(fmt.Sprintf("/%s/{%s}", MetricGauge, ChiName),
-		gaugeValueURLHandler(s, log))
+		gaugeValueURLHandler(ctx, s, log))
 	r.Get(fmt.Sprintf("/%s/{%s}", MetricCounter, ChiName),
-		counterValueURLHandler(s, log))
+		counterValueURLHandler(ctx, s, log))
 	r.Get(fmt.Sprintf("/{%s}/{%s}", ChiMetric, ChiName),
-		unknownMetricValueURLHandler(log))
-	r.Post("/", valueMetricJSONHandler(s, log))
+		unknownMetricValueURLHandler(ctx, log))
+	r.Post("/", valueMetricJSONHandler(ctx, s, log))
 
 	return r, nil
 }
 
-func valuesHandler(s Service, log *zap.Logger) (http.Handler, error) {
+func valuesHandler(ctx context.Context, s Service, log *zap.Logger) (http.Handler, error) {
 	if s == nil {
 		return nil, fmt.Errorf("metrics service is nil")
 	}
 
 	r := chi.NewRouter()
-	r.Get("/", metricValuesHandler(s, log))
+	r.Get("/", metricValuesHandler(ctx, s, log))
 
 	return r, nil
 }

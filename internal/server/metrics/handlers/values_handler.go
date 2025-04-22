@@ -1,29 +1,17 @@
 package handlers
 
 import (
-	"fmt"
+	"context"
 	"net/http"
 	"text/template"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/stepkareserva/obsermon/internal/models"
 	"go.uber.org/zap"
 
 	hc "github.com/stepkareserva/obsermon/internal/server/httpconst"
 )
 
-func ValuesHandler(s Service, log *zap.Logger) (http.Handler, error) {
-	if s == nil {
-		return nil, fmt.Errorf("metrics service is nil")
-	}
-
-	r := chi.NewRouter()
-	r.Get("/", metricValuesHandler(s, log))
-
-	return r, nil
-}
-
-func metricValuesHandler(s Service, log *zap.Logger) http.HandlerFunc {
+func metricValuesHandler(ctx context.Context, s Service, log *zap.Logger) http.HandlerFunc {
 	var tmpl = template.Must(template.New("index").Parse(`
 	<!DOCTYPE html>
 	<html>

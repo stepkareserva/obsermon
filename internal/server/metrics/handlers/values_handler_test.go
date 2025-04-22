@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -20,7 +21,7 @@ func TestValuesHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	valuesHandler, err := ValuesHandler(mockService, zap.NewNop())
+	valuesHandler, err := valuesHandler(context.Background(), mockService, zap.NewNop())
 	require.NoError(t, err, "value handler initialization error")
 
 	ts := httptest.NewServer(valuesHandler)

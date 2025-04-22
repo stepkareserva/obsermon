@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -13,7 +14,7 @@ import (
 	hc "github.com/stepkareserva/obsermon/internal/server/httpconst"
 )
 
-func gaugeValueURLHandler(s Service, log *zap.Logger) http.HandlerFunc {
+func gaugeValueURLHandler(ctx context.Context, s Service, log *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, ChiName)
 		gauge, exists, err := s.GetGauge(name)
@@ -35,7 +36,7 @@ func gaugeValueURLHandler(s Service, log *zap.Logger) http.HandlerFunc {
 	}
 }
 
-func counterValueURLHandler(s Service, log *zap.Logger) http.HandlerFunc {
+func counterValueURLHandler(ctx context.Context, s Service, log *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, ChiName)
 		counter, exists, err := s.GetCounter(name)
@@ -57,13 +58,13 @@ func counterValueURLHandler(s Service, log *zap.Logger) http.HandlerFunc {
 	}
 }
 
-func unknownMetricValueURLHandler(log *zap.Logger) http.HandlerFunc {
+func unknownMetricValueURLHandler(ctx context.Context, log *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, ErrInvalidMetricType, log, chi.URLParam(r, ChiMetric))
 	}
 }
 
-func valueMetricJSONHandler(s Service, log *zap.Logger) http.HandlerFunc {
+func valueMetricJSONHandler(ctx context.Context, s Service, log *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get(hc.ContentType) != hc.ContentTypeJSON {
 			WriteError(w, ErrUnsupportedContentType, log)
