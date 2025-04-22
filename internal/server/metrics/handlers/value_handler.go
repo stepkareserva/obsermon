@@ -17,7 +17,7 @@ import (
 func gaugeValueURLHandler(ctx context.Context, s Service, log *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, ChiName)
-		gauge, exists, err := s.GetGauge(name)
+		gauge, exists, err := s.FindGauge(name)
 		if err != nil {
 			WriteError(w, ErrInternalServerError, log)
 			return
@@ -39,7 +39,7 @@ func gaugeValueURLHandler(ctx context.Context, s Service, log *zap.Logger) http.
 func counterValueURLHandler(ctx context.Context, s Service, log *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, ChiName)
-		counter, exists, err := s.GetCounter(name)
+		counter, exists, err := s.FindCounter(name)
 		if err != nil {
 			WriteError(w, ErrInternalServerError, log)
 			return
@@ -79,7 +79,7 @@ func valueMetricJSONHandler(ctx context.Context, s Service, log *zap.Logger) htt
 			WriteError(w, ErrInvalidRequestJSON, log)
 			return
 		}
-		m, exists, err := s.GetMetric(request.MType, request.ID)
+		m, exists, err := s.FindMetric(request.MType, request.ID)
 		if err != nil {
 			WriteError(w, ErrInternalServerError, log)
 			return

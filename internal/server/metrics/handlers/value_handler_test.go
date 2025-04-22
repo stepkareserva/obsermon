@@ -32,7 +32,7 @@ func TestValidValueCounterHandler(t *testing.T) {
 
 		mockService.
 			EXPECT().
-			GetCounter(gomock.Eq("name")).
+			FindCounter(gomock.Eq("name")).
 			Return(&models.Counter{
 				Name:  "name",
 				Value: 1,
@@ -62,7 +62,7 @@ func TestNotFoundValueCounterHandler(t *testing.T) {
 
 		mockService.
 			EXPECT().
-			GetCounter(gomock.Eq("name")).
+			FindCounter(gomock.Eq("name")).
 			Return(nil, false, nil)
 
 		res := testingGetURL(t, ts.URL+"/counter/name")
@@ -87,7 +87,7 @@ func TestValidValueGaugeHandler(t *testing.T) {
 
 		mockService.
 			EXPECT().
-			GetGauge(gomock.Eq("name")).
+			FindGauge(gomock.Eq("name")).
 			Return(&models.Gauge{
 				Name:  "name",
 				Value: 1.2,
@@ -117,7 +117,7 @@ func TestNotFoundValueGaugeHandler(t *testing.T) {
 
 		mockService.
 			EXPECT().
-			GetGauge(gomock.Eq("name")).
+			FindGauge(gomock.Eq("name")).
 			Return(nil, false, nil)
 
 		res := testingGetURL(t, ts.URL+"/gauge/name")
@@ -149,7 +149,7 @@ func TestValidValueCounterJSONHandler(t *testing.T) {
 
 		mockService.
 			EXPECT().
-			GetMetric(models.MetricTypeCounter, "name").
+			FindMetric(models.MetricTypeCounter, "name").
 			Return(&counter, true, nil)
 
 		res := testingPostJSON(t, ts.URL+"/", counterJSON)
@@ -184,7 +184,7 @@ func TestValidValueGaugeJSONHandler(t *testing.T) {
 
 		mockService.
 			EXPECT().
-			GetMetric(models.MetricTypeGauge, "name").
+			FindMetric(models.MetricTypeGauge, "name").
 			Return(&gauge, true, nil)
 
 		res := testingPostJSON(t, ts.URL+"/", gaugeJSON)

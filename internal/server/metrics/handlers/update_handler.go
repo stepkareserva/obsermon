@@ -34,7 +34,7 @@ func updateGaugeURLHandler(ctx context.Context, s Service, log *zap.Logger) http
 			return
 		}
 		gauge := models.Gauge{Name: name, Value: value}
-		if err := s.UpdateGauge(gauge); err != nil {
+		if _, err := s.UpdateGauge(gauge); err != nil {
 			WriteError(w, ErrInternalServerError, log)
 			return
 		}
@@ -54,7 +54,7 @@ func updateCounterURLHandler(ctx context.Context, s Service, log *zap.Logger) ht
 		}
 
 		counter := models.Counter{Name: name, Value: value}
-		if err := s.UpdateCounter(counter); err != nil {
+		if _, err := s.UpdateCounter(counter); err != nil {
 			WriteError(w, ErrInternalServerError, log)
 			return
 		}
@@ -85,7 +85,8 @@ func updateMetricJSONHandler(ctx context.Context, s Service, log *zap.Logger) ht
 			WriteError(w, ErrInvalidRequestJSON, log)
 			return
 		}
-		if err := s.UpdateMetric(request); err != nil {
+		updated, err := s.UpdateMetric(request)
+		if err != nil {
 			WriteError(w, ErrInternalServerError, log)
 			return
 		}
@@ -96,15 +97,8 @@ func updateMetricJSONHandler(ctx context.Context, s Service, log *zap.Logger) ht
 		// update and aggregate on value requests.
 		// but now updated metric value should be returned as
 		// part of update request's response, so it keep in mind.
-		// for better performance methods UpdateMetric and
-		// UpdateAndExtractMetric required, i think, but...
-		m, exists, err := s.GetMetric(request.MType, request.ID)
-		if err != nil || !exists {
-			WriteError(w, ErrInternalServerError, log)
-			return
-		}
 		w.Header().Set(hc.ContentType, hc.ContentTypeJSON)
-		if err = json.NewEncoder(w).Encode(m); err != nil {
+		if err = json.NewEncoder(w).Encode(*updated); err != nil {
 			WriteError(w, ErrInternalServerError, log)
 			return
 		}

@@ -37,7 +37,10 @@ func TestValidUpdateCounterHandler(t *testing.T) {
 				Name:  "name",
 				Value: 1,
 			})).
-			Return(nil)
+			Return(&models.Counter{
+				Name:  "name",
+				Value: 1,
+			}, nil)
 
 		res := testingPostURL(t, ts.URL+"/counter/name/1")
 		defer safeCloseRes(t, res)
@@ -108,7 +111,10 @@ func TestValidUpdateGaugeHandler(t *testing.T) {
 				Name:  "name",
 				Value: 1.0,
 			})).
-			Return(nil)
+			Return(&models.Gauge{
+				Name:  "name",
+				Value: 1.0,
+			}, nil)
 
 		res := testingPostURL(t, ts.URL+"/gauge/name/1.0")
 		require.NoError(t, err)
@@ -184,11 +190,7 @@ func TestValidUpdateCounterJSONHandler(t *testing.T) {
 		mockService.
 			EXPECT().
 			UpdateMetric(counter).
-			Return(nil)
-		mockService.
-			EXPECT().
-			GetMetric(models.MetricTypeCounter, "name").
-			Return(&counter, true, nil)
+			Return(&counter, nil)
 
 		res := testingPostJSON(t, ts.URL+"/", counterJSON)
 		defer safeCloseRes(t, res)
@@ -223,11 +225,7 @@ func TestValidUpdateGaugeJSONHandler(t *testing.T) {
 		mockService.
 			EXPECT().
 			UpdateMetric(gauge).
-			Return(nil)
-		mockService.
-			EXPECT().
-			GetMetric(models.MetricTypeGauge, "name").
-			Return(&gauge, true, nil)
+			Return(&gauge, nil)
 
 		res := testingPostJSON(t, ts.URL+"/", gaugeJSON)
 		defer safeCloseRes(t, res)

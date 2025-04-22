@@ -133,35 +133,34 @@ func (s *Service) store() {
 	s.logger.Info("service state stored")
 }
 
-func (s *Service) UpdateGauge(val models.Gauge) error {
-	if err := s.BaseService.UpdateGauge(val); err != nil {
-		return err
+func (s *Service) UpdateGauge(val models.Gauge) (*models.Gauge, error) {
+	updated, err := s.BaseService.UpdateGauge(val)
+
+	if err == nil {
+		s.onUpdate()
 	}
 
-	s.onUpdate()
-
-	return nil
+	return updated, err
 }
 
-func (s *Service) UpdateCounter(val models.Counter) error {
-	s.logger.Info("update counter")
-	if err := s.BaseService.UpdateCounter(val); err != nil {
-		return err
+func (s *Service) UpdateCounter(val models.Counter) (*models.Counter, error) {
+	updated, err := s.BaseService.UpdateCounter(val)
+
+	if err == nil {
+		s.onUpdate()
 	}
 
-	s.onUpdate()
-
-	return nil
+	return updated, err
 }
 
-func (s *Service) UpdateMetric(val models.Metrics) error {
-	if err := s.BaseService.UpdateMetric(val); err != nil {
-		return err
+func (s *Service) UpdateMetric(val models.Metrics) (*models.Metrics, error) {
+	updated, err := s.BaseService.UpdateMetric(val)
+
+	if err == nil {
+		s.onUpdate()
 	}
 
-	s.onUpdate()
-
-	return nil
+	return updated, err
 }
 
 func (s *Service) onUpdate() {
