@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -25,17 +26,32 @@ const (
 	ChiValue  = "value"
 )
 
-func updateGaugeURLHandler(ctx context.Context, s Service, log *zap.Logger) http.HandlerFunc {
+type UpdateHandler struct {
+	service Service
+	ErrorsWriter
+}
+
+func NewUpdateHandler(s Service, log *zap.Logger) (*UpdateHandler, error) {
+	if s == nil {
+		return nil, fmt.Errorf("service not exists")
+	}
+	return &UpdateHandler{
+		service:      s,
+		ErrorsWriter: NewErrorsWriter(log),
+	}, nil
+}
+
+func (h *UpdateHandler) UpdateGaugeURLHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, ChiName)
 		var value models.GaugeValue
 		if err := value.FromString(chi.URLParam(r, ChiValue)); err != nil {
-			WriteError(w, ErrInvalidMetricValue, log)
+			h.WriteError(w, ErrInvalidMetricValue)
 			return
 		}
 		gauge := models.Gauge{Name: name, Value: value}
-		if _, err := s.UpdateGauge(gauge); err != nil {
-			WriteError(w, ErrInternalServerError, log)
+		if _, err := h.service.UpdateGauge(gauge); err != nil {
+			h.WriteError(w, ErrInternalServerError)
 			return
 		}
 
@@ -44,18 +60,18 @@ func updateGaugeURLHandler(ctx context.Context, s Service, log *zap.Logger) http
 	}
 }
 
-func updateCounterURLHandler(ctx context.Context, s Service, log *zap.Logger) http.HandlerFunc {
+func (h *UpdateHandler) UpdateCounterURLHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, ChiName)
 		var value models.CounterValue
 		if err := value.FromString(chi.URLParam(r, ChiValue)); err != nil {
-			WriteError(w, ErrInvalidMetricValue, log)
+			h.WriteError(w, ErrInvalidMetricValue)
 			return
 		}
 
 		counter := models.Counter{Name: name, Value: value}
-		if _, err := s.UpdateCounter(counter); err != nil {
-			WriteError(w, ErrInternalServerError, log)
+		if _, err := h.service.UpdateCounter(counter); err != nil {
+			h.WriteError(w, ErrInternalServerError)
 			return
 		}
 
@@ -64,30 +80,30 @@ func updateCounterURLHandler(ctx context.Context, s Service, log *zap.Logger) ht
 	}
 }
 
-func updateUnknownMetricURLHandler(ctx context.Context, log *zap.Logger) http.HandlerFunc {
+func (h *UpdateHandler) UpdateUnknownMetricURLHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		WriteError(w, ErrInvalidMetricType, log, chi.URLParam(r, ChiMetric))
+		h.WriteError(w, ErrInvalidMetricType, chi.URLParam(r, ChiMetric))
 	}
 }
 
-func updateMetricJSONHandler(ctx context.Context, s Service, log *zap.Logger) http.HandlerFunc {
+func (h *UpdateHandler) UpdateMetricJSONHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get(hc.ContentType) != hc.ContentTypeJSON {
-			WriteError(w, ErrUnsupportedContentType, log)
+			h.WriteError(w, ErrUnsupportedContentType)
 			return
 		}
 		var request models.UpdateMetricRequest
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-			WriteError(w, ErrInvalidRequestJSON, log)
+			h.WriteError(w, ErrInvalidRequestJSON)
 			return
 		}
 		if err := validator.New().Struct(request); err != nil {
-			WriteError(w, ErrInvalidRequestJSON, log)
+			h.WriteError(w, ErrInvalidRequestJSON)
 			return
 		}
-		updated, err := s.UpdateMetric(request)
+		updated, err := h.service.UpdateMetric(request)
 		if err != nil {
-			WriteError(w, ErrInternalServerError, log)
+			h.WriteError(w, ErrInternalServerError)
 			return
 		}
 		// update and return updated metrics in the same request
@@ -99,7 +115,7 @@ func updateMetricJSONHandler(ctx context.Context, s Service, log *zap.Logger) ht
 		// part of update request's response, so it keep in mind.
 		w.Header().Set(hc.ContentType, hc.ContentTypeJSON)
 		if err = json.NewEncoder(w).Encode(*updated); err != nil {
-			WriteError(w, ErrInternalServerError, log)
+			h.WriteError(w, ErrInternalServerError)
 			return
 		}
 	}

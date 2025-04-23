@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	"go.uber.org/zap"
 )
 
 type HandlerError struct {
@@ -50,12 +48,13 @@ var (
 	}
 )
 
-func WriteError(w http.ResponseWriter, err HandlerError, log *zap.Logger, details ...string) {
+func WriteError(w http.ResponseWriter, err HandlerError, details ...string) error {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(err.StatusCode)
 
 	errText := fmt.Sprintln(err.Message, strings.Join(details, " "))
-	if _, err := w.Write([]byte(errText)); err != nil && log != nil {
-		log.Error("writing http error", zap.Error(err))
+	if _, err := w.Write([]byte(errText)); err != nil {
+		return fmt.Errorf("writing error: %w", err)
 	}
+	return nil
 }

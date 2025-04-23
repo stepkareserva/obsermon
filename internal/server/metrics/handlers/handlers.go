@@ -47,16 +47,20 @@ func updateHandler(ctx context.Context, s Service, log *zap.Logger) (http.Handle
 	if s == nil {
 		return nil, fmt.Errorf("metrics service is nil")
 	}
-
+	handler, err := NewUpdateHandler(s, log)
+	if err != nil {
+		return nil, fmt.Errorf("value handler creation: %w", err)
+	}
 	r := chi.NewRouter()
 
 	r.Post(fmt.Sprintf("/%s/{%s}/{%s}", MetricGauge, ChiName, ChiValue),
-		updateGaugeURLHandler(ctx, s, log))
+		handler.UpdateGaugeURLHandler(ctx))
 	r.Post(fmt.Sprintf("/%s/{%s}/{%s}", MetricCounter, ChiName, ChiValue),
-		updateCounterURLHandler(ctx, s, log))
+		handler.UpdateCounterURLHandler(ctx))
 	r.Post(fmt.Sprintf("/{%s}/{%s}/{%s}", ChiMetric, ChiName, ChiValue),
-		updateUnknownMetricURLHandler(ctx, log))
-	r.Post("/", updateMetricJSONHandler(ctx, s, log))
+		handler.UpdateUnknownMetricURLHandler(ctx))
+	r.Post("/",
+		handler.UpdateMetricJSONHandler(ctx))
 
 	return r, nil
 }
@@ -65,16 +69,21 @@ func valueHandler(ctx context.Context, s Service, log *zap.Logger) (http.Handler
 	if s == nil {
 		return nil, fmt.Errorf("metrics server is nil")
 	}
+	handler, err := NewValueHandler(s, log)
+	if err != nil {
+		return nil, fmt.Errorf("value handler creation: %w", err)
+	}
 
 	r := chi.NewRouter()
 
 	r.Get(fmt.Sprintf("/%s/{%s}", MetricGauge, ChiName),
-		gaugeValueURLHandler(ctx, s, log))
+		handler.GaugeValueURLHandler(ctx))
 	r.Get(fmt.Sprintf("/%s/{%s}", MetricCounter, ChiName),
-		counterValueURLHandler(ctx, s, log))
+		handler.CounterValueURLHandler(ctx))
 	r.Get(fmt.Sprintf("/{%s}/{%s}", ChiMetric, ChiName),
-		unknownMetricValueURLHandler(ctx, log))
-	r.Post("/", valueMetricJSONHandler(ctx, s, log))
+		handler.UnknownMetricValueURLHandler(ctx))
+	r.Post("/",
+		handler.ValueMetricJSONHandler(ctx))
 
 	return r, nil
 }
@@ -83,9 +92,14 @@ func valuesHandler(ctx context.Context, s Service, log *zap.Logger) (http.Handle
 	if s == nil {
 		return nil, fmt.Errorf("metrics service is nil")
 	}
+	handler, err := NewValuesHandler(s, log)
+	if err != nil {
+		return nil, fmt.Errorf("values handler creation: %w", err)
+	}
 
 	r := chi.NewRouter()
-	r.Get("/", metricValuesHandler(ctx, s, log))
+	r.Get("/",
+		handler.MetricValuesHandler(ctx))
 
 	return r, nil
 }
