@@ -62,7 +62,7 @@ func (h *ValueHandler) CounterValueURLHandler(ctx context.Context) http.HandlerF
 		}
 
 		if !exists {
-			WriteError(w, ErrMetricNotFound)
+			h.WriteError(w, ErrMetricNotFound)
 			return
 		}
 
