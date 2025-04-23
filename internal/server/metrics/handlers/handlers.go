@@ -10,31 +10,49 @@ import (
 	"go.uber.org/zap"
 )
 
-func New(ctx context.Context, s Service, log *zap.Logger) (http.Handler, error) {
+type MetricsHandler struct {
+	service Service
+	log     *zap.Logger
+}
+
+func New(s Service, log *zap.Logger) (*MetricsHandler, error) {
 	if s == nil {
 		return nil, fmt.Errorf("service not exist")
 	}
+	return &MetricsHandler{
+		service: s,
+		log:     log,
+	}, nil
+}
 
-	updateHandler, err := updateHandler(ctx, s, log)
+func (h *MetricsHandler) Handler(ctx context.Context) (http.Handler, error) {
+	if h == nil {
+		return nil, fmt.Errorf("metrics handler not exists")
+	}
+	if h.service == nil {
+		return nil, fmt.Errorf("metrics service is nil")
+	}
+
+	updateHandler, err := h.updateHandler(ctx)
 	if err != nil {
 		return nil, err
 	}
-	valueHandler, err := valueHandler(ctx, s, log)
+	valueHandler, err := h.valueHandler(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	valuesHandler, err := valuesHandler(ctx, s, log)
+	valuesHandler, err := h.valuesHandler(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	r := chi.NewRouter()
-	if log != nil {
-		r.Use(middleware.Logger(log))
+	if h.log != nil {
+		r.Use(middleware.Logger(h.log))
 	}
-	r.Use(middleware.Compression(log))
-	r.Use(middleware.Buffering(log))
+	r.Use(middleware.Compression(h.log))
+	r.Use(middleware.Buffering(h.log))
 
 	r.Mount("/update", updateHandler)
 	r.Mount("/value", valueHandler)
@@ -43,11 +61,8 @@ func New(ctx context.Context, s Service, log *zap.Logger) (http.Handler, error) 
 	return r, nil
 }
 
-func updateHandler(ctx context.Context, s Service, log *zap.Logger) (http.Handler, error) {
-	if s == nil {
-		return nil, fmt.Errorf("metrics service is nil")
-	}
-	handler, err := NewUpdateHandler(s, log)
+func (h *MetricsHandler) updateHandler(ctx context.Context) (http.Handler, error) {
+	handler, err := NewUpdateHandler(h.service, h.log)
 	if err != nil {
 		return nil, fmt.Errorf("value handler creation: %w", err)
 	}
@@ -65,11 +80,8 @@ func updateHandler(ctx context.Context, s Service, log *zap.Logger) (http.Handle
 	return r, nil
 }
 
-func valueHandler(ctx context.Context, s Service, log *zap.Logger) (http.Handler, error) {
-	if s == nil {
-		return nil, fmt.Errorf("metrics server is nil")
-	}
-	handler, err := NewValueHandler(s, log)
+func (h *MetricsHandler) valueHandler(ctx context.Context) (http.Handler, error) {
+	handler, err := NewValueHandler(h.service, h.log)
 	if err != nil {
 		return nil, fmt.Errorf("value handler creation: %w", err)
 	}
@@ -88,11 +100,8 @@ func valueHandler(ctx context.Context, s Service, log *zap.Logger) (http.Handler
 	return r, nil
 }
 
-func valuesHandler(ctx context.Context, s Service, log *zap.Logger) (http.Handler, error) {
-	if s == nil {
-		return nil, fmt.Errorf("metrics service is nil")
-	}
-	handler, err := NewValuesHandler(s, log)
+func (h *MetricsHandler) valuesHandler(ctx context.Context) (http.Handler, error) {
+	handler, err := NewValuesHandler(h.service, h.log)
 	if err != nil {
 		return nil, fmt.Errorf("values handler creation: %w", err)
 	}

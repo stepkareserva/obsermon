@@ -23,10 +23,8 @@ func TestValidUpdateCounterHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := updateHandler(context.Background(), mockService, zap.NewNop())
-	require.NoError(t, err, "update handler initialization error")
 
-	ts := httptest.NewServer(updateHandler)
+	ts := testUpdateServer(t, mockService)
 	defer ts.Close()
 
 	t.Run("test /counter/name/1", func(t *testing.T) {
@@ -53,10 +51,8 @@ func TestInvalidUpdateCounterHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := updateHandler(context.Background(), mockService, zap.NewNop())
-	require.NoError(t, err, "update handler initialization error")
 
-	ts := httptest.NewServer(updateHandler)
+	ts := testUpdateServer(t, mockService)
 	defer ts.Close()
 
 	invalidRequests := []string{
@@ -78,10 +74,8 @@ func TestNotFoundUpdateCounterHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := updateHandler(context.Background(), mockService, zap.NewNop())
-	require.NoError(t, err, "update handler initialization error")
 
-	ts := httptest.NewServer(updateHandler)
+	ts := testUpdateServer(t, mockService)
 	defer ts.Close()
 
 	t.Run("test /counter/", func(t *testing.T) {
@@ -97,10 +91,8 @@ func TestValidUpdateGaugeHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := updateHandler(context.Background(), mockService, zap.NewNop())
-	require.NoError(t, err, "update handler initialization error")
 
-	ts := httptest.NewServer(updateHandler)
+	ts := testUpdateServer(t, mockService)
 	defer ts.Close()
 
 	t.Run("test /gauge/name/1.0", func(t *testing.T) {
@@ -117,7 +109,6 @@ func TestValidUpdateGaugeHandler(t *testing.T) {
 			}, nil)
 
 		res := testingPostURL(t, ts.URL+"/gauge/name/1.0")
-		require.NoError(t, err)
 		defer safeCloseRes(t, res)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
@@ -128,10 +119,8 @@ func TestInvalidUpdateGaugeHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := updateHandler(context.Background(), mockService, zap.NewNop())
-	require.NoError(t, err, "update handler initialization error")
 
-	ts := httptest.NewServer(updateHandler)
+	ts := testUpdateServer(t, mockService)
 	defer ts.Close()
 
 	invalidRequests := []string{
@@ -152,10 +141,8 @@ func TestNotFoundUpdateGaugeHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := updateHandler(context.Background(), mockService, zap.NewNop())
-	require.NoError(t, err, "update handler initialization error")
 
-	ts := httptest.NewServer(updateHandler)
+	ts := testUpdateServer(t, mockService)
 	defer ts.Close()
 
 	t.Run("test /gauge/", func(t *testing.T) {
@@ -171,10 +158,8 @@ func TestValidUpdateCounterJSONHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := updateHandler(context.Background(), mockService, zap.NewNop())
-	require.NoError(t, err, "update handler initialization error")
 
-	ts := httptest.NewServer(updateHandler)
+	ts := testUpdateServer(t, mockService)
 	defer ts.Close()
 
 	t.Run("update counter: { name, 1 }", func(t *testing.T) {
@@ -206,10 +191,8 @@ func TestValidUpdateGaugeJSONHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := updateHandler(context.Background(), mockService, zap.NewNop())
-	require.NoError(t, err, "update handler initialization error")
 
-	ts := httptest.NewServer(updateHandler)
+	ts := testUpdateServer(t, mockService)
 	defer ts.Close()
 
 	t.Run("update gauge: { name, 1.5 }", func(t *testing.T) {
@@ -241,10 +224,8 @@ func TestInvalidUpdateJSONHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := updateHandler(context.Background(), mockService, zap.NewNop())
-	require.NoError(t, err, "update handler initialization error")
 
-	ts := httptest.NewServer(updateHandler)
+	ts := testUpdateServer(t, mockService)
 	defer ts.Close()
 
 	t.Run("update invalid", func(t *testing.T) {
@@ -254,4 +235,12 @@ func TestInvalidUpdateJSONHandler(t *testing.T) {
 		defer safeCloseRes(t, res)
 		require.Equal(t, http.StatusBadRequest, res.StatusCode)
 	})
+}
+
+func testUpdateServer(t *testing.T, mockService *mocks.MockService) *httptest.Server {
+	metricsHandler, err := New(mockService, zap.NewNop())
+	require.NoError(t, err, "metrics handler initialization error")
+	updateHandler, err := metricsHandler.updateHandler(context.Background())
+	require.NoError(t, err, "update handler initialization error")
+	return httptest.NewServer(updateHandler)
 }

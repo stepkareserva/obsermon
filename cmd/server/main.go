@@ -146,7 +146,12 @@ func runServer(
 	}
 
 	// create handlers
-	handler, err := handlers.New(ctx, service, log)
+	handlers, err := handlers.New(service, log)
+	if err != nil {
+		return nil, fmt.Errorf("handlers creator initialization: %w", err)
+	}
+
+	handler, err := handlers.Handler(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("handlers initialization: %w", err)
 	}
