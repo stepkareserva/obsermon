@@ -9,12 +9,12 @@ import (
 	"github.com/stepkareserva/obsermon/internal/models"
 	"go.uber.org/zap"
 
-	hc "github.com/stepkareserva/obsermon/internal/server/httpconst"
+	hu "github.com/stepkareserva/obsermon/internal/server/httputils"
 )
 
 type ValuesHandler struct {
 	service Service
-	ErrorsWriter
+	hu.ErrorsWriter
 }
 
 func NewValuesHandler(s Service, log *zap.Logger) (*ValuesHandler, error) {
@@ -23,7 +23,7 @@ func NewValuesHandler(s Service, log *zap.Logger) (*ValuesHandler, error) {
 	}
 	return &ValuesHandler{
 		service:      s,
-		ErrorsWriter: NewErrorsWriter(log),
+		ErrorsWriter: hu.NewErrorsWriter(log),
 	}, nil
 }
 
@@ -77,13 +77,13 @@ func (h *ValuesHandler) MetricValuesHandler(ctx context.Context) http.HandlerFun
 	return func(w http.ResponseWriter, r *http.Request) {
 		gauges, err := h.service.ListGauges()
 		if err != nil {
-			h.WriteError(w, ErrInternalServerError)
+			h.WriteInternalServerError(w)
 			return
 		}
 
 		counters, err := h.service.ListCounters()
 		if err != nil {
-			h.WriteError(w, ErrInternalServerError)
+			h.WriteInternalServerError(w)
 			return
 		}
 
@@ -95,9 +95,9 @@ func (h *ValuesHandler) MetricValuesHandler(ctx context.Context) http.HandlerFun
 			Counters: counters,
 		}
 
-		w.Header().Set(hc.ContentType, hc.ContentTypeHTML)
+		w.Header().Set(hu.ContentType, hu.ContentTypeHTML)
 		if err := tmpl.Execute(w, templateData); err != nil {
-			h.WriteError(w, ErrInternalServerError)
+			h.WriteInternalServerError(w)
 			return
 		}
 	}

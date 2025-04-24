@@ -12,12 +12,12 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/stepkareserva/obsermon/internal/models"
 
-	hc "github.com/stepkareserva/obsermon/internal/server/httpconst"
+	hu "github.com/stepkareserva/obsermon/internal/server/httputils"
 )
 
 type ValueHandler struct {
 	service Service
-	ErrorsWriter
+	hu.ErrorsWriter
 }
 
 func NewValueHandler(s Service, log *zap.Logger) (*ValueHandler, error) {
@@ -26,7 +26,7 @@ func NewValueHandler(s Service, log *zap.Logger) (*ValueHandler, error) {
 	}
 	return &ValueHandler{
 		service:      s,
-		ErrorsWriter: NewErrorsWriter(log),
+		ErrorsWriter: hu.NewErrorsWriter(log),
 	}, nil
 }
 
@@ -35,7 +35,7 @@ func (h *ValueHandler) GaugeValueURLHandler(ctx context.Context) http.HandlerFun
 		name := chi.URLParam(r, ChiName)
 		gauge, exists, err := h.service.FindGauge(name)
 		if err != nil {
-			h.WriteError(w, ErrInternalServerError)
+			h.WriteInternalServerError(w)
 			return
 		}
 
@@ -44,9 +44,9 @@ func (h *ValueHandler) GaugeValueURLHandler(ctx context.Context) http.HandlerFun
 			return
 		}
 
-		w.Header().Set(hc.ContentType, hc.ContentTypeText)
+		w.Header().Set(hu.ContentType, hu.ContentTypeText)
 		if _, err := w.Write([]byte(gauge.Value.String())); err != nil {
-			h.WriteError(w, ErrInternalServerError)
+			h.WriteInternalServerError(w)
 			return
 		}
 	}
@@ -57,7 +57,7 @@ func (h *ValueHandler) CounterValueURLHandler(ctx context.Context) http.HandlerF
 		name := chi.URLParam(r, ChiName)
 		counter, exists, err := h.service.FindCounter(name)
 		if err != nil {
-			h.WriteError(w, ErrInternalServerError)
+			h.WriteInternalServerError(w)
 			return
 		}
 
@@ -66,9 +66,9 @@ func (h *ValueHandler) CounterValueURLHandler(ctx context.Context) http.HandlerF
 			return
 		}
 
-		w.Header().Set(hc.ContentType, hc.ContentTypeText)
+		w.Header().Set(hu.ContentType, hu.ContentTypeText)
 		if _, err := w.Write([]byte(counter.Value.String())); err != nil {
-			h.WriteError(w, ErrInternalServerError)
+			h.WriteInternalServerError(w)
 			return
 		}
 	}
@@ -82,31 +82,31 @@ func (h *ValueHandler) UnknownMetricValueURLHandler(ctx context.Context) http.Ha
 
 func (h *ValueHandler) ValueMetricJSONHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get(hc.ContentType) != hc.ContentTypeJSON {
-			h.WriteError(w, ErrUnsupportedContentType)
+		if r.Header.Get(hu.ContentType) != hu.ContentTypeJSON {
+			h.WriteError(w, hu.ErrUnsupportedContentType)
 			return
 		}
 		var request models.MetricValueRequest
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-			h.WriteError(w, ErrInvalidRequestJSON)
+			h.WriteInvalidRequestJSON(w)
 			return
 		}
 		if err := validator.New().Struct(request); err != nil {
-			h.WriteError(w, ErrInvalidRequestJSON)
+			h.WriteInvalidRequestJSON(w)
 			return
 		}
 		m, exists, err := h.service.FindMetric(request.MType, request.ID)
 		if err != nil {
-			h.WriteError(w, ErrInternalServerError)
+			h.WriteInternalServerError(w)
 			return
 		}
 		if !exists {
 			h.WriteError(w, ErrMetricNotFound)
 			return
 		}
-		w.Header().Set(hc.ContentType, hc.ContentTypeJSON)
+		w.Header().Set(hu.ContentType, hu.ContentTypeJSON)
 		if err = json.NewEncoder(w).Encode(m); err != nil {
-			h.WriteError(w, ErrInternalServerError)
+			h.WriteInternalServerError(w)
 			return
 		}
 	}
