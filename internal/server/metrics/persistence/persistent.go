@@ -19,8 +19,9 @@ type ServiceConfig struct {
 
 type Service struct {
 	BaseService
-	sstorage StateStorage
-	logger   *zap.Logger
+	sstorage      StateStorage
+	logger        *zap.Logger
+	storeInterval time.Duration
 
 	saveCh chan struct{}
 	stopCh chan struct{}
@@ -32,11 +33,12 @@ func New(cfg ServiceConfig) (*Service, error) {
 		return nil, err
 	}
 	service := &Service{
-		BaseService: cfg.Base,
-		sstorage:    cfg.StateStorage,
-		logger:      cfg.Logger,
-		saveCh:      make(chan struct{}),
-		stopCh:      make(chan struct{}),
+		BaseService:   cfg.Base,
+		sstorage:      cfg.StateStorage,
+		logger:        cfg.Logger,
+		storeInterval: cfg.StoreInterval,
+		saveCh:        make(chan struct{}),
+		stopCh:        make(chan struct{}),
 	}
 
 	// restore if required and possible
@@ -47,14 +49,28 @@ func New(cfg ServiceConfig) (*Service, error) {
 		}
 	}
 
-	// run storing loop, sync or async
-	service.wg.Add(1)
-	go func() {
-		defer service.wg.Done()
-		service.runStoringLoop(cfg.StoreInterval)
-	}()
-
 	return service, nil
+}
+
+func (s *Service) Start() {
+	// run storing loop, sync or async
+	s.wg.Add(1)
+	go func() {
+		defer s.wg.Done()
+		s.runStoringLoop(s.storeInterval)
+	}()
+}
+
+func (s *Service) Stop() {
+	if s == nil {
+		return
+	}
+
+	select {
+	case s.stopCh <- struct{}{}:
+	default:
+		s.wg.Wait()
+	}
 }
 
 func checkCreationParams(cfg ServiceConfig) error {
@@ -67,12 +83,6 @@ func checkCreationParams(cfg ServiceConfig) error {
 	if cfg.Logger == nil {
 		return fmt.Errorf("logger is nil")
 	}
-	return nil
-}
-
-func (s *Service) Close() error {
-	s.stopCh <- struct{}{}
-	s.wg.Wait()
 	return nil
 }
 
