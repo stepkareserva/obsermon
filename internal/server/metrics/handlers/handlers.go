@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/stepkareserva/obsermon/internal/server/middleware"
 	"go.uber.org/zap"
 )
 
@@ -48,11 +47,6 @@ func (h *MetricsHandler) Handler(ctx context.Context) (http.Handler, error) {
 	}
 
 	r := chi.NewRouter()
-	if h.log != nil {
-		r.Use(middleware.Logger(h.log))
-	}
-	r.Use(middleware.Compression(h.log))
-	r.Use(middleware.Buffering(h.log))
 
 	r.Mount("/update", updateHandler)
 	r.Mount("/value", valueHandler)

@@ -8,6 +8,7 @@ import (
 
 	"github.com/stepkareserva/obsermon/internal/server/config"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
+	"github.com/stepkareserva/obsermon/internal/server/routing"
 	"go.uber.org/zap"
 )
 
@@ -28,12 +29,12 @@ func New(cfg *config.Config, s handlers.Service, log *zap.Logger) (*Server, erro
 		log = zap.NewNop()
 	}
 
-	handlers, err := handlers.New(s, log)
+	routing, err := routing.New(s, log)
 	if err != nil {
 		return nil, fmt.Errorf("handlers creator initialization: %w", err)
 	}
 
-	handler, err := handlers.Handler(context.TODO())
+	handler, err := routing.Handler(context.TODO())
 	if err != nil {
 		return nil, fmt.Errorf("handlers initialization: %w", err)
 	}
