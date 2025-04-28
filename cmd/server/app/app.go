@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/stepkareserva/obsermon/internal/server/config"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
+	"github.com/stepkareserva/obsermon/internal/server/handlers"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/persistence"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/storage"

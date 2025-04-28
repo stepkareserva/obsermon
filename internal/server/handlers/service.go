@@ -19,7 +19,7 @@ type MetricsService interface {
 	FindMetric(t models.MetricType, name string) (*models.Metrics, bool, error)
 }
 
-//go:generate mockgen -source=$GOFILE -destination=../../mocks/mock_service.go -package=mocks
+//go:generate mockgen -source=$GOFILE -destination=../mocks/mock_service.go -package=mocks
 
 type Service interface {
 	GaugesService

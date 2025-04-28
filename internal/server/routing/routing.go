@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
+	"github.com/stepkareserva/obsermon/internal/server/handlers"
 	"github.com/stepkareserva/obsermon/internal/server/middleware"
 	"go.uber.org/zap"
 )

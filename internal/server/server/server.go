@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/stepkareserva/obsermon/internal/server/config"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
+	"github.com/stepkareserva/obsermon/internal/server/handlers"
 	"github.com/stepkareserva/obsermon/internal/server/routing"
 	"go.uber.org/zap"
 )
