@@ -15,12 +15,15 @@ import (
 )
 
 type App struct {
-	cfg     *config.Config
-	log     *zap.Logger
-	service *persistence.Service
+	cfg *config.Config
+	log *zap.Logger
+
+	storage service.Storage
+	service *service.Service
 	server  *server.Server
-	ctx     context.Context
-	cancel  context.CancelFunc
+
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 func NewApp(cfg *config.Config, log *zap.Logger) (*App, error) {
@@ -30,7 +33,11 @@ func NewApp(cfg *config.Config, log *zap.Logger) (*App, error) {
 	if log == nil {
 		log = zap.NewNop()
 	}
-	service, err := initService(cfg, log)
+	storage, err := initStorage(cfg, log)
+	if err != nil {
+		return nil, fmt.Errorf("storage init: %w", err)
+	}
+	service, err := initService(cfg, storage, log)
 	if err != nil {
 		return nil, fmt.Errorf("service init: %w", err)
 	}
@@ -42,13 +49,20 @@ func NewApp(cfg *config.Config, log *zap.Logger) (*App, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return &App{
-		cfg:     cfg,
-		log:     log,
+		cfg: cfg,
+		log: log,
+
+		storage: storage,
 		service: service,
 		server:  server,
-		ctx:     ctx,
-		cancel:  cancel,
+
+		ctx:    ctx,
+		cancel: cancel,
 	}, nil
+}
+
+func (a *App) Shutdown() {
+	a.cancel()
 }
 
 func (a *App) Run() (err error) {
@@ -56,11 +70,13 @@ func (a *App) Run() (err error) {
 		return fmt.Errorf("app not exists")
 	}
 
-	// start persistent service
-	a.service.Start()
+	// close storage
 	defer func() {
-		a.service.Stop()
-		a.log.Info("service stoppeed")
+		if stopErr := a.storage.Close(); err != nil {
+			err = errors.Join(err, stopErr)
+		} else {
+			a.log.Info("storage stopped")
+		}
 	}()
 
 	// start server
@@ -87,40 +103,44 @@ func (a *App) Run() (err error) {
 	return nil
 }
 
-func (a *App) Stop() {
-	a.cancel()
+func initStorage(cfg *config.Config, log *zap.Logger) (service.Storage, error) {
+	// memory storage
+	storage := storage.NewMemStorage()
+
+	// add persistence
+	stateStorage := persistence.NewJSONStateStorage(cfg.FileStoragePath)
+	persistenceCfg := persistence.StorageConfig{
+		Base:          storage,
+		StateStorage:  &stateStorage,
+		Restore:       cfg.Restore,
+		StoreInterval: cfg.StoreInterval(),
+		Logger:        log,
+	}
+	persistentStorage, err := persistence.New(persistenceCfg)
+	if err != nil {
+		return nil, fmt.Errorf("create persistent storage: %w", err)
+	}
+
+	return persistentStorage, nil
 }
 
-func initService(cfg *config.Config, log *zap.Logger) (*persistence.Service, error) {
+func initService(cfg *config.Config, storage service.Storage, log *zap.Logger) (*service.Service, error) {
 	if cfg == nil {
 		return nil, fmt.Errorf("config not exists")
 	}
 	if log == nil {
 		return nil, fmt.Errorf("log not exists")
 	}
+	if storage == nil {
+		return nil, fmt.Errorf("storage not exists")
+	}
 
-	// storage and service
-	storage := storage.NewMemStorage()
 	service, err := service.New(storage)
 	if err != nil {
 		return nil, fmt.Errorf("service creation: %w", err)
 	}
 
-	// wrap onto persistent object
-	stateStorage := persistence.NewJSONStateStorage(cfg.FileStoragePath)
-	persistenceCfg := persistence.ServiceConfig{
-		Base:          service,
-		StateStorage:  &stateStorage,
-		Restore:       cfg.Restore,
-		StoreInterval: cfg.StoreInterval(),
-		Logger:        log,
-	}
-	persistenceService, err := persistence.New(persistenceCfg)
-	if err != nil {
-		return nil, fmt.Errorf("persistent service: %w", err)
-	}
-
-	return persistenceService, nil
+	return service, nil
 }
 
 func initServer(cfg *config.Config, service handlers.Service, log *zap.Logger) (*server.Server, error) {

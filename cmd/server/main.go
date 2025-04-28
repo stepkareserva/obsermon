@@ -40,13 +40,13 @@ func main() {
 
 	go func() {
 		<-ctx.Done()
-		app.Stop()
+		app.Shutdown()
 	}()
 
 	if err := app.Run(); err != nil {
 		logger.Error("app running", zap.Error(err))
 	}
-	defer app.Stop()
+	defer app.Shutdown()
 }
 
 func loadConfig() (*config.Config, error) {

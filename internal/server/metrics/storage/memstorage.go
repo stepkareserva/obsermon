@@ -22,6 +22,10 @@ func NewMemStorage() *MemStorage {
 	}
 }
 
+func (m *MemStorage) Close() error {
+	return nil
+}
+
 func (m *MemStorage) SetGauge(val models.Gauge) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()

@@ -1,6 +1,10 @@
 package service
 
-import "github.com/stepkareserva/obsermon/internal/models"
+import (
+	"io"
+
+	"github.com/stepkareserva/obsermon/internal/models"
+)
 
 type GaugeStorage interface {
 	SetGauge(val models.Gauge) error
@@ -21,4 +25,5 @@ type CounterStorage interface {
 type Storage interface {
 	GaugeStorage
 	CounterStorage
+	io.Closer
 }

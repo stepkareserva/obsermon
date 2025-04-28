@@ -6,7 +6,6 @@ import (
 
 	"github.com/stepkareserva/obsermon/internal/models"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/persistence"
 )
 
 type Service struct {
@@ -14,13 +13,16 @@ type Service struct {
 }
 
 var _ handlers.Service = (*Service)(nil)
-var _ persistence.Stateful = (*Service)(nil)
 
 func New(storage Storage) (*Service, error) {
 	if storage == nil {
 		return nil, fmt.Errorf("metrics storage is nil")
 	}
 	return &Service{storage: storage}, nil
+}
+
+func (s *Service) Close() error {
+	return nil
 }
 
 func (s *Service) UpdateGauge(val models.Gauge) (*models.Gauge, error) {
@@ -166,39 +168,6 @@ func (s *Service) FindMetric(t models.MetricType, name string) (*models.Metrics,
 	default:
 		return nil, false, fmt.Errorf("unknown metric type")
 	}
-}
-
-func (s *Service) GetState() (*persistence.State, error) {
-	if err := s.checkValidity(); err != nil {
-		return nil, err
-	}
-
-	counters, err := s.storage.ListCounters()
-	if err != nil {
-		return nil, err
-	}
-	gauges, err := s.storage.ListGauges()
-	if err != nil {
-		return nil, err
-	}
-
-	return &persistence.State{
-		Counters: counters,
-		Gauges:   gauges,
-	}, nil
-}
-
-func (s *Service) LoadState(state persistence.State) error {
-	if err := s.checkValidity(); err != nil {
-		return err
-	}
-	if err := s.storage.ReplaceCounters(state.Counters); err != nil {
-		return err
-	}
-	if err := s.storage.ReplaceGauges(state.Gauges); err != nil {
-		return err
-	}
-	return nil
 }
 
 func (s *Service) checkValidity() error {
