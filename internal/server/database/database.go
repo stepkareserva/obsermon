@@ -1,4 +1,4 @@
-package db
+package database
 
 import (
 	"context"
@@ -31,6 +31,9 @@ func (db *Database) Close() error {
 }
 
 func (db *Database) Ping() error {
+	if db == nil {
+		return fmt.Errorf("db not exists")
+	}
 	if err := db.db.PingContext(context.TODO()); err != nil {
 		return fmt.Errorf("db: %w", err)
 	}

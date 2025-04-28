@@ -14,7 +14,7 @@ type MetricsHandler struct {
 	log     *zap.Logger
 }
 
-func New(s Service, log *zap.Logger) (*MetricsHandler, error) {
+func NewMetricsHandler(s Service, log *zap.Logger) (*MetricsHandler, error) {
 	if s == nil {
 		return nil, fmt.Errorf("service not exist")
 	}

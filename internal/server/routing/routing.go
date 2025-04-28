@@ -12,21 +12,30 @@ import (
 )
 
 type Routing struct {
-	metrics *handlers.MetricsHandler
-	log     *zap.Logger
+	hMetrics  *handlers.MetricsHandler
+	hDatabase *handlers.DBHandler
+	log       *zap.Logger
 }
 
-func New(s Service, log *zap.Logger) (*Routing, error) {
+func New(s Service, db Database, log *zap.Logger) (*Routing, error) {
 	if s == nil {
 		return nil, fmt.Errorf("service not exist")
 	}
-	metrics, err := handlers.New(s, log)
+
+	hMetrics, err := handlers.NewMetricsHandler(s, log)
 	if err != nil {
 		return nil, fmt.Errorf("metrics handlers: %w", err)
 	}
+
+	hDatabase, err := handlers.NewDBHandler(db, log)
+	if err != nil {
+		return nil, fmt.Errorf("database handlers: %w", err)
+	}
+
 	return &Routing{
-		metrics: metrics,
-		log:     log,
+		hMetrics:  hMetrics,
+		hDatabase: hDatabase,
+		log:       log,
 	}, nil
 }
 
@@ -42,11 +51,14 @@ func (r *Routing) Handler(ctx context.Context) (http.Handler, error) {
 	router.Use(middleware.Compression(r.log))
 	router.Use(middleware.Buffering(r.log))
 
-	metricsHandler, err := r.metrics.Handler(ctx)
+	metricsHandler, err := r.hMetrics.Handler(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("metrics handler: %w", err)
 	}
 	router.Mount("/", metricsHandler)
+
+	databaseHandler := r.hDatabase.PingHandler(ctx)
+	router.Mount("/ping", databaseHandler)
 
 	return router, nil
 }

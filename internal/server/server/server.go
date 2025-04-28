@@ -8,20 +8,26 @@ import (
 
 	"github.com/stepkareserva/obsermon/internal/server/config"
 	"github.com/stepkareserva/obsermon/internal/server/handlers"
+
 	"github.com/stepkareserva/obsermon/internal/server/routing"
 	"go.uber.org/zap"
 )
 
 type Server struct {
-	service handlers.Service
-	http    *http.Server
-	log     *zap.Logger
+	service  handlers.Service
+	database handlers.Database
+	http     *http.Server
+	log      *zap.Logger
 }
 
-func New(cfg *config.Config, s handlers.Service, log *zap.Logger) (*Server, error) {
+func New(cfg *config.Config, s handlers.Service, db handlers.Database, log *zap.Logger) (*Server, error) {
 	if s == nil {
 		return nil, fmt.Errorf("service not exists")
 	}
+	// if db == nil {
+	//		not an error, skipping
+	// 		return nil, fmt.Errorf("database not exists")
+	// }
 	if cfg == nil {
 		return nil, fmt.Errorf("config not exists")
 	}
@@ -29,7 +35,7 @@ func New(cfg *config.Config, s handlers.Service, log *zap.Logger) (*Server, erro
 		log = zap.NewNop()
 	}
 
-	routing, err := routing.New(s, log)
+	routing, err := routing.New(s, db, log)
 	if err != nil {
 		return nil, fmt.Errorf("handlers creator initialization: %w", err)
 	}

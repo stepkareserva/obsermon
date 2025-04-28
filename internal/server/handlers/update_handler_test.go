@@ -238,7 +238,7 @@ func TestInvalidUpdateJSONHandler(t *testing.T) {
 }
 
 func testUpdateServer(t *testing.T, mockService *mocks.MockService) *httptest.Server {
-	metricsHandler, err := New(mockService, zap.NewNop())
+	metricsHandler, err := NewMetricsHandler(mockService, zap.NewNop())
 	require.NoError(t, err, "metrics handler initialization error")
 	updateHandler, err := metricsHandler.updateHandler(context.Background())
 	require.NoError(t, err, "update handler initialization error")

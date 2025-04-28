@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/stepkareserva/obsermon/internal/server/config"
+	"github.com/stepkareserva/obsermon/internal/server/database"
 	"github.com/stepkareserva/obsermon/internal/server/handlers"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/persistence"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
@@ -33,6 +34,11 @@ func NewApp(cfg *config.Config, log *zap.Logger) (*App, error) {
 	if log == nil {
 		log = zap.NewNop()
 	}
+
+	db, err := initDatabase(cfg, log)
+	if err != nil {
+		log.Warn("database initialization", zap.Error(err))
+	}
 	storage, err := initStorage(cfg, log)
 	if err != nil {
 		return nil, fmt.Errorf("storage init: %w", err)
@@ -41,7 +47,7 @@ func NewApp(cfg *config.Config, log *zap.Logger) (*App, error) {
 	if err != nil {
 		return nil, fmt.Errorf("service init: %w", err)
 	}
-	server, err := initServer(cfg, service, log)
+	server, err := initServer(cfg, service, db, log)
 	if err != nil {
 		return nil, fmt.Errorf("server init: %w", err)
 	}
@@ -124,6 +130,13 @@ func initStorage(cfg *config.Config, log *zap.Logger) (service.Storage, error) {
 	return persistentStorage, nil
 }
 
+func initDatabase(cfg *config.Config, log *zap.Logger) (*database.Database, error) {
+	if cfg.DBConnection == "" {
+		return nil, nil
+	}
+	return database.New(cfg.DBConnection)
+}
+
 func initService(cfg *config.Config, storage service.Storage, log *zap.Logger) (*service.Service, error) {
 	if cfg == nil {
 		return nil, fmt.Errorf("config not exists")
@@ -143,8 +156,8 @@ func initService(cfg *config.Config, storage service.Storage, log *zap.Logger) (
 	return service, nil
 }
 
-func initServer(cfg *config.Config, service handlers.Service, log *zap.Logger) (*server.Server, error) {
-	server, err := server.New(cfg, service, log)
+func initServer(cfg *config.Config, service handlers.Service, db handlers.Database, log *zap.Logger) (*server.Server, error) {
+	server, err := server.New(cfg, service, db, log)
 	if err != nil {
 		return nil, fmt.Errorf("server init: %w", err)
 	}

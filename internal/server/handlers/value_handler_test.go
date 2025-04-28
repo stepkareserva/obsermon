@@ -203,7 +203,7 @@ func TestInvalidValueJSONHandler(t *testing.T) {
 }
 
 func testValueServer(t *testing.T, mockService *mocks.MockService) *httptest.Server {
-	metricsHandler, err := New(mockService, zap.NewNop())
+	metricsHandler, err := NewMetricsHandler(mockService, zap.NewNop())
 	require.NoError(t, err, "metrics handler initialization error")
 	valueHandler, err := metricsHandler.valueHandler(context.Background())
 	require.NoError(t, err, "value handler initialization error")

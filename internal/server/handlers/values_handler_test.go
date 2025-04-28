@@ -51,7 +51,7 @@ func TestValuesHandler(t *testing.T) {
 }
 
 func testValuesServer(t *testing.T, mockService *mocks.MockService) *httptest.Server {
-	metricsHandler, err := New(mockService, zap.NewNop())
+	metricsHandler, err := NewMetricsHandler(mockService, zap.NewNop())
 	require.NoError(t, err, "metrics handler initialization error")
 	valuesHandler, err := metricsHandler.valuesHandler(context.Background())
 	require.NoError(t, err, "value handler initialization error")
