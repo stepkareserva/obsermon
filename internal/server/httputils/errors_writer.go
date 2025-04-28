@@ -20,7 +20,7 @@ func NewErrorsWriter(log *zap.Logger) ErrorsWriter {
 }
 
 func (e *ErrorsWriter) WriteError(w http.ResponseWriter, err HandlerError, details ...string) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set(ContentType, ContentTypeTextU)
 	w.WriteHeader(err.StatusCode)
 
 	errText := fmt.Sprintln(err.Message, strings.Join(details, " "))
