@@ -18,6 +18,7 @@ import (
 	"github.com/stepkareserva/obsermon/internal/server/metrics/memstorage"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/persistence"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
+	"github.com/stepkareserva/obsermon/internal/server/server"
 	"go.uber.org/zap"
 )
 
@@ -62,16 +63,26 @@ func main() {
 		return
 	}
 
-	// run server in goroutine
-	server, err := runServer(ctx, service, cfg, log)
+	// initialize handlers
+	handler, err := initHandler(ctx, service, log)
 	if err != nil {
-		shutdown(server, storage, log)
-		log.Error("server starting", zap.Error(err))
+		shutdown(nil, storage, log)
+		log.Error("handler initialization", zap.Error(err))
 		return
 	}
 
-	// wait for cancel
-	<-ctx.Done()
+	// run server, wait for errors channel
+	server := server.New(cfg.Endpoint, handler)
+	serverErrCh := server.Start()
+
+	// wait for cancel or server error (it's critical)
+	select {
+	case <-ctx.Done():
+		log.Info("received cancel signal")
+	case srvErr := <-serverErrCh:
+		log.Error("server", zap.Error(srvErr))
+
+	}
 
 	// shutdown server
 	shutdown(server, storage, log)
@@ -151,20 +162,12 @@ func initService(cfg *config.Config, storage service.Storage, log *zap.Logger) (
 	return service, nil
 }
 
-func runServer(
-	ctx context.Context,
-	service handlers.Service,
-	cfg *config.Config,
-	log *zap.Logger,
-) (*http.Server, error) {
+func initHandler(ctx context.Context, service handlers.Service, log *zap.Logger) (http.Handler, error) {
 	if service == nil {
 		return nil, fmt.Errorf("service not exists")
 	}
 	if log == nil {
 		return nil, fmt.Errorf("log not exists")
-	}
-	if cfg == nil {
-		return nil, fmt.Errorf("config not exists")
 	}
 
 	// create handlers
@@ -173,23 +176,10 @@ func runServer(
 		return nil, fmt.Errorf("handlers initialization: %w", err)
 	}
 
-	// run server in goroutine
-	server := http.Server{Addr: cfg.Endpoint, Handler: handler}
-	log.Info("server is running",
-		zap.String("endpoint", cfg.Endpoint),
-		zap.String("storage", cfg.FileStoragePath),
-	)
-
-	go func() {
-		if err := server.ListenAndServe(); err != nil {
-			log.Error("server listening", zap.Error(err))
-		}
-	}()
-
-	return &server, nil
+	return handler, nil
 }
 
-func shutdown(server *http.Server, storage service.Storage, log *zap.Logger) {
+func shutdown(server *server.Server, storage service.Storage, log *zap.Logger) {
 	if log == nil {
 		log.Error("log not exists")
 		return
