@@ -13,9 +13,9 @@ import (
 	"github.com/stepkareserva/obsermon/internal/server/config"
 	"github.com/stepkareserva/obsermon/internal/server/logging"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/memstorage"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/persistence"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/storage"
 	"go.uber.org/zap"
 )
 
@@ -106,7 +106,7 @@ func initService(cfg *config.Config, log *zap.Logger) (*persistence.Service, err
 	}
 
 	// storage and service
-	storage := storage.NewMemStorage()
+	storage := memstorage.New()
 	service, err := service.New(storage)
 	if err != nil {
 		return nil, fmt.Errorf("service creation: %w", err)
