@@ -1,4 +1,4 @@
-package storage
+package memstorage
 
 import (
 	"sync"
@@ -7,22 +7,22 @@ import (
 	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
 )
 
-var _ service.Storage = (*MemStorage)(nil)
+var _ service.Storage = (*Storage)(nil)
 
-type MemStorage struct {
+type Storage struct {
 	gauges   models.GaugesMap
 	counters models.CountersMap
 	lock     sync.RWMutex
 }
 
-func NewMemStorage() *MemStorage {
-	return &MemStorage{
+func New() *Storage {
+	return &Storage{
 		gauges:   make(models.GaugesMap),
 		counters: make(models.CountersMap),
 	}
 }
 
-func (m *MemStorage) SetGauge(val models.Gauge) error {
+func (m *Storage) SetGauge(val models.Gauge) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -30,7 +30,7 @@ func (m *MemStorage) SetGauge(val models.Gauge) error {
 	return nil
 }
 
-func (m *MemStorage) FindGauge(name string) (*models.Gauge, bool, error) {
+func (m *Storage) FindGauge(name string) (*models.Gauge, bool, error) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
@@ -38,14 +38,14 @@ func (m *MemStorage) FindGauge(name string) (*models.Gauge, bool, error) {
 	return &models.Gauge{Name: name, Value: val}, exists, nil
 }
 
-func (m *MemStorage) ListGauges() (models.GaugesList, error) {
+func (m *Storage) ListGauges() (models.GaugesList, error) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
 	return m.gauges.List(), nil
 }
 
-func (m *MemStorage) ReplaceGauges(val models.GaugesList) error {
+func (m *Storage) ReplaceGauges(val models.GaugesList) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -53,7 +53,7 @@ func (m *MemStorage) ReplaceGauges(val models.GaugesList) error {
 	return nil
 }
 
-func (m *MemStorage) SetCounter(val models.Counter) error {
+func (m *Storage) SetCounter(val models.Counter) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -61,7 +61,7 @@ func (m *MemStorage) SetCounter(val models.Counter) error {
 	return nil
 }
 
-func (m *MemStorage) FindCounter(name string) (*models.Counter, bool, error) {
+func (m *Storage) FindCounter(name string) (*models.Counter, bool, error) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
@@ -69,14 +69,14 @@ func (m *MemStorage) FindCounter(name string) (*models.Counter, bool, error) {
 	return &models.Counter{Name: name, Value: val}, exists, nil
 }
 
-func (m *MemStorage) ListCounters() (models.CountersList, error) {
+func (m *Storage) ListCounters() (models.CountersList, error) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
 	return m.counters.List(), nil
 }
 
-func (m *MemStorage) ReplaceCounters(val models.CountersList) error {
+func (m *Storage) ReplaceCounters(val models.CountersList) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
