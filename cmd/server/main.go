@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	stdlog "log"
 	"net/http"
 	"os"
@@ -46,9 +48,16 @@ func main() {
 		log.Error("graceful cancelling init", zap.Error(err))
 	}
 
-	// initialize service
-	service, err := initService(cfg, log)
+	// initialize storage
+	storage, err := initStorage(cfg, log)
 	if err != nil {
+		log.Error("storage initialization", zap.Error(err))
+	}
+
+	// initialize service
+	service, err := initService(cfg, storage, log)
+	if err != nil {
+		shutdown(nil, storage, log)
 		log.Error("service initialization", zap.Error(err))
 		return
 	}
@@ -56,6 +65,7 @@ func main() {
 	// run server in goroutine
 	server, err := runServer(ctx, service, cfg, log)
 	if err != nil {
+		shutdown(server, storage, log)
 		log.Error("server starting", zap.Error(err))
 		return
 	}
@@ -64,9 +74,7 @@ func main() {
 	<-ctx.Done()
 
 	// shutdown server
-	if err = shutdown(server, service, log); err != nil {
-		log.Error("shutdown", zap.Error(err))
-	}
+	shutdown(server, storage, log)
 }
 
 func gracefulCancellingCtx(log *zap.Logger) (context.Context, error) {
@@ -97,7 +105,7 @@ func loadConfig() (*config.Config, error) {
 	return cfg, nil
 }
 
-func initService(cfg *config.Config, log *zap.Logger) (*persistence.Service, error) {
+func initStorage(cfg *config.Config, log *zap.Logger) (service.Storage, error) {
 	if cfg == nil {
 		return nil, fmt.Errorf("config not exists")
 	}
@@ -105,28 +113,42 @@ func initService(cfg *config.Config, log *zap.Logger) (*persistence.Service, err
 		return nil, fmt.Errorf("log not exists")
 	}
 
-	// storage and service
+	// storage
 	storage := memstorage.New()
+
+	// wrap onto persistent storage
+	stateStorage := persistence.NewJSONStateStorage(cfg.FileStoragePath)
+	persistenceCfg := persistence.Config{
+		StateStorage:  &stateStorage,
+		Restore:       cfg.Restore,
+		StoreInterval: cfg.StoreInterval(),
+	}
+	persistentStorage, err := persistence.New(persistenceCfg, storage, log)
+	if err != nil {
+		return nil, fmt.Errorf("persistent service: %w", err)
+	}
+
+	return persistentStorage, nil
+}
+
+func initService(cfg *config.Config, storage service.Storage, log *zap.Logger) (*service.Service, error) {
+	if cfg == nil {
+		return nil, fmt.Errorf("config not exists")
+	}
+	if storage == nil {
+		return nil, fmt.Errorf("storage not exists")
+	}
+	if log == nil {
+		return nil, fmt.Errorf("log not exists")
+	}
+
+	// service
 	service, err := service.New(storage)
 	if err != nil {
 		return nil, fmt.Errorf("service creation: %w", err)
 	}
 
-	// wrap onto persistent object
-	stateStorage := persistence.NewJSONStateStorage(cfg.FileStoragePath)
-	persistenceCfg := persistence.ServiceConfig{
-		Base:          service,
-		StateStorage:  &stateStorage,
-		Restore:       cfg.Restore,
-		StoreInterval: cfg.StoreInterval(),
-		Logger:        log,
-	}
-	persistenceService, err := persistence.New(persistenceCfg)
-	if err != nil {
-		return nil, fmt.Errorf("persistent service: %w", err)
-	}
-
-	return persistenceService, nil
+	return service, nil
 }
 
 func runServer(
@@ -167,32 +189,33 @@ func runServer(
 	return &server, nil
 }
 
-func shutdown(server *http.Server, service *persistence.Service, log *zap.Logger) error {
-	if server == nil {
-		return fmt.Errorf("server not exists")
-	}
-	if service == nil {
-		return fmt.Errorf("service not exists")
-	}
+func shutdown(server *http.Server, storage service.Storage, log *zap.Logger) {
 	if log == nil {
-		return fmt.Errorf("log not exists")
+		log.Error("log not exists")
+		return
 	}
 
 	// cancel server
-	context, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := server.Shutdown(context); err != nil {
-		log.Error("server shutdown", zap.Error(err))
-	} else {
-		log.Info("server stopped")
+	if server != nil {
+		context, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := server.Shutdown(context); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Error("server shutdown", zap.Error(err))
+		} else {
+			log.Info("server stopped")
+		}
 	}
 
-	// cancel service
-	if err := service.Close(); err != nil {
-		log.Error("service stopping", zap.Error(err))
-	} else {
-		log.Info("service stopped")
+	// cancel storage, if it can be cancelled
+	if storage != nil {
+		if c, ok := storage.(io.Closer); ok {
+			if err := c.Close(); err != nil {
+				log.Error("storage closing", zap.Error(err))
+			} else {
+				log.Info("storage closed")
+			}
+		} else {
+			log.Info("storage does not implement io.Closer")
+		}
 	}
-
-	return nil
 }
