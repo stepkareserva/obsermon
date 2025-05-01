@@ -2,23 +2,15 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"io"
 	stdlog "log"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
+	"github.com/stepkareserva/obsermon/cmd/server/app"
 	"github.com/stepkareserva/obsermon/internal/server/config"
 	"github.com/stepkareserva/obsermon/internal/server/logging"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/memstorage"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/persistence"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
-	"github.com/stepkareserva/obsermon/internal/server/server"
 	"go.uber.org/zap"
 )
 
@@ -43,49 +35,25 @@ func main() {
 		}
 	}()
 
+	app, err := app.New(context.TODO(), *cfg, log)
+	if err != nil {
+		log.Error("app init", zap.Error(err))
+	}
+	defer func() {
+		if err := app.Close(); err != nil {
+			log.Error("app closing", zap.Error(err))
+		}
+	}()
+
 	// create gentle cancelling to context
 	ctx, err := gracefulCancellingCtx(log)
 	if err != nil {
 		log.Error("graceful cancelling init", zap.Error(err))
 	}
 
-	// initialize storage
-	storage, err := initStorage(cfg, log)
-	if err != nil {
-		log.Error("storage initialization", zap.Error(err))
+	if err := app.Run(ctx); err != nil {
+		log.Error("app running", zap.Error(err))
 	}
-
-	// initialize service
-	service, err := initService(cfg, storage, log)
-	if err != nil {
-		shutdown(nil, storage, log)
-		log.Error("service initialization", zap.Error(err))
-		return
-	}
-
-	// initialize handlers
-	handler, err := initHandler(ctx, service, log)
-	if err != nil {
-		shutdown(nil, storage, log)
-		log.Error("handler initialization", zap.Error(err))
-		return
-	}
-
-	// run server, wait for errors channel
-	server := server.New(cfg.Endpoint, handler)
-	serverErrCh := server.Start()
-
-	// wait for cancel or server error (it's critical)
-	select {
-	case <-ctx.Done():
-		log.Info("received cancel signal")
-	case srvErr := <-serverErrCh:
-		log.Error("server", zap.Error(srvErr))
-
-	}
-
-	// shutdown server
-	shutdown(server, storage, log)
 }
 
 func gracefulCancellingCtx(log *zap.Logger) (context.Context, error) {
@@ -114,98 +82,4 @@ func loadConfig() (*config.Config, error) {
 		return nil, fmt.Errorf("config validation: %v", err)
 	}
 	return cfg, nil
-}
-
-func initStorage(cfg *config.Config, log *zap.Logger) (service.Storage, error) {
-	if cfg == nil {
-		return nil, fmt.Errorf("config not exists")
-	}
-	if log == nil {
-		return nil, fmt.Errorf("log not exists")
-	}
-
-	// storage
-	storage := memstorage.New()
-
-	// wrap onto persistent storage
-	stateStorage := persistence.NewJSONStateStorage(cfg.FileStoragePath)
-	persistenceCfg := persistence.Config{
-		StateStorage:  &stateStorage,
-		Restore:       cfg.Restore,
-		StoreInterval: cfg.StoreInterval(),
-	}
-	persistentStorage, err := persistence.New(persistenceCfg, storage, log)
-	if err != nil {
-		return nil, fmt.Errorf("persistent service: %w", err)
-	}
-
-	return persistentStorage, nil
-}
-
-func initService(cfg *config.Config, storage service.Storage, log *zap.Logger) (*service.Service, error) {
-	if cfg == nil {
-		return nil, fmt.Errorf("config not exists")
-	}
-	if storage == nil {
-		return nil, fmt.Errorf("storage not exists")
-	}
-	if log == nil {
-		return nil, fmt.Errorf("log not exists")
-	}
-
-	// service
-	service, err := service.New(storage)
-	if err != nil {
-		return nil, fmt.Errorf("service creation: %w", err)
-	}
-
-	return service, nil
-}
-
-func initHandler(ctx context.Context, service handlers.Service, log *zap.Logger) (http.Handler, error) {
-	if service == nil {
-		return nil, fmt.Errorf("service not exists")
-	}
-	if log == nil {
-		return nil, fmt.Errorf("log not exists")
-	}
-
-	// create handlers
-	handler, err := handlers.New(ctx, service, log)
-	if err != nil {
-		return nil, fmt.Errorf("handlers initialization: %w", err)
-	}
-
-	return handler, nil
-}
-
-func shutdown(server *server.Server, storage service.Storage, log *zap.Logger) {
-	if log == nil {
-		log.Error("log not exists")
-		return
-	}
-
-	// cancel server
-	if server != nil {
-		context, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		if err := server.Shutdown(context); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Error("server shutdown", zap.Error(err))
-		} else {
-			log.Info("server stopped")
-		}
-	}
-
-	// cancel storage, if it can be cancelled
-	if storage != nil {
-		if c, ok := storage.(io.Closer); ok {
-			if err := c.Close(); err != nil {
-				log.Error("storage closing", zap.Error(err))
-			} else {
-				log.Info("storage closed")
-			}
-		} else {
-			log.Info("storage does not implement io.Closer")
-		}
-	}
 }
