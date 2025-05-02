@@ -13,6 +13,7 @@ import (
 	"github.com/stepkareserva/obsermon/internal/server/metrics/memstorage"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/persistence"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
+	"github.com/stepkareserva/obsermon/internal/server/routing"
 	"github.com/stepkareserva/obsermon/internal/server/server"
 	"go.uber.org/zap"
 )
@@ -156,12 +157,19 @@ func (a *App) initService(cfg config.Config) error {
 }
 
 func (a *App) initHandler(ctx context.Context, cfg config.Config) error {
-	// create handlers
-	handler, err := handlers.New(ctx, a.service, a.log)
-	if err != nil {
-		return fmt.Errorf("handlers initialization: %w", err)
+	// create router
+	router := routing.New(a.log)
+
+	// add metrics handlers
+	if err := router.AddMetricsHandlers(ctx, a.service); err != nil {
+		return fmt.Errorf("metrics handler: %w", err)
 	}
 
+	// set handlers
+	handler, err := router.Handler()
+	if err != nil {
+		return fmt.Errorf("router handler: %w", err)
+	}
 	a.handler = handler
 
 	return nil

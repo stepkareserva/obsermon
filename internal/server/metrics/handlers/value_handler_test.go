@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -18,14 +19,8 @@ import (
 
 // test for counter value handler
 func TestValidValueCounterHandler(t *testing.T) {
-	ctrl := gomock.NewController(t)
+	ctrl, mockService, ts := getValueTestObjects(t)
 	defer ctrl.Finish()
-
-	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := valueHandler(context.Background(), mockService, zap.NewNop())
-	require.NoError(t, err, "value handler initialization error")
-
-	ts := httptest.NewServer(updateHandler)
 	defer ts.Close()
 
 	t.Run("test /counter/name", func(t *testing.T) {
@@ -48,14 +43,8 @@ func TestValidValueCounterHandler(t *testing.T) {
 }
 
 func TestNotFoundValueCounterHandler(t *testing.T) {
-	ctrl := gomock.NewController(t)
+	ctrl, mockService, ts := getValueTestObjects(t)
 	defer ctrl.Finish()
-
-	mockService := mocks.NewMockService(ctrl)
-	valueHandler, err := valueHandler(context.Background(), mockService, zap.NewNop())
-	require.NoError(t, err, "value handler initialization error")
-
-	ts := httptest.NewServer(valueHandler)
 	defer ts.Close()
 
 	t.Run("test /counter/name", func(t *testing.T) {
@@ -73,14 +62,8 @@ func TestNotFoundValueCounterHandler(t *testing.T) {
 
 // test for gauge value handler
 func TestValidValueGaugeHandler(t *testing.T) {
-	ctrl := gomock.NewController(t)
+	ctrl, mockService, ts := getValueTestObjects(t)
 	defer ctrl.Finish()
-
-	mockService := mocks.NewMockService(ctrl)
-	valueHandler, err := valueHandler(context.Background(), mockService, zap.NewNop())
-	require.NoError(t, err, "value handler initialization error")
-
-	ts := httptest.NewServer(valueHandler)
 	defer ts.Close()
 
 	t.Run("test /gauge/name", func(t *testing.T) {
@@ -103,14 +86,8 @@ func TestValidValueGaugeHandler(t *testing.T) {
 }
 
 func TestNotFoundValueGaugeHandler(t *testing.T) {
-	ctrl := gomock.NewController(t)
+	ctrl, mockService, ts := getValueTestObjects(t)
 	defer ctrl.Finish()
-
-	mockService := mocks.NewMockService(ctrl)
-	updateHandler, err := valueHandler(context.Background(), mockService, zap.NewNop())
-	require.NoError(t, err, "value handler initialization error")
-
-	ts := httptest.NewServer(updateHandler)
 	defer ts.Close()
 
 	t.Run("test /gauge/name", func(t *testing.T) {
@@ -127,14 +104,8 @@ func TestNotFoundValueGaugeHandler(t *testing.T) {
 }
 
 func TestValidValueCounterJSONHandler(t *testing.T) {
-	ctrl := gomock.NewController(t)
+	ctrl, mockService, ts := getValueTestObjects(t)
 	defer ctrl.Finish()
-
-	mockService := mocks.NewMockService(ctrl)
-	valueHandler, err := valueHandler(context.Background(), mockService, zap.NewNop())
-	require.NoError(t, err, "value handler initialization error")
-
-	ts := httptest.NewServer(valueHandler)
 	defer ts.Close()
 
 	t.Run("value counter: { name }", func(t *testing.T) {
@@ -162,14 +133,8 @@ func TestValidValueCounterJSONHandler(t *testing.T) {
 }
 
 func TestValidValueGaugeJSONHandler(t *testing.T) {
-	ctrl := gomock.NewController(t)
+	ctrl, mockService, ts := getValueTestObjects(t)
 	defer ctrl.Finish()
-
-	mockService := mocks.NewMockService(ctrl)
-	valueHandler, err := valueHandler(context.Background(), mockService, zap.NewNop())
-	require.NoError(t, err, "value handler initialization error")
-
-	ts := httptest.NewServer(valueHandler)
 	defer ts.Close()
 
 	t.Run("value gauge: { name }", func(t *testing.T) {
@@ -197,14 +162,8 @@ func TestValidValueGaugeJSONHandler(t *testing.T) {
 }
 
 func TestInvalidValueJSONHandler(t *testing.T) {
-	ctrl := gomock.NewController(t)
+	ctrl, _, ts := getValueTestObjects(t)
 	defer ctrl.Finish()
-
-	mockService := mocks.NewMockService(ctrl)
-	valueHandler, err := valueHandler(context.Background(), mockService, zap.NewNop())
-	require.NoError(t, err, "update handler initialization error")
-
-	ts := httptest.NewServer(valueHandler)
 	defer ts.Close()
 
 	t.Run("value invalid: {}", func(t *testing.T) {
@@ -214,4 +173,19 @@ func TestInvalidValueJSONHandler(t *testing.T) {
 		defer safeCloseRes(t, res)
 		require.Equal(t, http.StatusBadRequest, res.StatusCode)
 	})
+}
+
+func getValueTestObjects(t *testing.T) (*gomock.Controller, *mocks.MockService, *httptest.Server) {
+	ctrl := gomock.NewController(t)
+	mockService := mocks.NewMockService(ctrl)
+
+	handlers, err := New(mockService, zap.NewNop())
+	require.NoError(t, err, "handlers initialization error")
+
+	router := chi.NewRouter()
+	handlers.registerValueRoutes(context.TODO(), router)
+
+	ts := httptest.NewServer(router)
+
+	return ctrl, mockService, ts
 }
