@@ -1,4 +1,4 @@
-package httpconst
+package httputils
 
 const (
 	ContentType      = "Content-Type"

@@ -8,41 +8,31 @@ Package also contains  [`agent`](https://github.com/stepkareserva/obsermon/tree/
 
 ## Service usage
 
-### CLI
-
 Run server: `go run cmd/server/main.go`
 
-Params: 
+Params:
 
-- `-a` (string) - server endpoint tcp address, like `:8080`, `127.0.0.1:80`, `localhost:22` (default `localhost:8080`)
+| `CLI`| `ENV` | `type` | `default` | **Description** |
+|:-----|:------|:-------|:----------|:----------------|
+|`-a`  | `ADDRESS` | `string` | `localhost:8080` |  server endpoint tcp address, like `:8080`, `127.0.0.1:80`, `localhost:22`
+|`-i`  | `STORE_INTERVAL` | `int` | `300` | server state file storing interval, s, 0 for sync storing 
+|`-f`  | `FILE_STORAGE_PATH` | `string` | `obsermon/storage.json` in appdata (depends on os) | path to server state storage file
+|`-r`  | `RESTORE` | `bool` | `false` | restore server state from storage file
+|`-d`  | `DATABASE_DSN` | `string` | `""` | database connection string
+|`-m`  | `MODE` | `string` | `prod` | app mode, `quiet` (no logs), `dev` (human-readable logs), `prod` (machine-readable logs)|
 
-### Env
-
-Env params overrides command line params, if exist:
-
-- `ADDRESS` - same as CLI `-a` 
 
 ## Agent usage
-
-### CLI
 
 Run server: `go run cmd/agent/main.go`
 
 Params: 
 
-- `-a` (string) - server endpoint tcp address, like `:8080`, `127.0.0.1:80`, `localhost:22` (default `localhost:8080`)
-
-- `-p` (int) - poll (local metrics update) interval, in seconds, positive integer (default 2)
-
-- `-r` (int) - report (send metrics to server) interval, in seconds, positive integer (default 10)
-
-### Env
-
-Env params overrides command line params, if exist:
-
-- `ADDRESS` - same as CLI `-a` 
-- `POLL_INTERVAL` - same as CLI `-p` 
-- `REPORT_INTERVAL` - same as CLI `-r`
+| `CLI`| `ENV` | `type` | `default` | **Description** |
+|:-----|:------|:-------|:----------|:----------------|
+|`-a`  | `ADDRESS` | `string` | `localhost:8080` | server endpoint tcp address, like `:8080`, `127.0.0.1:80`, `localhost:22`
+|`-p`  | `POLL_INTERVAL` | `int` | `2` | poll (local metrics update) interval, in seconds, positive integer 
+|`-r` | `REPORT_INTERVAL` | `int` | `10 | report (send metrics to server) interval, in seconds, positive integer
 
 ## Service API
 
