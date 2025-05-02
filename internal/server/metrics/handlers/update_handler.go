@@ -15,17 +15,6 @@ import (
 	hc "github.com/stepkareserva/obsermon/internal/server/httpconst"
 )
 
-const (
-	// metrics for url
-	MetricGauge   = "gauge"
-	MetricCounter = "counter"
-
-	// names of chi routing url params to be extracted
-	ChiMetric = "metric"
-	ChiName   = "name"
-	ChiValue  = "value"
-)
-
 type UpdateHandler struct {
 	service Service
 	ErrorsWriter

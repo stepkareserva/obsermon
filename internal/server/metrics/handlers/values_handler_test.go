@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -17,14 +18,8 @@ import (
 )
 
 func TestValuesHandler(t *testing.T) {
-	ctrl := gomock.NewController(t)
+	ctrl, mockService, ts := getValuesTestObjects(t)
 	defer ctrl.Finish()
-
-	mockService := mocks.NewMockService(ctrl)
-	valuesHandler, err := valuesHandler(context.Background(), mockService, zap.NewNop())
-	require.NoError(t, err, "value handler initialization error")
-
-	ts := httptest.NewServer(valuesHandler)
 	defer ts.Close()
 
 	t.Run("test /", func(t *testing.T) {
@@ -46,8 +41,23 @@ func TestValuesHandler(t *testing.T) {
 		// check status and contentType if status is ok
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		contentType := res.Header.Get("Content-Type")
-		_, err = io.ReadAll(res.Body)
+		_, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		assert.Equal(t, "text/html", contentType)
 	})
+}
+
+func getValuesTestObjects(t *testing.T) (*gomock.Controller, *mocks.MockService, *httptest.Server) {
+	ctrl := gomock.NewController(t)
+	mockService := mocks.NewMockService(ctrl)
+
+	handlers, err := New(mockService, zap.NewNop())
+	require.NoError(t, err, "handlers initialization error")
+
+	router := chi.NewRouter()
+	handlers.registerValuesRoutes(context.TODO(), router)
+
+	ts := httptest.NewServer(router)
+
+	return ctrl, mockService, ts
 }
