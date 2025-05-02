@@ -152,6 +152,9 @@ func (a *App) initDatabase(cfg config.Config) error {
 	if err != nil {
 		return fmt.Errorf("db connect: %w", err)
 	}
+	if err := db.Ping(); err != nil {
+		return fmt.Errorf("db ping: %w", err)
+	}
 
 	a.database = db
 
@@ -199,6 +202,7 @@ func (a *App) initHandler(ctx context.Context, cfg config.Config) error {
 	if err := router.AddMetricsHandlers(ctx, a.service); err != nil {
 		return fmt.Errorf("metrics handler: %w", err)
 	}
+
 	// add database handler
 	if err := router.AddDatabaseHandlers(ctx, a.database); err != nil {
 		return fmt.Errorf("database handler: %w", err)
