@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/stepkareserva/obsermon/internal/server/config"
+	"github.com/stepkareserva/obsermon/internal/server/db"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/memstorage"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/persistence"
@@ -19,11 +20,12 @@ import (
 )
 
 type App struct {
-	storage service.Storage
-	service handlers.Service
-	handler http.Handler
-	server  *server.Server
-	log     *zap.Logger
+	database *db.Database
+	storage  service.Storage
+	service  handlers.Service
+	handler  http.Handler
+	server   *server.Server
+	log      *zap.Logger
 }
 
 func New(ctx context.Context, cfg config.Config, log *zap.Logger) (*App, error) {
@@ -35,6 +37,13 @@ func New(ctx context.Context, cfg config.Config, log *zap.Logger) (*App, error) 
 	}
 
 	app := App{log: log}
+
+	if err := app.initDatabase(cfg); err != nil {
+		if closeErr := app.Close(); closeErr != nil {
+			log.Error("app close", zap.Error(closeErr))
+		}
+		return nil, fmt.Errorf("init storage: %w", err)
+	}
 
 	if err := app.initStorage(cfg); err != nil {
 		if closeErr := app.Close(); closeErr != nil {
@@ -99,6 +108,16 @@ func (a *App) Close() error {
 		a.storage = nil
 	}
 
+	// close database if it can be closed
+	if a.database != nil {
+		if err := a.database.Close(); err != nil {
+			closingErrs = errors.Join(err, fmt.Errorf("database closing: %w", err))
+		} else {
+			a.log.Info("database closed")
+		}
+		a.database = nil
+	}
+
 	return closingErrs
 }
 
@@ -121,6 +140,22 @@ func (a *App) Run(ctx context.Context) error {
 	case srvErr := <-serverErrCh:
 		return fmt.Errorf("server running: %w", srvErr)
 	}
+}
+
+func (a *App) initDatabase(cfg config.Config) error {
+	if cfg.DBConnection == "" {
+		a.log.Info("Database connection not performed, don't use database")
+		return nil
+	}
+
+	db, err := db.New(cfg.DBConnection)
+	if err != nil {
+		return fmt.Errorf("db connect: %w", err)
+	}
+
+	a.database = db
+
+	return nil
 }
 
 func (a *App) initStorage(cfg config.Config) error {
@@ -163,6 +198,10 @@ func (a *App) initHandler(ctx context.Context, cfg config.Config) error {
 	// add metrics handlers
 	if err := router.AddMetricsHandlers(ctx, a.service); err != nil {
 		return fmt.Errorf("metrics handler: %w", err)
+	}
+	// add database handler
+	if err := router.AddDatabaseHandlers(ctx, a.database); err != nil {
+		return fmt.Errorf("database handler: %w", err)
 	}
 
 	// set handlers
