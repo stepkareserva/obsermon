@@ -35,11 +35,14 @@ func (s *State) Import(storage service.Storage) error {
 	if storage == nil {
 		return fmt.Errorf("storage not exists")
 	}
-	if err := storage.ReplaceCounters(s.Counters); err != nil {
-		return fmt.Errorf("replacing storage counters: %w", err)
+	var err error
+	s.Counters, err = storage.ListCounters()
+	if err != nil {
+		return fmt.Errorf("requesting storage counters: %w", err)
 	}
-	if err := storage.ReplaceGauges(s.Gauges); err != nil {
-		return fmt.Errorf("replacing storage gauges: %w", err)
+	s.Gauges, err = storage.ListGauges()
+	if err != nil {
+		return fmt.Errorf("requesting storage gauges: %w", err)
 	}
 	return nil
 }
