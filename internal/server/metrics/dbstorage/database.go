@@ -10,5 +10,5 @@ type Database interface {
 	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
 	QueryRowContext(ctx context.Context, query string, args ...any) (*sql.Row, error)
 
-	Begin() (*sql.Tx, error)
+	BeginTx(ctx context.Context) (*sql.Tx, error)
 }

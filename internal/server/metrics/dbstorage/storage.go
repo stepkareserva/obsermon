@@ -301,8 +301,11 @@ func replaceMetrics[Value any](s *Storage, clearQuery, addQuery string, names []
 		return fmt.Errorf("insufficient names and values")
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
+	defer cancel()
+
 	// start transaction
-	tx, err := s.db.Begin()
+	tx, err := s.db.BeginTx(ctx)
 	if err != nil {
 		return fmt.Errorf("replace metrics: %w", err)
 	}
@@ -312,9 +315,6 @@ func replaceMetrics[Value any](s *Storage, clearQuery, addQuery string, names []
 			s.log.Error("replace metrics rollback", zap.Error(err))
 		}
 	}()
-
-	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
-	defer cancel()
 
 	// clear existed values
 	if _, err = tx.ExecContext(ctx, clearQuery); err != nil {
