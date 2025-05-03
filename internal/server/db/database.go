@@ -60,3 +60,15 @@ func (db *Database) QueryRowContext(ctx context.Context, query string, args ...a
 	}
 	return db.db.QueryRowContext(ctx, query, args...), nil
 }
+
+func (db *Database) Begin() (*sql.Tx, error) {
+	if db == nil || db.db == nil {
+		return nil, fmt.Errorf("database not exists")
+	}
+
+	tx, err := db.db.Begin()
+	if err != nil {
+		return nil, fmt.Errorf("begin transaction: %w", err)
+	}
+	return tx, nil
+}
