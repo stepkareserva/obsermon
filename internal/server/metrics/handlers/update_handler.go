@@ -35,12 +35,12 @@ func (h *UpdateHandler) UpdateGaugeURLHandler(ctx context.Context) http.HandlerF
 		name := chi.URLParam(r, ChiName)
 		var value models.GaugeValue
 		if err := value.FromString(chi.URLParam(r, ChiValue)); err != nil {
-			h.WriteError(w, ErrInvalidMetricValue)
+			h.WriteError(w, ErrInvalidMetricValue, err.Error())
 			return
 		}
 		gauge := models.Gauge{Name: name, Value: value}
 		if _, err := h.service.UpdateGauge(gauge); err != nil {
-			h.WriteError(w, hu.ErrInternalServerError)
+			h.WriteError(w, hu.ErrInternalServerError, err.Error())
 			return
 		}
 
@@ -54,13 +54,13 @@ func (h *UpdateHandler) UpdateCounterURLHandler(ctx context.Context) http.Handle
 		name := chi.URLParam(r, ChiName)
 		var value models.CounterValue
 		if err := value.FromString(chi.URLParam(r, ChiValue)); err != nil {
-			h.WriteError(w, ErrInvalidMetricValue)
+			h.WriteError(w, ErrInvalidMetricValue, err.Error())
 			return
 		}
 
 		counter := models.Counter{Name: name, Value: value}
 		if _, err := h.service.UpdateCounter(counter); err != nil {
-			h.WriteError(w, hu.ErrInternalServerError)
+			h.WriteError(w, hu.ErrInternalServerError, err.Error())
 			return
 		}
 
@@ -83,16 +83,16 @@ func (h *UpdateHandler) UpdateMetricJSONHandler(ctx context.Context) http.Handle
 		}
 		var request models.UpdateMetricRequest
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-			h.WriteError(w, hu.ErrInvalidRequestJSON)
+			h.WriteError(w, hu.ErrInvalidRequestJSON, err.Error())
 			return
 		}
 		if err := validator.New().Struct(request); err != nil {
-			h.WriteError(w, hu.ErrInvalidRequestJSON)
+			h.WriteError(w, hu.ErrInvalidRequestJSON, err.Error())
 			return
 		}
 		updated, err := h.service.UpdateMetric(request)
 		if err != nil {
-			h.WriteError(w, hu.ErrInternalServerError)
+			h.WriteError(w, hu.ErrInternalServerError, err.Error())
 			return
 		}
 		// update and return updated metrics in the same request
@@ -104,7 +104,7 @@ func (h *UpdateHandler) UpdateMetricJSONHandler(ctx context.Context) http.Handle
 		// part of update request's response, so it keep in mind.
 		w.Header().Set(hu.ContentType, hu.ContentTypeJSON)
 		if err = json.NewEncoder(w).Encode(*updated); err != nil {
-			h.WriteError(w, hu.ErrInternalServerError)
+			h.WriteError(w, hu.ErrInternalServerError, err.Error())
 			return
 		}
 	}

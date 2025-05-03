@@ -39,3 +39,24 @@ func (db *Database) Ping() error {
 	}
 	return nil
 }
+
+func (db *Database) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
+	if db == nil || db.db == nil {
+		return nil, fmt.Errorf("database not exists")
+	}
+	return db.db.ExecContext(ctx, query, args...)
+}
+
+func (db *Database) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
+	if db == nil || db.db == nil {
+		return nil, fmt.Errorf("database not exists")
+	}
+	return db.db.QueryContext(ctx, query, args...)
+}
+
+func (db *Database) QueryRowContext(ctx context.Context, query string, args ...any) (*sql.Row, error) {
+	if db == nil || db.db == nil {
+		return nil, fmt.Errorf("database not exists")
+	}
+	return db.db.QueryRowContext(ctx, query, args...), nil
+}

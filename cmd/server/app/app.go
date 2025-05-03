@@ -10,6 +10,7 @@ import (
 
 	"github.com/stepkareserva/obsermon/internal/server/config"
 	"github.com/stepkareserva/obsermon/internal/server/db"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/dbstorage"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/memstorage"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/persistence"
@@ -162,6 +163,16 @@ func (a *App) initDatabase(cfg config.Config) error {
 }
 
 func (a *App) initStorage(cfg config.Config) error {
+	if a.database != nil {
+		// use db storage, if use
+		storage, err := dbstorage.New(a.database, a.log)
+		if err != nil {
+			return fmt.Errorf("init db storage: %w", err)
+		}
+		a.storage = storage
+		return nil
+	}
+
 	// storage
 	storage := memstorage.New()
 

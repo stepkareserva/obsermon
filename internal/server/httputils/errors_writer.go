@@ -20,17 +20,20 @@ func NewErrorsWriter(log *zap.Logger) ErrorsWriter {
 }
 
 func (e *ErrorsWriter) WriteError(w http.ResponseWriter, err HandlerError, details ...string) {
-	if writingErr := writeError(w, err, details...); writingErr != nil {
+	if writingErr := writeError(w, err); writingErr != nil {
 		e.log.Error("error writing", zap.Error(writingErr))
 	}
+	e.log.Error("request error",
+		zap.String("message", err.Message),
+		zap.String("details", strings.Join(details, " ")),
+	)
 }
 
-func writeError(w http.ResponseWriter, err HandlerError, details ...string) error {
+func writeError(w http.ResponseWriter, err HandlerError) error {
 	w.Header().Set(ContentType, ContentTypeTextU)
 	w.WriteHeader(err.StatusCode)
 
-	errText := fmt.Sprintln(err.Message, strings.Join(details, " "))
-	if _, err := w.Write([]byte(errText)); err != nil {
+	if _, err := w.Write([]byte(err.Message)); err != nil {
 		return fmt.Errorf("writing error: %w", err)
 	}
 	return nil

@@ -23,8 +23,8 @@ func NewPingHandler(db Database, log *zap.Logger) (*PingHandler, error) {
 func (h *PingHandler) Handler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := h.db.Ping(); err != nil {
-			w.Header().Set(hu.ContentType, hu.ContentTypeText)
-			w.WriteHeader(http.StatusInternalServerError)
+			h.ErrorsWriter.WriteError(w, ErrDatabaseUnavailable, err.Error())
+			return
 		}
 
 		w.Header().Set(hu.ContentType, hu.ContentTypeText)

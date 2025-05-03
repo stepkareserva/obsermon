@@ -35,7 +35,7 @@ func (h *ValueHandler) GaugeValueURLHandler(ctx context.Context) http.HandlerFun
 		name := chi.URLParam(r, ChiName)
 		gauge, exists, err := h.service.FindGauge(name)
 		if err != nil {
-			h.WriteError(w, hu.ErrInternalServerError)
+			h.WriteError(w, hu.ErrInternalServerError, err.Error())
 			return
 		}
 
@@ -46,7 +46,7 @@ func (h *ValueHandler) GaugeValueURLHandler(ctx context.Context) http.HandlerFun
 
 		w.Header().Set(hu.ContentType, hu.ContentTypeText)
 		if _, err := w.Write([]byte(gauge.Value.String())); err != nil {
-			h.WriteError(w, hu.ErrInternalServerError)
+			h.WriteError(w, hu.ErrInternalServerError, err.Error())
 			return
 		}
 	}
@@ -57,7 +57,7 @@ func (h *ValueHandler) CounterValueURLHandler(ctx context.Context) http.HandlerF
 		name := chi.URLParam(r, ChiName)
 		counter, exists, err := h.service.FindCounter(name)
 		if err != nil {
-			h.WriteError(w, hu.ErrInternalServerError)
+			h.WriteError(w, hu.ErrInternalServerError, err.Error())
 			return
 		}
 
@@ -68,7 +68,7 @@ func (h *ValueHandler) CounterValueURLHandler(ctx context.Context) http.HandlerF
 
 		w.Header().Set(hu.ContentType, hu.ContentTypeText)
 		if _, err := w.Write([]byte(counter.Value.String())); err != nil {
-			h.WriteError(w, hu.ErrInternalServerError)
+			h.WriteError(w, hu.ErrInternalServerError, err.Error())
 			return
 		}
 	}
@@ -88,16 +88,16 @@ func (h *ValueHandler) ValueMetricJSONHandler(ctx context.Context) http.HandlerF
 		}
 		var request models.MetricValueRequest
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-			h.WriteError(w, hu.ErrInvalidRequestJSON)
+			h.WriteError(w, hu.ErrInvalidRequestJSON, err.Error())
 			return
 		}
 		if err := validator.New().Struct(request); err != nil {
-			h.WriteError(w, hu.ErrInvalidRequestJSON)
+			h.WriteError(w, hu.ErrInvalidRequestJSON, err.Error())
 			return
 		}
 		m, exists, err := h.service.FindMetric(request.MType, request.ID)
 		if err != nil {
-			h.WriteError(w, hu.ErrInternalServerError)
+			h.WriteError(w, hu.ErrInternalServerError, err.Error())
 			return
 		}
 		if !exists {
@@ -106,7 +106,7 @@ func (h *ValueHandler) ValueMetricJSONHandler(ctx context.Context) http.HandlerF
 		}
 		w.Header().Set(hu.ContentType, hu.ContentTypeJSON)
 		if err = json.NewEncoder(w).Encode(m); err != nil {
-			h.WriteError(w, hu.ErrInternalServerError)
+			h.WriteError(w, hu.ErrInternalServerError, err.Error())
 			return
 		}
 	}
