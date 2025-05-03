@@ -12,7 +12,6 @@ import (
 
 type Config struct {
 	StateStorage  StateStorage
-	Restore       bool
 	StoreInterval time.Duration
 }
 
@@ -48,14 +47,6 @@ func New(cfg Config, base service.Storage, logger *zap.Logger) (*Storage, error)
 		saveCh:   make(chan time.Time),
 		stopCh:   make(chan struct{}),
 		logger:   logger,
-	}
-
-	// restore if required and possible
-	if cfg.Restore {
-		if err := storage.loadState(); err != nil {
-			// fail but ok ignore it
-			logger.Warn("service config restoring", zap.Error(err))
-		}
 	}
 
 	// run storing loop, sync or async
@@ -149,53 +140,19 @@ func (s *Storage) loadState() error {
 	if err != nil {
 		return fmt.Errorf("storage state loading: %w", err)
 	}
-	if err = setStorageState(s.Storage, state); err != nil {
+	if err = state.Export(s.Storage); err != nil {
 		return fmt.Errorf("storage state request: %w", err)
 	}
 	return nil
 }
 
 func (s *Storage) storeState() error {
-	state, err := getStorageState(s.Storage)
-	if err != nil {
+	var state State
+	if err := state.Import(s.Storage); err != nil {
 		return fmt.Errorf("storage state request: %w", err)
 	}
-	if err = s.sstorage.StoreState(*state); err != nil {
+	if err := s.sstorage.StoreState(state); err != nil {
 		return fmt.Errorf("storage state storing: %w", err)
-	}
-	return nil
-}
-
-func getStorageState(storage service.Storage) (*State, error) {
-	if storage == nil {
-		return nil, fmt.Errorf("storage not exists")
-	}
-	counters, err := storage.ListCounters()
-	if err != nil {
-		return nil, fmt.Errorf("getting counters: %w", err)
-	}
-	gauges, err := storage.ListGauges()
-	if err != nil {
-		return nil, fmt.Errorf("getting gauges: %w", err)
-	}
-	return &State{
-		Counters: counters,
-		Gauges:   gauges,
-	}, nil
-}
-
-func setStorageState(storage service.Storage, state *State) error {
-	if storage == nil {
-		return fmt.Errorf("storage not exists")
-	}
-	if state == nil {
-		return fmt.Errorf("state not exists")
-	}
-	if err := storage.ReplaceCounters(state.Counters); err != nil {
-		return fmt.Errorf("replacing storage counters: %w", err)
-	}
-	if err := storage.ReplaceGauges(state.Gauges); err != nil {
-		return fmt.Errorf("replacing storage gauges: %w", err)
 	}
 	return nil
 }

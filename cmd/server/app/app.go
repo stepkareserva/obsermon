@@ -163,32 +163,58 @@ func (a *App) initDatabase(cfg config.Config) error {
 }
 
 func (a *App) initStorage(cfg config.Config) error {
-	if a.database != nil {
-		// use db storage, if use
+	// omg I don't know how to refactor it.
+	// we need to firstly load storage state if exists,
+	// then create one of storage impl, then apply to it
+	// loaded state.
+
+	// try to load current state if passed
+	var currentState *persistence.State
+	if cfg.Restore {
+		storage := persistence.NewJSONStateStorage(cfg.FileStoragePath)
+		state, err := storage.LoadState()
+		if err != nil {
+			a.log.Warn("service config restoring", zap.Error(err))
+		} else {
+			currentState = state
+			a.log.Info("restored state loaded")
+		}
+	}
+
+	// create database, presistent or memory storage
+	if cfg.DBConnection != "" {
+		// use db storage
 		storage, err := dbstorage.New(a.database, a.log)
 		if err != nil {
 			return fmt.Errorf("init db storage: %w", err)
 		}
 		a.storage = storage
-		return nil
+	} else {
+		// storage
+		a.storage = memstorage.New()
+
+		// wrap onto persistent, if corresponding param passed
+		if cfg.FileStoragePath != "" {
+			// wrap onto persistent storage
+			persistenStorage := persistence.NewJSONStateStorage(cfg.FileStoragePath)
+			persistenceCfg := persistence.Config{
+				StateStorage:  &persistenStorage,
+				StoreInterval: cfg.StoreInterval(),
+			}
+			var err error
+			a.storage, err = persistence.New(persistenceCfg, a.storage, a.log)
+			if err != nil {
+				return fmt.Errorf("persistent storage: %w", err)
+			}
+		}
 	}
 
-	// storage
-	storage := memstorage.New()
-
-	// wrap onto persistent storage
-	stateStorage := persistence.NewJSONStateStorage(cfg.FileStoragePath)
-	persistenceCfg := persistence.Config{
-		StateStorage:  &stateStorage,
-		Restore:       cfg.Restore,
-		StoreInterval: cfg.StoreInterval(),
+	// restore state, if state exists
+	if currentState != nil {
+		if err := currentState.Export(a.storage); err != nil {
+			return fmt.Errorf("restoring state: %w", err)
+		}
 	}
-	persistentStorage, err := persistence.New(persistenceCfg, storage, a.log)
-	if err != nil {
-		return fmt.Errorf("persistent storage: %w", err)
-	}
-
-	a.storage = persistentStorage
 
 	return nil
 }

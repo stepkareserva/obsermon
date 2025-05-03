@@ -301,10 +301,12 @@ func replaceMetrics[Value any](s *Storage, clearQuery, addQuery string, names []
 		return fmt.Errorf("replace metrics: %w", err)
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil {
+		// omg ingeneering :/
+		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
 			s.log.Error("replace metrics rollback", zap.Error(err))
 		}
 	}()
+
 	ctx, _ := context.WithTimeout(context.Background(), SqlOpTimeout)
 
 	// clear existed values
@@ -327,6 +329,10 @@ func replaceMetrics[Value any](s *Storage, clearQuery, addQuery string, names []
 		if _, err = stmt.ExecContext(ctx, names[i], values[i]); err != nil {
 			return fmt.Errorf("add metric: %w", err)
 		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("committing replace metrics: %w", err)
 	}
 
 	return nil
