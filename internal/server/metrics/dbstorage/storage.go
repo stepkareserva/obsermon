@@ -27,7 +27,7 @@ const (
 	NameColumn  = "name"
 	ValueColumn = "value"
 
-	SqlOpTimeout = 5 * time.Second
+	SQLOpTimeout = 5 * time.Second
 )
 
 var (
@@ -117,14 +117,15 @@ func New(db Database, log *zap.Logger) (*Storage, error) {
 
 func (s *Storage) initTables() error {
 	// create counters table
-	createCountersCtx, _ := context.WithTimeout(context.Background(), SqlOpTimeout)
-	if _, err := s.db.ExecContext(createCountersCtx, createCountersQuery); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
+	defer cancel()
+
+	if _, err := s.db.ExecContext(ctx, createCountersQuery); err != nil {
 		return fmt.Errorf("counters table creation: %w", err)
 	}
 
 	// create gauges table
-	createGaugesCtx, _ := context.WithTimeout(context.Background(), SqlOpTimeout)
-	if _, err := s.db.ExecContext(createGaugesCtx, createGaugesQuery); err != nil {
+	if _, err := s.db.ExecContext(ctx, createGaugesQuery); err != nil {
 		return fmt.Errorf("gauges table creation: %w", err)
 	}
 
@@ -218,7 +219,9 @@ func setMetric[Value any](s *Storage, query, name string, value Value) error {
 		return fmt.Errorf("database not exists")
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), SqlOpTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
+	defer cancel()
+
 	if _, err := s.db.ExecContext(ctx, query, name, value); err != nil {
 		return fmt.Errorf("set metric: %w", err)
 	}
@@ -231,7 +234,9 @@ func findMetric[Value any](s *Storage, query, name string) (*Value, bool, error)
 		return nil, false, fmt.Errorf("database not exists")
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), SqlOpTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
+	defer cancel()
+
 	row, err := s.db.QueryRowContext(ctx, query, name)
 	if err != nil {
 		return nil, false, fmt.Errorf("find metric: %w", err)
@@ -254,8 +259,9 @@ func listMetrics[Value any](s *Storage, query string) (names []string, values []
 		return nil, nil, fmt.Errorf("database not exists")
 	}
 
-	// request rows
-	ctx, _ := context.WithTimeout(context.Background(), SqlOpTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
+	defer cancel()
+
 	rows, err := s.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, nil, fmt.Errorf("query rows: %w", err)
@@ -307,7 +313,8 @@ func replaceMetrics[Value any](s *Storage, clearQuery, addQuery string, names []
 		}
 	}()
 
-	ctx, _ := context.WithTimeout(context.Background(), SqlOpTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
+	defer cancel()
 
 	// clear existed values
 	if _, err = tx.ExecContext(ctx, clearQuery); err != nil {
