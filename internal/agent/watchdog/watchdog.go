@@ -125,7 +125,6 @@ func (w *Watchdog) processPolledMetrics() metrics.Metrics {
 func (w *Watchdog) sendMetrics(metrics metrics.Metrics) error {
 	err := w.params.MetricsServerClient.BatchUpdate(
 		metrics.Counters.List(), metrics.Gauges.List())
-
 	if err != nil {
 		return fmt.Errorf("sending metrics: %w", err)
 	}

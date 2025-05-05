@@ -1,9 +1,13 @@
 package client
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/stepkareserva/obsermon/internal/models"
@@ -12,6 +16,8 @@ import (
 type MetricsClient struct {
 	client *resty.Client
 }
+
+const requestTimeout = 5 * time.Second
 
 func New(endpoint string) (*MetricsClient, error) {
 	u, err := url.ParseRequestURI(endpoint)
@@ -24,6 +30,7 @@ func New(endpoint string) (*MetricsClient, error) {
 
 	client := resty.New()
 	client.SetBaseURL(endpoint)
+	client.SetTimeout(requestTimeout)
 
 	return &MetricsClient{client: client}, nil
 }
@@ -52,17 +59,48 @@ func (c *MetricsClient) sendUpdateRequest(metrics []models.Metrics) error {
 		return nil
 	}
 
-	resp, err := c.client.R().
+	req := c.client.R().
 		SetHeader("Content-Type", "application/json").
-		SetBody(metrics).
-		Post("/updates")
+		SetBody(metrics)
 
-	if err != nil {
-		return fmt.Errorf("could not send request: %w", err)
+	attemptsIntervals := []time.Duration{
+		0 * time.Second,
+		1 * time.Second,
+		3 * time.Second,
+		5 * time.Second,
 	}
 
-	if resp.StatusCode() != http.StatusOK {
-		return fmt.Errorf("post %s request error, status %d", resp.Request.URL, resp.StatusCode())
+	var resp *resty.Response
+	var err error
+	for _, waitIterval := range attemptsIntervals {
+		time.Sleep(waitIterval)
+
+		resp, err = req.Post("/updates")
+		switch {
+		case err == nil:
+			if resp.StatusCode() != http.StatusOK {
+				return fmt.Errorf("post %s request status %d",
+					resp.Request.URL, resp.StatusCode())
+			}
+			return nil
+		case !isServerUnavailableErr(err):
+			return fmt.Errorf("post updates: %w", err)
+		}
 	}
-	return nil
+
+	return fmt.Errorf("post updates: %w", err)
+}
+
+func isServerUnavailableErr(err error) bool {
+	if errors.Is(err, context.DeadlineExceeded) {
+		// too long for request timeout
+		return true
+	}
+
+	var netErr net.Error
+	if errors.As(err, &netErr) && netErr.Timeout() {
+		return true
+	}
+
+	return false
 }
