@@ -6,7 +6,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
+	dbhandlers "github.com/stepkareserva/obsermon/internal/server/db/handlers"
+	mhandlers "github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
 	"github.com/stepkareserva/obsermon/internal/server/middleware"
 	"go.uber.org/zap"
 )
@@ -39,21 +40,35 @@ func (r *Routing) Handler() (http.Handler, error) {
 	return r.router, nil
 }
 
-func (r *Routing) AddMetricsHandlers(ctx context.Context, s handlers.Service) error {
+func (r *Routing) AddMetricsHandlers(ctx context.Context, s mhandlers.Service) error {
 	if r == nil || r.router == nil {
 		return fmt.Errorf("routing not exists")
 	}
-	if s == nil {
-		return fmt.Errorf("service not exists")
-	}
 
-	metricsHandlers, err := handlers.New(s, r.log)
+	metricsHandlers, err := mhandlers.New(s, r.log)
 	if err != nil {
 		return fmt.Errorf("metrics handlers: %w", err)
 	}
 
 	if err := metricsHandlers.RegisterRoutes(ctx, r.router); err != nil {
 		return fmt.Errorf("register metrics routes: %w", err)
+	}
+
+	return nil
+}
+
+func (r *Routing) AddDatabaseHandlers(ctx context.Context, db dbhandlers.Database) error {
+	if r == nil || r.router == nil {
+		return fmt.Errorf("routing not exists")
+	}
+
+	dbHandlers, err := dbhandlers.New(db, r.log)
+	if err != nil {
+		return fmt.Errorf("metrics handlers: %w", err)
+	}
+
+	if err := dbHandlers.RegisterRoutes(ctx, r.router); err != nil {
+		return fmt.Errorf("register database routes: %w", err)
 	}
 
 	return nil

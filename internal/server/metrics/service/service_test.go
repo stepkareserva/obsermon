@@ -55,29 +55,16 @@ func TestCounterService(t *testing.T) {
 
 		mockStorage.
 			EXPECT().
-			FindCounter("name").
-			Return(nil, false, nil)
-
-		mockStorage.
-			EXPECT().
-			SetCounter(models.Counter{
+			UpdateCounter(models.Counter{
 				Name:  "name",
 				Value: 1,
 			})
 
 		mockStorage.
 			EXPECT().
-			FindCounter("name").
-			Return(&models.Counter{
+			UpdateCounter(models.Counter{
 				Name:  "name",
-				Value: 1,
-			}, true, nil)
-
-		mockStorage.
-			EXPECT().
-			SetCounter(models.Counter{
-				Name:  "name",
-				Value: 3,
+				Value: 2,
 			})
 
 		mockStorage.

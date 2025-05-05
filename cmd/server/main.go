@@ -38,6 +38,7 @@ func main() {
 	app, err := app.New(context.TODO(), *cfg, log)
 	if err != nil {
 		log.Error("app init", zap.Error(err))
+		return
 	}
 	defer func() {
 		if err := app.Close(); err != nil {
@@ -49,10 +50,12 @@ func main() {
 	ctx, err := gracefulCancellingCtx(log)
 	if err != nil {
 		log.Error("graceful cancelling init", zap.Error(err))
+		return
 	}
 
 	if err := app.Run(ctx); err != nil {
 		log.Error("app running", zap.Error(err))
+		return
 	}
 }
 

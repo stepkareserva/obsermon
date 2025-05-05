@@ -12,7 +12,6 @@ import (
 
 type Config struct {
 	StateStorage  StateStorage
-	Restore       bool
 	StoreInterval time.Duration
 }
 
@@ -50,14 +49,6 @@ func New(cfg Config, base service.Storage, logger *zap.Logger) (*Storage, error)
 		logger:   logger,
 	}
 
-	// restore if required and possible
-	if cfg.Restore {
-		if err := storage.loadState(); err != nil {
-			// fail but ok ignore it
-			logger.Warn("service config restoring", zap.Error(err))
-		}
-	}
-
 	// run storing loop, sync or async
 	storage.wg.Add(1)
 	go func() {
@@ -85,6 +76,17 @@ func (s *Storage) SetGauge(val models.Gauge) error {
 	return nil
 }
 
+func (s *Storage) SetGauges(vals models.GaugesList) error {
+	if s == nil || s.Storage == nil {
+		return fmt.Errorf("storage not exists")
+	}
+	if err := s.Storage.SetGauges(vals); err != nil {
+		return err
+	}
+	s.onModify()
+	return nil
+}
+
 func (s *Storage) ReplaceGauges(val models.GaugesList) error {
 	if s == nil || s.Storage == nil {
 		return fmt.Errorf("storage not exists")
@@ -96,15 +98,28 @@ func (s *Storage) ReplaceGauges(val models.GaugesList) error {
 	return nil
 }
 
-func (s *Storage) SetCounter(val models.Counter) error {
+func (s *Storage) UpdateCounter(val models.Counter) (*models.Counter, error) {
 	if s == nil || s.Storage == nil {
-		return fmt.Errorf("storage not exists")
+		return nil, fmt.Errorf("storage not exists")
 	}
-	if err := s.Storage.SetCounter(val); err != nil {
-		return err
+	updated, err := s.Storage.UpdateCounter(val)
+	if err != nil {
+		return nil, err
 	}
 	s.onModify()
-	return nil
+	return updated, nil
+}
+
+func (s *Storage) UpdateCounters(vals models.CountersList) (models.CountersList, error) {
+	if s == nil || s.Storage == nil {
+		return nil, fmt.Errorf("storage not exists")
+	}
+	updated, err := s.Storage.UpdateCounters(vals)
+	if err != nil {
+		return nil, err
+	}
+	s.onModify()
+	return updated, nil
 }
 
 func (s *Storage) ReplaceCounters(val models.CountersList) error {
@@ -149,53 +164,19 @@ func (s *Storage) loadState() error {
 	if err != nil {
 		return fmt.Errorf("storage state loading: %w", err)
 	}
-	if err = setStorageState(s.Storage, state); err != nil {
+	if err = state.Export(s.Storage); err != nil {
 		return fmt.Errorf("storage state request: %w", err)
 	}
 	return nil
 }
 
 func (s *Storage) storeState() error {
-	state, err := getStorageState(s.Storage)
-	if err != nil {
+	var state State
+	if err := state.Import(s.Storage); err != nil {
 		return fmt.Errorf("storage state request: %w", err)
 	}
-	if err = s.sstorage.StoreState(*state); err != nil {
+	if err := s.sstorage.StoreState(state); err != nil {
 		return fmt.Errorf("storage state storing: %w", err)
-	}
-	return nil
-}
-
-func getStorageState(storage service.Storage) (*State, error) {
-	if storage == nil {
-		return nil, fmt.Errorf("storage not exists")
-	}
-	counters, err := storage.ListCounters()
-	if err != nil {
-		return nil, fmt.Errorf("getting counters: %w", err)
-	}
-	gauges, err := storage.ListGauges()
-	if err != nil {
-		return nil, fmt.Errorf("getting gauges: %w", err)
-	}
-	return &State{
-		Counters: counters,
-		Gauges:   gauges,
-	}, nil
-}
-
-func setStorageState(storage service.Storage, state *State) error {
-	if storage == nil {
-		return fmt.Errorf("storage not exists")
-	}
-	if state == nil {
-		return fmt.Errorf("state not exists")
-	}
-	if err := storage.ReplaceCounters(state.Counters); err != nil {
-		return fmt.Errorf("replacing storage counters: %w", err)
-	}
-	if err := storage.ReplaceGauges(state.Gauges); err != nil {
-		return fmt.Errorf("replacing storage gauges: %w", err)
 	}
 	return nil
 }

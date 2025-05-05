@@ -211,6 +211,21 @@ func (mr *MockMetricsServiceMockRecorder) UpdateMetric(val any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMetric", reflect.TypeOf((*MockMetricsService)(nil).UpdateMetric), val)
 }
 
+// UpdateMetrics mocks base method.
+func (m *MockMetricsService) UpdateMetrics(vals []models.Metrics) ([]models.Metrics, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateMetrics", vals)
+	ret0, _ := ret[0].([]models.Metrics)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateMetrics indicates an expected call of UpdateMetrics.
+func (mr *MockMetricsServiceMockRecorder) UpdateMetrics(vals any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMetrics", reflect.TypeOf((*MockMetricsService)(nil).UpdateMetrics), vals)
+}
+
 // MockService is a mock of Service interface.
 type MockService struct {
 	ctrl     *gomock.Controller
@@ -356,4 +371,19 @@ func (m *MockService) UpdateMetric(val models.Metrics) (*models.Metrics, error) 
 func (mr *MockServiceMockRecorder) UpdateMetric(val any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMetric", reflect.TypeOf((*MockService)(nil).UpdateMetric), val)
+}
+
+// UpdateMetrics mocks base method.
+func (m *MockService) UpdateMetrics(vals []models.Metrics) ([]models.Metrics, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateMetrics", vals)
+	ret0, _ := ret[0].([]models.Metrics)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateMetrics indicates an expected call of UpdateMetrics.
+func (mr *MockServiceMockRecorder) UpdateMetrics(vals any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMetrics", reflect.TypeOf((*MockService)(nil).UpdateMetrics), vals)
 }
