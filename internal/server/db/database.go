@@ -142,7 +142,7 @@ func (db *Database) sustainedOp(ctx context.Context, op func(ctx context.Context
 			switch {
 			case err == nil:
 				return nil
-			case !isDbConnectionError(err):
+			case !isDBConnectionError(err):
 				return fmt.Errorf("sustained op: %w", err)
 			}
 		}
@@ -151,7 +151,7 @@ func (db *Database) sustainedOp(ctx context.Context, op func(ctx context.Context
 	return nil
 }
 
-func isDbConnectionError(err error) bool {
+func isDBConnectionError(err error) bool {
 	var netErr net.Error
 	return errors.As(err, &netErr) && netErr.Timeout()
 }
