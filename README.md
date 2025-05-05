@@ -41,10 +41,12 @@ Params:
 - `POST /update/counter/name/value` - update counter, value is int
 - `POST /update/gauge/name/value` - update gauge, value is float
 - `POST /update` - update counter or gauge
+- `POST /updates` - update batch of metrics (counters and gauges)
 - `GET /value/counter/name` - get counter value, 404 if not exists
 - `GET /value/gauge/name` - get gauge value, 404 if not exists
 - `POST /value` - GET(lol) counter or gauge
 - `GET /` - html page with all counters and gauges
+- `GET /ping` - check database status
 
 ## Monitoring page example
 
