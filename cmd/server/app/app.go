@@ -14,11 +14,11 @@ import (
 	"github.com/stepkareserva/obsermon/internal/server/database/sustained"
 	idatabase "github.com/stepkareserva/obsermon/internal/server/interfaces/database"
 
-	"github.com/stepkareserva/obsermon/internal/server/metrics/dbstorage"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/memstorage"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/persistence"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/storage/dbstorage"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/storage/memstorage"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/storage/persistence"
 	"github.com/stepkareserva/obsermon/internal/server/routing"
 	"github.com/stepkareserva/obsermon/internal/server/server"
 
