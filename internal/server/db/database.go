@@ -62,6 +62,9 @@ func (db *Database) ExecContext(ctx context.Context, query string, args ...any) 
 func (db *Database) QueryContext(ctx context.Context, query string, args ...any) (rows *sql.Rows, err error) {
 	err = db.sustainedOp(ctx, func(ctx context.Context) error {
 		rows, err = db.db.QueryContext(ctx, query, args...)
+		if rows != nil && rows.Err() != nil {
+			err = rows.Err()
+		}
 		return err
 	})
 	if err != nil {
