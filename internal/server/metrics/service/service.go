@@ -152,9 +152,70 @@ func (s *Service) FindMetric(t models.MetricType, name string) (*models.Metrics,
 	}
 }
 
+func (s *Service) UpdateMetrics(vals []models.Metrics) ([]models.Metrics, error) {
+	if err := s.checkValidity(); err != nil {
+		return nil, err
+	}
+
+	// get counters and gauges from metrics
+	counters, gauges, err := splitMetrics(vals)
+	if err != nil {
+		return nil, fmt.Errorf("split metrics: %w", err)
+	}
+
+	// update counters and gauges
+	counters, err = s.storage.UpdateCounters(counters)
+	if err != nil {
+		return nil, fmt.Errorf("update counters: %w", err)
+	}
+	err = s.storage.SetGauges(gauges)
+	if err != nil {
+		return nil, fmt.Errorf("update gauges: %w", err)
+	}
+
+	metrics := mergeMetrics(counters, gauges)
+
+	return metrics, nil
+}
+
 func (s *Service) checkValidity() error {
 	if s == nil || s.storage == nil {
 		return fmt.Errorf("Service not exists")
 	}
 	return nil
+}
+
+func splitMetrics(vals []models.Metrics) (models.CountersList, models.GaugesList, error) {
+	var counters models.CountersList
+	var gauges models.GaugesList
+	for _, val := range vals {
+		switch val.MType {
+		case models.MetricTypeCounter:
+			counter, err := val.Counter()
+			if err != nil {
+				return nil, nil, err
+			}
+			counters = append(counters, *counter)
+		case models.MetricTypeGauge:
+			gauge, err := val.Gauge()
+			if err != nil {
+				return nil, nil, err
+			}
+			gauges = append(gauges, *gauge)
+		default:
+			return nil, nil, fmt.Errorf("unknown metric type")
+		}
+	}
+	return counters, gauges, nil
+}
+
+func mergeMetrics(counters models.CountersList, gauges models.GaugesList) []models.Metrics {
+	metrics := make([]models.Metrics, 0, len(counters)+len(gauges))
+	for _, counter := range counters {
+		metrics = append(metrics, models.CounterMetric(counter))
+	}
+	for _, gauge := range gauges {
+		metrics = append(metrics, models.GaugeMetric(gauge))
+	}
+	return metrics
 }

@@ -24,13 +24,11 @@ func (e *ErrorsWriter) WriteError(w http.ResponseWriter, err HandlerError, detai
 		e.log.Error("error writing", zap.Error(writingErr))
 	}
 
-	if err.StatusCode == http.StatusInternalServerError {
-		// log internal server error details to log
-		e.log.Error("internal server error",
-			zap.String("message", err.Message),
-			zap.String("details", strings.Join(details, " ")),
-		)
-	}
+	// log error details to log
+	e.log.Error("internal server error",
+		zap.String("message", err.Message),
+		zap.String("details", strings.Join(details, " ")),
+	)
 }
 
 func writeError(w http.ResponseWriter, err HandlerError) error {

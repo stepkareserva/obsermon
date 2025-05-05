@@ -29,20 +29,29 @@ func New(endpoint string) (*MetricsClient, error) {
 }
 
 func (c *MetricsClient) UpdateCounter(value models.Counter) error {
-	metric := models.CounterMetric(value)
-	return c.sendUpdateRequest(metric)
+	return c.BatchUpdate(models.CountersList{value}, nil)
 }
 
 func (c *MetricsClient) UpdateGauge(value models.Gauge) error {
-	metric := models.GaugeMetric(value)
-	return c.sendUpdateRequest(metric)
+	return c.BatchUpdate(nil, models.GaugesList{value})
 }
 
-func (c *MetricsClient) sendUpdateRequest(metric models.Metrics) error {
+func (c *MetricsClient) BatchUpdate(counters models.CountersList, gauges models.GaugesList) error {
+	metrics := make([]models.Metrics, 0, len(counters)+len(gauges))
+	for _, counter := range counters {
+		metrics = append(metrics, models.CounterMetric(counter))
+	}
+	for _, gauge := range gauges {
+		metrics = append(metrics, models.GaugeMetric(gauge))
+	}
+	return c.sendUpdateRequest(metrics)
+}
+
+func (c *MetricsClient) sendUpdateRequest(metric []models.Metrics) error {
 	resp, err := c.client.R().
 		SetHeader("Content-Type", "application/json").
 		SetBody(metric).
-		Post("/update")
+		Post("/updates")
 
 	if err != nil {
 		return fmt.Errorf("could not send request: %w", err)
