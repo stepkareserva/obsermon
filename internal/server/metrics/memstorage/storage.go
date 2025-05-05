@@ -78,6 +78,23 @@ func (m *Storage) UpdateCounter(val models.Counter) (*models.Counter, error) {
 	return &val, nil
 }
 
+func (m *Storage) UpdateCounters(vals models.CountersList) (models.CountersList, error) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	for _, val := range vals {
+		counter, exists := m.counters[val.Name]
+		if exists {
+			if err := val.Value.Update(counter); err != nil {
+				return nil, fmt.Errorf("update counters: %w", err)
+			}
+		}
+		m.counters[val.Name] = val.Value
+	}
+
+	return vals, nil
+}
+
 func (m *Storage) FindCounter(name string) (*models.Counter, bool, error) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()

@@ -197,6 +197,21 @@ func (mr *MockCounterStorageMockRecorder) UpdateCounter(val any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCounter", reflect.TypeOf((*MockCounterStorage)(nil).UpdateCounter), val)
 }
 
+// UpdateCounters mocks base method.
+func (m *MockCounterStorage) UpdateCounters(vals models.CountersList) (models.CountersList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateCounters", vals)
+	ret0, _ := ret[0].(models.CountersList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateCounters indicates an expected call of UpdateCounters.
+func (mr *MockCounterStorageMockRecorder) UpdateCounters(vals any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCounters", reflect.TypeOf((*MockCounterStorage)(nil).UpdateCounters), vals)
+}
+
 // MockStorage is a mock of Storage interface.
 type MockStorage struct {
 	ctrl     *gomock.Controller
@@ -352,4 +367,19 @@ func (m *MockStorage) UpdateCounter(val models.Counter) (*models.Counter, error)
 func (mr *MockStorageMockRecorder) UpdateCounter(val any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCounter", reflect.TypeOf((*MockStorage)(nil).UpdateCounter), val)
+}
+
+// UpdateCounters mocks base method.
+func (m *MockStorage) UpdateCounters(vals models.CountersList) (models.CountersList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateCounters", vals)
+	ret0, _ := ret[0].(models.CountersList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateCounters indicates an expected call of UpdateCounters.
+func (mr *MockStorageMockRecorder) UpdateCounters(vals any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCounters", reflect.TypeOf((*MockStorage)(nil).UpdateCounters), vals)
 }

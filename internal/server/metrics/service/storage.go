@@ -14,6 +14,7 @@ type CounterOp = func(val *models.CounterValue) error
 
 type CounterStorage interface {
 	UpdateCounter(val models.Counter) (*models.Counter, error)
+	UpdateCounters(vals models.CountersList) (models.CountersList, error)
 	FindCounter(name string) (*models.Counter, bool, error)
 	ListCounters() (models.CountersList, error)
 	ReplaceCounters(val models.CountersList) error

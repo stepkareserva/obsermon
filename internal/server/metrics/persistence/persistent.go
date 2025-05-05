@@ -110,6 +110,18 @@ func (s *Storage) UpdateCounter(val models.Counter) (*models.Counter, error) {
 	return updated, nil
 }
 
+func (s *Storage) UpdateCounters(vals models.CountersList) (models.CountersList, error) {
+	if s == nil || s.Storage == nil {
+		return nil, fmt.Errorf("storage not exists")
+	}
+	updated, err := s.Storage.UpdateCounters(vals)
+	if err != nil {
+		return nil, err
+	}
+	s.onModify()
+	return updated, nil
+}
+
 func (s *Storage) ReplaceCounters(val models.CountersList) error {
 	if s == nil || s.Storage == nil {
 		return fmt.Errorf("storage not exists")
