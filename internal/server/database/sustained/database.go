@@ -36,6 +36,10 @@ func (db *Database) Exec(ctx context.Context, query string, args ...any) (res sq
 func (db *Database) Query(ctx context.Context, query string, args ...any) (rows *sql.Rows, err error) {
 	err = db.sustainedOp(ctx, func(ctx context.Context) (opErr error) {
 		rows, opErr = db.Database.Query(ctx, query, args...)
+		// for static code analyser, idk why, may be false alarm
+		if rows != nil && rows.Err() != nil {
+			opErr = rows.Err()
+		}
 		return
 	})
 	if err != nil {
