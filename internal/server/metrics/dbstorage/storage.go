@@ -179,18 +179,18 @@ func (s *Storage) SetGauges(vals models.GaugesList) error {
 	defer s.txClosingFn(tx, err)
 
 	// insert or update gauges
-	stmt, err := tx.PrepareContext(ctx, setGaugeQuery)
+	setGaugeStmt, err := tx.PrepareContext(ctx, setGaugeQuery)
 	if err != nil {
 		return fmt.Errorf("prepare set gauges context: %w", err)
 	}
 	defer func() {
-		if err := stmt.Close(); err != nil {
+		if err := setGaugeStmt.Close(); err != nil {
 			s.log.Error("close set gauges statement", zap.Error(err))
 		}
 	}()
 
 	for _, val := range vals {
-		if _, err = stmt.ExecContext(ctx, val.Name, val.Value); err != nil {
+		if _, err = setGaugeStmt.ExecContext(ctx, val.Name, val.Value); err != nil {
 			return fmt.Errorf("set gauge: %w", err)
 		}
 	}
@@ -267,6 +267,82 @@ func (s *Storage) UpdateCounter(val models.Counter) (*models.Counter, error) {
 		}
 		return &val, nil
 	}
+}
+
+func (s *Storage) UpdateCounters(vals models.CountersList) (models.CountersList, error) {
+	if s == nil || s.db == nil {
+		return nil, fmt.Errorf("database not exists")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
+	defer cancel()
+
+	tx, err := s.db.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer s.txClosingFn(tx, err)
+
+	// lock counter statement
+	selectCounterStmt, err := tx.PrepareContext(ctx, selectCounterForUpdateQuery)
+	if err != nil {
+		return nil, fmt.Errorf("prepare select counter statement: %w", err)
+	}
+	defer func() {
+		if err := selectCounterStmt.Close(); err != nil {
+			s.log.Error("close select counter statement", zap.Error(err))
+		}
+	}()
+
+	// insert counter statement
+	insertCounterStmt, err := tx.PrepareContext(ctx, insertCounterQuery)
+	if err != nil {
+		return nil, fmt.Errorf("prepare insert counter statement: %w", err)
+	}
+	defer func() {
+		if err := insertCounterStmt.Close(); err != nil {
+			s.log.Error("close insert counter statement", zap.Error(err))
+		}
+	}()
+
+	// update counter statemnt
+	updateCounterStmt, err := tx.PrepareContext(ctx, updateCounterQuery)
+	if err != nil {
+		return nil, fmt.Errorf("prepare update counter statement: %w", err)
+	}
+	defer func() {
+		if err := updateCounterStmt.Close(); err != nil {
+			s.log.Error("close update counter statement", zap.Error(err))
+		}
+	}()
+
+	var updatedVals models.CountersList
+	for _, val := range vals {
+		// get counter value
+		var currentVal models.CounterValue
+		err = selectCounterStmt.QueryRowContext(ctx, val.Name).Scan(&currentVal)
+
+		// update or insert updated counter value
+		switch {
+		case err == sql.ErrNoRows:
+			if _, err = insertCounterStmt.ExecContext(ctx, val.Name, val.Value); err != nil {
+				return nil, fmt.Errorf("insert counter: %w", err)
+			}
+			updatedVals = append(updatedVals, val)
+		case err != nil:
+			return nil, fmt.Errorf("query counter: %w", err)
+		default:
+			if err = val.Value.Update(currentVal); err != nil {
+				return nil, fmt.Errorf("update counter value: %w", err)
+			}
+			if _, err := updateCounterStmt.ExecContext(ctx, val.Name, val.Value); err != nil {
+				return nil, fmt.Errorf("update counter: %w", err)
+			}
+			updatedVals = append(updatedVals, val)
+		}
+	}
+
+	return updatedVals, nil
 }
 
 func (s *Storage) FindCounter(name string) (*models.Counter, bool, error) {
