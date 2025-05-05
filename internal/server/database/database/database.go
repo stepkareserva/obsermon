@@ -1,19 +1,19 @@
-package db
+package database
 
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
-	"net"
-	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/stepkareserva/obsermon/internal/server/interfaces/database"
 )
 
 type Database struct {
 	db *sql.DB
 }
+
+var _ database.Database = (*Database)(nil)
 
 func New(dbConn string) (*Database, error) {
 	db, err := sql.Open("pgx", dbConn)
@@ -43,56 +43,37 @@ func (db *Database) Ping() error {
 	return nil
 }
 
-func (db *Database) ExecContext(ctx context.Context, query string, args ...any) (res sql.Result, err error) {
-	err = db.sustainedOp(ctx, func(ctx context.Context) error {
-		res, err = db.db.ExecContext(ctx, query, args...)
-		return err
-	})
+func (db *Database) Exec(ctx context.Context, query string, args ...any) (sql.Result, error) {
+	if db == nil || db.db == nil {
+		return nil, fmt.Errorf("db not exists")
+	}
+	res, err := db.db.ExecContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("exec: %w", err)
 	}
-	return
+	return res, nil
 }
 
-func (db *Database) QueryContext(ctx context.Context, query string, args ...any) (rows *sql.Rows, err error) {
-	err = db.sustainedOp(ctx, func(ctx context.Context) error {
-		rows, err = db.db.QueryContext(ctx, query, args...)
-		// errcheck requires this 3 lines wtf
-		if rows != nil && rows.Err() != nil {
-			err = rows.Err()
-		}
-		return err
-	})
+func (db *Database) Query(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
+	if db == nil || db.db == nil {
+		return nil, fmt.Errorf("db not exists")
+	}
+	rows, err := db.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}
-	return
+	return rows, nil
 }
 
-func (db *Database) QueryRowContext(ctx context.Context, query string, args ...any) (row *sql.Row, err error) {
-	err = db.sustainedOp(ctx, func(ctx context.Context) error {
-		row = db.db.QueryRowContext(ctx, query, args...)
-		err = row.Err()
-		return err
-	})
-	if err != nil {
-		return nil, fmt.Errorf("query row: %w", err)
+func (db *Database) QueryRow(ctx context.Context, query string, args ...any) (*sql.Row, error) {
+	if db == nil || db.db == nil {
+		return nil, fmt.Errorf("db not exists")
 	}
-	return
+	row := db.db.QueryRowContext(ctx, query, args...)
+	return row, row.Err()
 }
 
-func (db *Database) ExecTxFn(ctx context.Context, txFn func(ctx context.Context, tx *sql.Tx) error) (err error) {
-	err = db.sustainedOp(ctx, func(ctx context.Context) error {
-		err = db.execTxFn(ctx, txFn)
-		return err
-	})
-	if err != nil {
-		return fmt.Errorf("exec tx: %w", err)
-	}
-	return
-}
-
-func (db *Database) execTxFn(ctx context.Context, txFn func(ctx context.Context, tx *sql.Tx) error) (err error) {
+func (db *Database) ExecTxFn(ctx context.Context, txFn database.TxFn) (err error) {
 	if db == nil || db.db == nil {
 		return fmt.Errorf("database not exists")
 	}
@@ -117,40 +98,4 @@ func (db *Database) execTxFn(ctx context.Context, txFn func(ctx context.Context,
 	}
 
 	return nil
-}
-
-func (db *Database) sustainedOp(ctx context.Context, op func(ctx context.Context) error) error {
-	if db == nil || db.db == nil {
-		return fmt.Errorf("database not exists")
-	}
-
-	delays := []time.Duration{
-		0,
-		1 * time.Second,
-		3 * time.Second,
-		5 * time.Second,
-	}
-
-	for _, delay := range delays {
-		timer := time.NewTimer(delay)
-		select {
-		case <-ctx.Done():
-			return fmt.Errorf("sustained op timeout")
-		case <-timer.C:
-			err := op(ctx)
-			switch {
-			case err == nil:
-				return nil
-			case !isDBConnectionError(err):
-				return fmt.Errorf("sustained op: %w", err)
-			}
-		}
-	}
-
-	return nil
-}
-
-func isDBConnectionError(err error) bool {
-	var netErr net.Error
-	return errors.As(err, &netErr) && netErr.Timeout()
 }

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/stepkareserva/obsermon/internal/models"
-	"github.com/stepkareserva/obsermon/internal/server/common/database"
+	"github.com/stepkareserva/obsermon/internal/server/interfaces/database"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
 	"go.uber.org/zap"
 )
@@ -138,12 +138,12 @@ func (s *Storage) initTables() error {
 	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
 	defer cancel()
 
-	if _, err := s.db.ExecContext(ctx, createCountersQuery); err != nil {
+	if _, err := s.db.Exec(ctx, createCountersQuery); err != nil {
 		return fmt.Errorf("counters table creation: %w", err)
 	}
 
 	// create gauges table
-	if _, err := s.db.ExecContext(ctx, createGaugesQuery); err != nil {
+	if _, err := s.db.Exec(ctx, createGaugesQuery); err != nil {
 		return fmt.Errorf("gauges table creation: %w", err)
 	}
 
@@ -158,7 +158,7 @@ func (s *Storage) SetGauge(val models.Gauge) error {
 	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
 	defer cancel()
 
-	if _, err := s.db.ExecContext(ctx, setGaugeQuery, val.Name, val.Value); err != nil {
+	if _, err := s.db.Exec(ctx, setGaugeQuery, val.Name, val.Value); err != nil {
 		return fmt.Errorf("set gauge: %w", err)
 	}
 
@@ -396,7 +396,7 @@ func findMetric[Value any](s *Storage, query, name string) (*Value, bool, error)
 	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
 	defer cancel()
 
-	row, err := s.db.QueryRowContext(ctx, query, name)
+	row, err := s.db.QueryRow(ctx, query, name)
 	if err != nil {
 		return nil, false, fmt.Errorf("find metric: %w", err)
 	}
@@ -421,7 +421,7 @@ func listMetrics[Value any](s *Storage, query string) (names []string, values []
 	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
 	defer cancel()
 
-	rows, err := s.db.QueryContext(ctx, query)
+	rows, err := s.db.Query(ctx, query)
 	if err != nil {
 		return nil, nil, fmt.Errorf("query rows: %w", err)
 	}

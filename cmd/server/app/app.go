@@ -9,7 +9,11 @@ import (
 	"time"
 
 	"github.com/stepkareserva/obsermon/internal/server/config"
-	"github.com/stepkareserva/obsermon/internal/server/db"
+
+	"github.com/stepkareserva/obsermon/internal/server/database/database"
+	"github.com/stepkareserva/obsermon/internal/server/database/sustained"
+	idatabase "github.com/stepkareserva/obsermon/internal/server/interfaces/database"
+
 	"github.com/stepkareserva/obsermon/internal/server/metrics/dbstorage"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/memstorage"
@@ -17,11 +21,12 @@ import (
 	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
 	"github.com/stepkareserva/obsermon/internal/server/routing"
 	"github.com/stepkareserva/obsermon/internal/server/server"
+
 	"go.uber.org/zap"
 )
 
 type App struct {
-	database *db.Database
+	database idatabase.Database
 	storage  service.Storage
 	service  handlers.Service
 	handler  http.Handler
@@ -149,15 +154,22 @@ func (a *App) initDatabase(cfg config.Config) error {
 		return nil
 	}
 
-	db, err := db.New(cfg.DBConnection)
+	// create database
+	db, err := database.New(cfg.DBConnection)
 	if err != nil {
 		return fmt.Errorf("db connect: %w", err)
 	}
+	a.database = db
 	if err := db.Ping(); err != nil {
 		return fmt.Errorf("db ping: %w", err)
 	}
 
-	a.database = db
+	// wrap onto sustainable database
+	sustDB, err := sustained.New(a.database)
+	if err != nil {
+		return fmt.Errorf("sustained db creation")
+	}
+	a.database = sustDB
 
 	return nil
 }

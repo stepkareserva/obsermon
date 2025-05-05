@@ -6,9 +6,12 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	dbhandlers "github.com/stepkareserva/obsermon/internal/server/db/handlers"
+
+	dbhandlers "github.com/stepkareserva/obsermon/internal/server/database/handlers"
 	"github.com/stepkareserva/obsermon/internal/server/interfaces/database"
+
 	mhandlers "github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
+
 	"github.com/stepkareserva/obsermon/internal/server/middleware"
 	"go.uber.org/zap"
 )
