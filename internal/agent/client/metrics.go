@@ -47,10 +47,14 @@ func (c *MetricsClient) BatchUpdate(counters models.CountersList, gauges models.
 	return c.sendUpdateRequest(metrics)
 }
 
-func (c *MetricsClient) sendUpdateRequest(metric []models.Metrics) error {
+func (c *MetricsClient) sendUpdateRequest(metrics []models.Metrics) error {
+	if len(metrics) == 0 {
+		return nil
+	}
+
 	resp, err := c.client.R().
 		SetHeader("Content-Type", "application/json").
-		SetBody(metric).
+		SetBody(metrics).
 		Post("/updates")
 
 	if err != nil {
