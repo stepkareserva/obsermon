@@ -177,7 +177,7 @@ func (a *App) initStorage(cfg config.Config) error {
 			a.log.Warn("service config restoring", zap.Error(err))
 		} else {
 			currentState = state
-			a.log.Info("restored state loaded")
+			a.log.Info("restored state loaded", zap.String("location", cfg.FileStoragePath))
 		}
 	}
 

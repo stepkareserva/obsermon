@@ -87,15 +87,16 @@ func (s *Storage) ReplaceGauges(val models.GaugesList) error {
 	return nil
 }
 
-func (s *Storage) SetCounter(val models.Counter) error {
+func (s *Storage) UpdateCounter(val models.Counter) (*models.Counter, error) {
 	if s == nil || s.Storage == nil {
-		return fmt.Errorf("storage not exists")
+		return nil, fmt.Errorf("storage not exists")
 	}
-	if err := s.Storage.SetCounter(val); err != nil {
-		return err
+	updated, err := s.Storage.UpdateCounter(val)
+	if err != nil {
+		return nil, err
 	}
 	s.onModify()
-	return nil
+	return updated, nil
 }
 
 func (s *Storage) ReplaceCounters(val models.CountersList) error {

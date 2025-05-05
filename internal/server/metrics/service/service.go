@@ -62,25 +62,11 @@ func (s *Service) UpdateCounter(val models.Counter) (*models.Counter, error) {
 		return nil, err
 	}
 
-	current, exists, err := s.storage.FindCounter(val.Name)
+	updatedVal, err := s.storage.UpdateCounter(val)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("update counter: %w", err)
 	}
-
-	if !exists {
-		if err := s.storage.SetCounter(val); err != nil {
-			return nil, err
-		}
-		return &val, nil
-	}
-
-	if err = current.Value.Update(val.Value); err != nil {
-		return nil, err
-	}
-	if err = s.storage.SetCounter(*current); err != nil {
-		return nil, err
-	}
-	return &val, nil
+	return updatedVal, nil
 }
 
 func (s *Service) FindCounter(name string) (*models.Counter, bool, error) {

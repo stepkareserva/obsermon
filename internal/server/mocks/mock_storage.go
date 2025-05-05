@@ -168,18 +168,19 @@ func (mr *MockCounterStorageMockRecorder) ReplaceCounters(val any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplaceCounters", reflect.TypeOf((*MockCounterStorage)(nil).ReplaceCounters), val)
 }
 
-// SetCounter mocks base method.
-func (m *MockCounterStorage) SetCounter(val models.Counter) error {
+// UpdateCounter mocks base method.
+func (m *MockCounterStorage) UpdateCounter(val models.Counter) (*models.Counter, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetCounter", val)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "UpdateCounter", val)
+	ret0, _ := ret[0].(*models.Counter)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// SetCounter indicates an expected call of SetCounter.
-func (mr *MockCounterStorageMockRecorder) SetCounter(val any) *gomock.Call {
+// UpdateCounter indicates an expected call of UpdateCounter.
+func (mr *MockCounterStorageMockRecorder) UpdateCounter(val any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCounter", reflect.TypeOf((*MockCounterStorage)(nil).SetCounter), val)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCounter", reflect.TypeOf((*MockCounterStorage)(nil).UpdateCounter), val)
 }
 
 // MockStorage is a mock of Storage interface.
@@ -296,20 +297,6 @@ func (mr *MockStorageMockRecorder) ReplaceGauges(val any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplaceGauges", reflect.TypeOf((*MockStorage)(nil).ReplaceGauges), val)
 }
 
-// SetCounter mocks base method.
-func (m *MockStorage) SetCounter(val models.Counter) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetCounter", val)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetCounter indicates an expected call of SetCounter.
-func (mr *MockStorageMockRecorder) SetCounter(val any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCounter", reflect.TypeOf((*MockStorage)(nil).SetCounter), val)
-}
-
 // SetGauge mocks base method.
 func (m *MockStorage) SetGauge(val models.Gauge) error {
 	m.ctrl.T.Helper()
@@ -322,4 +309,19 @@ func (m *MockStorage) SetGauge(val models.Gauge) error {
 func (mr *MockStorageMockRecorder) SetGauge(val any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGauge", reflect.TypeOf((*MockStorage)(nil).SetGauge), val)
+}
+
+// UpdateCounter mocks base method.
+func (m *MockStorage) UpdateCounter(val models.Counter) (*models.Counter, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateCounter", val)
+	ret0, _ := ret[0].(*models.Counter)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateCounter indicates an expected call of UpdateCounter.
+func (mr *MockStorageMockRecorder) UpdateCounter(val any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCounter", reflect.TypeOf((*MockStorage)(nil).UpdateCounter), val)
 }

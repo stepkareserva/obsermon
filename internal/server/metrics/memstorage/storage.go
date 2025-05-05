@@ -1,6 +1,7 @@
 package memstorage
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/stepkareserva/obsermon/internal/models"
@@ -53,12 +54,19 @@ func (m *Storage) ReplaceGauges(val models.GaugesList) error {
 	return nil
 }
 
-func (m *Storage) SetCounter(val models.Counter) error {
+func (m *Storage) UpdateCounter(val models.Counter) (*models.Counter, error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
+	counter, exists := m.counters[val.Name]
+	if exists {
+		if err := val.Value.Update(counter); err != nil {
+			return nil, fmt.Errorf("update counter: %w", err)
+		}
+	}
 	m.counters[val.Name] = val.Value
-	return nil
+
+	return &val, nil
 }
 
 func (m *Storage) FindCounter(name string) (*models.Counter, bool, error) {

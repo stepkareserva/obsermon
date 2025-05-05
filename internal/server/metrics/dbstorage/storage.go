@@ -49,23 +49,34 @@ var (
 			{value} DOUBLE PRECISION NOT NULL
 		)`)
 
-	setCounterQuery = queryReplacer.Replace(`
+	insertCounterQuery = queryReplacer.Replace(`
 		INSERT
 			INTO {counters} ({name}, {value})
 			VALUES ($1, $2)
-		ON CONFLICT ({name})
-			DO UPDATE SET {value} = EXCLUDED.{value};
+		`)
+
+	updateCounterQuery = queryReplacer.Replace(`
+		UPDATE {counters}
+			SET {value} = $2
+			WHERE {name} = $1
 		`)
 
 	findCounterQuery = queryReplacer.Replace(`
 		SELECT {value}
 			FROM {counters}
-			WHERE {name} = $1;
+			WHERE {name} = $1
 		`)
 
 	listCountersQuery = queryReplacer.Replace(`
 		SELECT {name}, {value}
 			FROM {counters}
+		`)
+
+	selectCounterForUpdateQuery = queryReplacer.Replace(`
+		SELECT {value}
+			FROM {counters}
+			WHERE {name} = $1
+		FOR UPDATE
 		`)
 
 	clearCountersQuery = queryReplacer.Replace(`
@@ -77,13 +88,19 @@ var (
 			INTO {gauges} ({name}, {value})
 			VALUES ($1, $2)
 		ON CONFLICT ({name})
-			DO UPDATE SET {value} = EXCLUDED.{value};
+			DO UPDATE SET {value} = EXCLUDED.{value}
+		`)
+
+	insertGaugeQuery = queryReplacer.Replace(`
+		INSERT
+			INTO {gauges} ({name}, {value})
+			VALUES ($1, $2)
 		`)
 
 	findGaugeQuery = queryReplacer.Replace(`
 		SELECT {value}
 			FROM {gauges}
-			WHERE {name} = $1;
+			WHERE {name} = $1
 		`)
 
 	listGaugesQuery = queryReplacer.Replace(`
@@ -133,9 +150,17 @@ func (s *Storage) initTables() error {
 }
 
 func (s *Storage) SetGauge(val models.Gauge) error {
-	if err := setMetric(s, setGaugeQuery, val.Name, val.Value); err != nil {
+	if s == nil || s.db == nil {
+		return fmt.Errorf("database not exists")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
+	defer cancel()
+
+	if _, err := s.db.ExecContext(ctx, setGaugeQuery, val.Name, val.Value); err != nil {
 		return fmt.Errorf("set gauge: %w", err)
 	}
+
 	return nil
 }
 
@@ -167,17 +192,48 @@ func (s *Storage) ListGauges() (models.GaugesList, error) {
 
 func (s *Storage) ReplaceGauges(val models.GaugesList) error {
 	names, values := unzipGauges(val)
-	if err := replaceMetrics(s, clearGaugeQuery, setGaugeQuery, names, values); err != nil {
+	if err := replaceMetrics(s, clearGaugeQuery, insertGaugeQuery, names, values); err != nil {
 		return fmt.Errorf("replace gauges: %w", err)
 	}
 	return nil
 }
 
-func (s *Storage) SetCounter(val models.Counter) error {
-	if err := setMetric(s, setCounterQuery, val.Name, val.Value); err != nil {
-		return fmt.Errorf("set counter: %w", err)
+func (s *Storage) UpdateCounter(val models.Counter) (*models.Counter, error) {
+	if s == nil || s.db == nil {
+		return nil, fmt.Errorf("database not exists")
 	}
-	return nil
+
+	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
+	defer cancel()
+
+	tx, err := s.db.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer s.txClosingFn(tx, err)
+
+	// get current counter value
+	var currentVal models.CounterValue
+	err = tx.QueryRowContext(ctx, selectCounterForUpdateQuery, val.Name).Scan(&currentVal)
+
+	// update or insert updated counter value
+	switch {
+	case err == sql.ErrNoRows:
+		if _, err = tx.ExecContext(ctx, insertCounterQuery, val.Name, val.Value); err != nil {
+			return nil, fmt.Errorf("insert counter: %w", err)
+		}
+		return &val, nil
+	case err != nil:
+		return nil, fmt.Errorf("query counter: %w", err)
+	default:
+		if err = val.Value.Update(currentVal); err != nil {
+			return nil, fmt.Errorf("update counter value: %w", err)
+		}
+		if _, err := tx.ExecContext(ctx, updateCounterQuery, val.Name, val.Value); err != nil {
+			return nil, fmt.Errorf("update counter: %w", err)
+		}
+		return &val, nil
+	}
 }
 
 func (s *Storage) FindCounter(name string) (*models.Counter, bool, error) {
@@ -208,25 +264,21 @@ func (s *Storage) ListCounters() (models.CountersList, error) {
 
 func (s *Storage) ReplaceCounters(val models.CountersList) error {
 	names, values := unzipCounters(val)
-	if err := replaceMetrics(s, clearCountersQuery, setCounterQuery, names, values); err != nil {
-		return fmt.Errorf("replace gauges: %w", err)
+	if err := replaceMetrics(s, clearCountersQuery, insertCounterQuery, names, values); err != nil {
+		return fmt.Errorf("replace counters: %w", err)
 	}
 	return nil
 }
 
-func setMetric[Value any](s *Storage, query, name string, value Value) error {
-	if s == nil || s.db == nil {
-		return fmt.Errorf("database not exists")
+func (s *Storage) txClosingFn(tx *sql.Tx, err error) {
+	if err != nil {
+		err = tx.Rollback()
+	} else {
+		err = tx.Commit()
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
-	defer cancel()
-
-	if _, err := s.db.ExecContext(ctx, query, name, value); err != nil {
-		return fmt.Errorf("set metric: %w", err)
+	if err != nil {
+		s.log.Error("update counter transaction", zap.Error(err))
 	}
-
-	return nil
 }
 
 func findMetric[Value any](s *Storage, query, name string) (*Value, bool, error) {
@@ -293,7 +345,7 @@ func listMetrics[Value any](s *Storage, query string) (names []string, values []
 	return names, values, nil
 }
 
-func replaceMetrics[Value any](s *Storage, clearQuery, addQuery string, names []string, values []Value) error {
+func replaceMetrics[Value any](s *Storage, clearQuery, insertQuery string, names []string, values []Value) error {
 	if s == nil || s.db == nil {
 		return fmt.Errorf("database not exists")
 	}
@@ -309,12 +361,7 @@ func replaceMetrics[Value any](s *Storage, clearQuery, addQuery string, names []
 	if err != nil {
 		return fmt.Errorf("replace metrics: %w", err)
 	}
-	defer func() {
-		// omg ingeneering :/
-		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
-			s.log.Error("replace metrics rollback", zap.Error(err))
-		}
-	}()
+	defer s.txClosingFn(tx, err)
 
 	// clear existed values
 	if _, err = tx.ExecContext(ctx, clearQuery); err != nil {
@@ -322,7 +369,7 @@ func replaceMetrics[Value any](s *Storage, clearQuery, addQuery string, names []
 	}
 
 	// add new values
-	stmt, err := tx.PrepareContext(ctx, addQuery)
+	stmt, err := tx.PrepareContext(ctx, insertQuery)
 	if err != nil {
 		return fmt.Errorf("prepare context: %w", err)
 	}
@@ -336,10 +383,6 @@ func replaceMetrics[Value any](s *Storage, clearQuery, addQuery string, names []
 		if _, err = stmt.ExecContext(ctx, names[i], values[i]); err != nil {
 			return fmt.Errorf("add metric: %w", err)
 		}
-	}
-
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("committing replace metrics: %w", err)
 	}
 
 	return nil
