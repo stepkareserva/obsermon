@@ -9,12 +9,13 @@ import (
 	"time"
 
 	"github.com/stepkareserva/obsermon/internal/models"
+	"github.com/stepkareserva/obsermon/internal/server/common/database"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
 	"go.uber.org/zap"
 )
 
 type Storage struct {
-	db  Database
+	db  database.Database
 	log *zap.Logger
 }
 
@@ -113,7 +114,7 @@ var (
 	`)
 )
 
-func New(db Database, log *zap.Logger) (*Storage, error) {
+func New(db database.Database, log *zap.Logger) (*Storage, error) {
 	if db == nil {
 		return nil, fmt.Errorf("database not exists")
 	}
@@ -281,15 +282,15 @@ func (s *Storage) UpdateCounters(vals models.CountersList) (models.CountersList,
 	}
 
 	var updatedVals models.CountersList
-	txfn := func(ctx context.Context, tx *sql.Tx) error {
+	txfn := func(ctx context.Context, tx *sql.Tx) (err error) {
 		// lock counter statement
 		selectCounterStmt, err := tx.PrepareContext(ctx, selectCounterForUpdateQuery)
 		if err != nil {
 			return fmt.Errorf("prepare select counter statement: %w", err)
 		}
 		defer func() {
-			if err := selectCounterStmt.Close(); err != nil {
-				s.log.Error("close select counter statement", zap.Error(err))
+			if closeErr := selectCounterStmt.Close(); closeErr != nil {
+				err = fmt.Errorf("close select counter statement: %w", closeErr)
 			}
 		}()
 
@@ -299,8 +300,8 @@ func (s *Storage) UpdateCounters(vals models.CountersList) (models.CountersList,
 			return fmt.Errorf("prepare insert counter statement: %w", err)
 		}
 		defer func() {
-			if err := insertCounterStmt.Close(); err != nil {
-				s.log.Error("close insert counter statement", zap.Error(err))
+			if closeErr := insertCounterStmt.Close(); closeErr != nil {
+				err = fmt.Errorf("close insert counter statement: %w", closeErr)
 			}
 		}()
 
@@ -310,8 +311,8 @@ func (s *Storage) UpdateCounters(vals models.CountersList) (models.CountersList,
 			return fmt.Errorf("prepare update counter statement: %w", err)
 		}
 		defer func() {
-			if err := updateCounterStmt.Close(); err != nil {
-				s.log.Error("close update counter statement", zap.Error(err))
+			if closeErr := updateCounterStmt.Close(); closeErr != nil {
+				err = fmt.Errorf("close update counter statement: %w", closeErr)
 			}
 		}()
 
@@ -385,17 +386,6 @@ func (s *Storage) ReplaceCounters(val models.CountersList) error {
 		return fmt.Errorf("replace counters: %w", err)
 	}
 	return nil
-}
-
-func (s *Storage) txClosingFn(tx *sql.Tx, err error) {
-	if err != nil {
-		err = tx.Rollback()
-	} else {
-		err = tx.Commit()
-	}
-	if err != nil {
-		s.log.Error("database storage transaction", zap.Error(err))
-	}
 }
 
 func findMetric[Value any](s *Storage, query, name string) (*Value, bool, error) {

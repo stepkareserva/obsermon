@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	dbhandlers "github.com/stepkareserva/obsermon/internal/server/db/handlers"
+	"github.com/stepkareserva/obsermon/internal/server/interfaces/database"
 	mhandlers "github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
 	"github.com/stepkareserva/obsermon/internal/server/middleware"
 	"go.uber.org/zap"
@@ -57,7 +58,7 @@ func (r *Routing) AddMetricsHandlers(ctx context.Context, s mhandlers.Service) e
 	return nil
 }
 
-func (r *Routing) AddDatabaseHandlers(ctx context.Context, db dbhandlers.Database) error {
+func (r *Routing) AddDatabaseHandlers(ctx context.Context, db database.Database) error {
 	if r == nil || r.router == nil {
 		return fmt.Errorf("routing not exists")
 	}

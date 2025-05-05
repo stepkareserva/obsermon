@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/stepkareserva/obsermon/internal/server/interfaces/database"
 	"go.uber.org/zap"
 )
 
@@ -12,7 +13,7 @@ type Handlers struct {
 	pingHandler *PingHandler
 }
 
-func New(db Database, log *zap.Logger) (*Handlers, error) {
+func New(db database.Database, log *zap.Logger) (*Handlers, error) {
 	pingHandler, err := NewPingHandler(db, log)
 	if err != nil {
 		return nil, fmt.Errorf("ping handler creation: %w", err)

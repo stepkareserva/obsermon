@@ -9,16 +9,11 @@ import (
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/stepkareserva/obsermon/internal/server/db/handlers"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/dbstorage"
 )
 
 type Database struct {
 	db *sql.DB
 }
-
-var _ handlers.Database = (*Database)(nil)
-var _ dbstorage.Database = (*Database)(nil)
 
 func New(dbConn string) (*Database, error) {
 	db, err := sql.Open("pgx", dbConn)
@@ -62,6 +57,7 @@ func (db *Database) ExecContext(ctx context.Context, query string, args ...any) 
 func (db *Database) QueryContext(ctx context.Context, query string, args ...any) (rows *sql.Rows, err error) {
 	err = db.sustainedOp(ctx, func(ctx context.Context) error {
 		rows, err = db.db.QueryContext(ctx, query, args...)
+		// errcheck requires this 3 lines wtf
 		if rows != nil && rows.Err() != nil {
 			err = rows.Err()
 		}

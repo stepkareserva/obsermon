@@ -5,15 +5,16 @@ import (
 	"net/http"
 
 	hu "github.com/stepkareserva/obsermon/internal/server/httputils"
+	"github.com/stepkareserva/obsermon/internal/server/interfaces/database"
 	"go.uber.org/zap"
 )
 
 type PingHandler struct {
-	db Database
+	db database.Database
 	hu.ErrorsWriter
 }
 
-func NewPingHandler(db Database, log *zap.Logger) (*PingHandler, error) {
+func NewPingHandler(db database.Database, log *zap.Logger) (*PingHandler, error) {
 	return &PingHandler{
 		db:           db,
 		ErrorsWriter: hu.NewErrorsWriter(log),
