@@ -31,6 +31,15 @@ func (m *Storage) SetGauge(val models.Gauge) error {
 	return nil
 }
 
+func (m *Storage) SetGauges(vals models.GaugesList) error {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	for _, val := range vals {
+		m.gauges[val.Name] = val.Value
+	}
+	return nil
+}
 func (m *Storage) FindGauge(name string) (*models.Gauge, bool, error) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()

@@ -99,6 +99,20 @@ func (mr *MockGaugeStorageMockRecorder) SetGauge(val any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGauge", reflect.TypeOf((*MockGaugeStorage)(nil).SetGauge), val)
 }
 
+// SetGauges mocks base method.
+func (m *MockGaugeStorage) SetGauges(val models.GaugesList) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetGauges", val)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetGauges indicates an expected call of SetGauges.
+func (mr *MockGaugeStorageMockRecorder) SetGauges(val any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGauges", reflect.TypeOf((*MockGaugeStorage)(nil).SetGauges), val)
+}
+
 // MockCounterStorage is a mock of CounterStorage interface.
 type MockCounterStorage struct {
 	ctrl     *gomock.Controller
@@ -309,6 +323,20 @@ func (m *MockStorage) SetGauge(val models.Gauge) error {
 func (mr *MockStorageMockRecorder) SetGauge(val any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGauge", reflect.TypeOf((*MockStorage)(nil).SetGauge), val)
+}
+
+// SetGauges mocks base method.
+func (m *MockStorage) SetGauges(val models.GaugesList) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetGauges", val)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetGauges indicates an expected call of SetGauges.
+func (mr *MockStorageMockRecorder) SetGauges(val any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGauges", reflect.TypeOf((*MockStorage)(nil).SetGauges), val)
 }
 
 // UpdateCounter mocks base method.

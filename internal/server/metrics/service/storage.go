@@ -4,6 +4,7 @@ import "github.com/stepkareserva/obsermon/internal/models"
 
 type GaugeStorage interface {
 	SetGauge(val models.Gauge) error
+	SetGauges(val models.GaugesList) error
 	FindGauge(name string) (*models.Gauge, bool, error)
 	ListGauges() (models.GaugesList, error)
 	ReplaceGauges(val models.GaugesList) error

@@ -164,6 +164,39 @@ func (s *Storage) SetGauge(val models.Gauge) error {
 	return nil
 }
 
+func (s *Storage) SetGauges(vals models.GaugesList) error {
+	if s == nil || s.db == nil {
+		return fmt.Errorf("database not exists")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
+	defer cancel()
+
+	tx, err := s.db.BeginTx(ctx)
+	if err != nil {
+		return err
+	}
+	defer s.txClosingFn(tx, err)
+
+	// insert or update gauges
+	stmt, err := tx.PrepareContext(ctx, setGaugeQuery)
+	if err != nil {
+		return fmt.Errorf("prepare set gauges context: %w", err)
+	}
+	defer func() {
+		if err := stmt.Close(); err != nil {
+			s.log.Error("close set gauges statement", zap.Error(err))
+		}
+	}()
+
+	for _, val := range vals {
+		if _, err = stmt.ExecContext(ctx, val.Name, val.Value); err != nil {
+			return fmt.Errorf("set gauge: %w", err)
+		}
+	}
+
+	return nil
+}
 func (s *Storage) FindGauge(name string) (*models.Gauge, bool, error) {
 	value, exists, err := findMetric[models.GaugeValue](s, findGaugeQuery, name)
 	if err != nil {
@@ -277,7 +310,7 @@ func (s *Storage) txClosingFn(tx *sql.Tx, err error) {
 		err = tx.Commit()
 	}
 	if err != nil {
-		s.log.Error("update counter transaction", zap.Error(err))
+		s.log.Error("database storage transaction", zap.Error(err))
 	}
 }
 

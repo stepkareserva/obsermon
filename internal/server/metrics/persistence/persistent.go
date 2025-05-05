@@ -76,6 +76,17 @@ func (s *Storage) SetGauge(val models.Gauge) error {
 	return nil
 }
 
+func (s *Storage) SetGauges(vals models.GaugesList) error {
+	if s == nil || s.Storage == nil {
+		return fmt.Errorf("storage not exists")
+	}
+	if err := s.Storage.SetGauges(vals); err != nil {
+		return err
+	}
+	s.onModify()
+	return nil
+}
+
 func (s *Storage) ReplaceGauges(val models.GaugesList) error {
 	if s == nil || s.Storage == nil {
 		return fmt.Errorf("storage not exists")
