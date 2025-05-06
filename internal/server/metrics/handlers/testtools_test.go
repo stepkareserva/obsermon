@@ -26,22 +26,6 @@ func testingPostJSON(t *testing.T, url string, data string) *http.Response {
 	return res
 }
 
-func testingGetGzipURL(t *testing.T, url string) *http.Response {
-	// create request
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	require.NoError(t, err)
-
-	// set headers
-	req.Header.Set("Accept-Encoding", "gzip")
-
-	// send request
-	client := &http.Client{}
-	res, err := client.Do(req)
-	require.NoError(t, err)
-
-	return res
-}
-
 func safeCloseRes(t *testing.T, res *http.Response) {
 	if res == nil {
 		return

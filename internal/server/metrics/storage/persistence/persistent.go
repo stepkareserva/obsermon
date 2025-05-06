@@ -159,17 +159,6 @@ func (s *Storage) channelStoringLoop(ch <-chan time.Time) {
 	}
 }
 
-func (s *Storage) loadState() error {
-	state, err := s.sstorage.LoadState()
-	if err != nil {
-		return fmt.Errorf("storage state loading: %w", err)
-	}
-	if err = state.Export(s.Storage); err != nil {
-		return fmt.Errorf("storage state request: %w", err)
-	}
-	return nil
-}
-
 func (s *Storage) storeState() error {
 	var state State
 	if err := state.Import(s.Storage); err != nil {
