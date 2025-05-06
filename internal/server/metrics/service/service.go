@@ -94,7 +94,7 @@ func (s *Service) ListCounters() (models.CountersList, error) {
 	return counters, nil
 }
 
-func (s *Service) UpdateMetric(val models.Metrics) (*models.Metrics, error) {
+func (s *Service) UpdateMetric(val models.Metric) (*models.Metric, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func (s *Service) UpdateMetric(val models.Metrics) (*models.Metrics, error) {
 	}
 }
 
-func (s *Service) FindMetric(t models.MetricType, name string) (*models.Metrics, bool, error) {
+func (s *Service) FindMetric(t models.MetricType, name string) (*models.Metric, bool, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, false, err
 	}
@@ -152,7 +152,7 @@ func (s *Service) FindMetric(t models.MetricType, name string) (*models.Metrics,
 	}
 }
 
-func (s *Service) UpdateMetrics(vals []models.Metrics) ([]models.Metrics, error) {
+func (s *Service) UpdateMetrics(vals models.Metrics) (models.Metrics, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, err
 	}
@@ -185,7 +185,7 @@ func (s *Service) checkValidity() error {
 	return nil
 }
 
-func splitMetrics(vals []models.Metrics) (models.CountersList, models.GaugesList, error) {
+func splitMetrics(vals models.Metrics) (models.CountersList, models.GaugesList, error) {
 	var counters models.CountersList
 	var gauges models.GaugesList
 	for _, val := range vals {
@@ -209,8 +209,8 @@ func splitMetrics(vals []models.Metrics) (models.CountersList, models.GaugesList
 	return counters, gauges, nil
 }
 
-func mergeMetrics(counters models.CountersList, gauges models.GaugesList) []models.Metrics {
-	metrics := make([]models.Metrics, 0, len(counters)+len(gauges))
+func mergeMetrics(counters models.CountersList, gauges models.GaugesList) models.Metrics {
+	metrics := make(models.Metrics, 0, len(counters)+len(gauges))
 	for _, counter := range counters {
 		metrics = append(metrics, models.CounterMetric(counter))
 	}

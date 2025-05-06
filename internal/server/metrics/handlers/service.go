@@ -15,9 +15,9 @@ type CountersService interface {
 }
 
 type MetricsService interface {
-	UpdateMetric(val models.Metrics) (*models.Metrics, error)
-	FindMetric(t models.MetricType, name string) (*models.Metrics, bool, error)
-	UpdateMetrics(vals []models.Metrics) ([]models.Metrics, error)
+	UpdateMetric(val models.Metric) (*models.Metric, error)
+	FindMetric(t models.MetricType, name string) (*models.Metric, bool, error)
+	UpdateMetrics(vals models.Metrics) (models.Metrics, error)
 }
 
 //go:generate mockgen -source=$GOFILE -destination=../../mocks/mock_service.go -package=mocks

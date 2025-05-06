@@ -31,7 +31,7 @@ func TestValidUpdatesHandler(t *testing.T) {
 
 		counterValue := models.CounterValue(1)
 		gaugeValue := models.GaugeValue(2.5)
-		metrics := []models.Metrics{
+		metrics := models.Metrics{
 			{
 				MType: models.MetricTypeCounter,
 				ID:    "name",
