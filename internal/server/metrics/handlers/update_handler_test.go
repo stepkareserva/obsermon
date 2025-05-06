@@ -139,7 +139,7 @@ func TestValidUpdateCounterJSONHandler(t *testing.T) {
 		counterJSON := `{"id":"name","type":"counter","delta":1}`
 
 		value := models.CounterValue(1)
-		counter := models.Metrics{
+		counter := models.Metric{
 			MType: models.MetricTypeCounter,
 			ID:    "name",
 			Delta: &value,
@@ -168,7 +168,7 @@ func TestValidUpdateGaugeJSONHandler(t *testing.T) {
 		gaugeJSON := `{"id":"name","type":"gauge","value":1.5}`
 
 		value := models.GaugeValue(1.5)
-		gauge := models.Metrics{
+		gauge := models.Metric{
 			MType: models.MetricTypeGauge,
 			ID:    "name",
 			Value: &value,

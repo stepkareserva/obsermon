@@ -10,6 +10,7 @@ import (
 
 type Handlers struct {
 	updHandler  *UpdateHandler
+	updsHandler *UpdatesHandler
 	valHandler  *ValueHandler
 	valsHandler *ValuesHandler
 }
@@ -23,6 +24,10 @@ func New(s Service, log *zap.Logger) (*Handlers, error) {
 	if err != nil {
 		return nil, fmt.Errorf("update handler creation: %w", err)
 	}
+	updsHandler, err := NewUpdatesHandler(s, log)
+	if err != nil {
+		return nil, fmt.Errorf("updates handler creation: %w", err)
+	}
 	valHandler, err := NewValueHandler(s, log)
 	if err != nil {
 		return nil, fmt.Errorf("value handler creation: %w", err)
@@ -34,6 +39,7 @@ func New(s Service, log *zap.Logger) (*Handlers, error) {
 
 	return &Handlers{
 		updHandler:  updHandler,
+		updsHandler: updsHandler,
 		valHandler:  valHandler,
 		valsHandler: valsHandler,
 	}, nil
@@ -47,6 +53,9 @@ func (h *Handlers) RegisterRoutes(ctx context.Context, r chi.Router) error {
 
 	r.Route("/update", func(r chi.Router) {
 		h.registerUpdateRoutes(ctx, r)
+	})
+	r.Route("/updates", func(r chi.Router) {
+		h.registerUpdatesRoutes(ctx, r)
 	})
 	r.Route("/value", func(r chi.Router) {
 		h.registerValueRoutes(ctx, r)
@@ -69,6 +78,10 @@ func (h *Handlers) registerUpdateRoutes(ctx context.Context, r chi.Router) {
 		h.updHandler.UpdateMetricJSONHandler(ctx))
 }
 
+func (h *Handlers) registerUpdatesRoutes(ctx context.Context, r chi.Router) {
+	r.Post("/",
+		h.updHandler.UpdateMetricsJSONHandler(ctx))
+}
 func (h *Handlers) registerValueRoutes(ctx context.Context, r chi.Router) {
 	r.Get(fmt.Sprintf("/%s/{%s}", MetricGauge, ChiName),
 		h.valHandler.GaugeValueURLHandler(ctx))

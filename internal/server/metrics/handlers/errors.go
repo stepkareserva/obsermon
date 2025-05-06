@@ -1,60 +1,29 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
-	"strings"
+
+	hu "github.com/stepkareserva/obsermon/internal/server/httputils"
 )
 
-type HandlerError struct {
-	StatusCode int
-	Message    string
-}
-
 var (
-	ErrInvalidMetricType = HandlerError{
+	ErrInvalidMetricType = hu.HandlerError{
 		StatusCode: http.StatusBadRequest,
 		Message:    "Request contains invalid metric type",
 	}
 
-	ErrInvalidMetricValue = HandlerError{
+	ErrInvalidMetricValue = hu.HandlerError{
 		StatusCode: http.StatusBadRequest,
 		Message:    "Invalid metric value",
 	}
 
-	ErrInternalServerError = HandlerError{
-		StatusCode: http.StatusInternalServerError,
-		Message:    "Internal server error",
-	}
-
-	ErrMissingMetricName = HandlerError{
+	ErrMissingMetricName = hu.HandlerError{
 		StatusCode: http.StatusNotFound,
 		Message:    "Metric name is missing",
 	}
 
-	ErrMetricNotFound = HandlerError{
+	ErrMetricNotFound = hu.HandlerError{
 		StatusCode: http.StatusNotFound,
 		Message:    "Metric not found",
 	}
-
-	ErrUnsupportedContentType = HandlerError{
-		StatusCode: http.StatusUnsupportedMediaType,
-		Message:    "Content-Type header is not supported",
-	}
-
-	ErrInvalidRequestJSON = HandlerError{
-		StatusCode: http.StatusBadRequest,
-		Message:    "Invalid request JSON content",
-	}
 )
-
-func WriteError(w http.ResponseWriter, err HandlerError, details ...string) error {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(err.StatusCode)
-
-	errText := fmt.Sprintln(err.Message, strings.Join(details, " "))
-	if _, err := w.Write([]byte(errText)); err != nil {
-		return fmt.Errorf("writing error: %w", err)
-	}
-	return nil
-}

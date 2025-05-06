@@ -10,6 +10,7 @@ type Config struct {
 	FileStoragePath string  `env:"FILE_STORAGE_PATH"`
 	Restore         bool    `env:"RESTORE"`
 	Mode            AppMode `env:"MODE"`
+	DBConnection    string  `env:"DATABASE_DSN"`
 }
 
 func (c *Config) StoreInterval() time.Duration {

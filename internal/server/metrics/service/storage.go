@@ -4,13 +4,17 @@ import "github.com/stepkareserva/obsermon/internal/models"
 
 type GaugeStorage interface {
 	SetGauge(val models.Gauge) error
+	SetGauges(val models.GaugesList) error
 	FindGauge(name string) (*models.Gauge, bool, error)
 	ListGauges() (models.GaugesList, error)
 	ReplaceGauges(val models.GaugesList) error
 }
 
+type CounterOp = func(val *models.CounterValue) error
+
 type CounterStorage interface {
-	SetCounter(val models.Counter) error
+	UpdateCounter(val models.Counter) (*models.Counter, error)
+	UpdateCounters(vals models.CountersList) (models.CountersList, error)
 	FindCounter(name string) (*models.Counter, bool, error)
 	ListCounters() (models.CountersList, error)
 	ReplaceCounters(val models.CountersList) error

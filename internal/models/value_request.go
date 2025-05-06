@@ -1,5 +1,5 @@
 package models
 
-type MetricValueRequest = Metrics
+type MetricValueRequest = Metric
 
-type MetricValueResponse = Metrics
+type MetricValueResponse = Metric

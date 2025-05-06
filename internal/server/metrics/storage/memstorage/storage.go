@@ -1,6 +1,7 @@
 package memstorage
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/stepkareserva/obsermon/internal/models"
@@ -30,6 +31,15 @@ func (m *Storage) SetGauge(val models.Gauge) error {
 	return nil
 }
 
+func (m *Storage) SetGauges(vals models.GaugesList) error {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	for _, val := range vals {
+		m.gauges[val.Name] = val.Value
+	}
+	return nil
+}
 func (m *Storage) FindGauge(name string) (*models.Gauge, bool, error) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
@@ -53,12 +63,36 @@ func (m *Storage) ReplaceGauges(val models.GaugesList) error {
 	return nil
 }
 
-func (m *Storage) SetCounter(val models.Counter) error {
+func (m *Storage) UpdateCounter(val models.Counter) (*models.Counter, error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
+	counter, exists := m.counters[val.Name]
+	if exists {
+		if err := val.Value.Update(counter); err != nil {
+			return nil, fmt.Errorf("update counter: %w", err)
+		}
+	}
 	m.counters[val.Name] = val.Value
-	return nil
+
+	return &val, nil
+}
+
+func (m *Storage) UpdateCounters(vals models.CountersList) (models.CountersList, error) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	for _, val := range vals {
+		counter, exists := m.counters[val.Name]
+		if exists {
+			if err := val.Value.Update(counter); err != nil {
+				return nil, fmt.Errorf("update counters: %w", err)
+			}
+		}
+		m.counters[val.Name] = val.Value
+	}
+
+	return vals, nil
 }
 
 func (m *Storage) FindCounter(name string) (*models.Counter, bool, error) {

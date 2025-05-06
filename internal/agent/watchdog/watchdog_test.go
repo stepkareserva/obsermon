@@ -15,7 +15,7 @@ func TestWatchdog(t *testing.T) {
 	// test params
 	pollInterval := 300 * time.Millisecond
 	reportInterval := 1 * time.Second
-	expectedURLPath := "/update"
+	expectedURLPath := "/updates"
 
 	// mock server just collect all incoming requests
 	incomingRequests := make(map[string]struct{})

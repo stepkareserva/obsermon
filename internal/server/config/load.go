@@ -26,6 +26,7 @@ func defaultConfig() *Config {
 		StoreIntervalS:  300,
 		FileStoragePath: defaultStoragePath(),
 		Restore:         false,
+		DBConnection:    "",
 		Mode:            Prod,
 	}
 }
@@ -67,6 +68,9 @@ func readCLIParams(c *Config) error {
 
 	fs.BoolVar(&c.Restore, "r", c.Restore,
 		"restore server state from storage file")
+
+	fs.StringVar(&c.DBConnection, "d", c.DBConnection,
+		"database connection string")
 
 	fs.Var(&c.Mode, "m",
 		"app mode, quiet/dev/prod")
