@@ -82,13 +82,14 @@ func (db *Database) sustainedOp(ctx context.Context, op func(ctx context.Context
 		5 * time.Second,
 	}
 
+	var err error
 	for _, delay := range delays {
 		timer := time.NewTimer(delay)
 		select {
 		case <-ctx.Done():
 			return fmt.Errorf("sustained op timeout")
 		case <-timer.C:
-			err := op(ctx)
+			err = op(ctx)
 			switch {
 			case err == nil:
 				return nil
@@ -98,7 +99,7 @@ func (db *Database) sustainedOp(ctx context.Context, op func(ctx context.Context
 		}
 	}
 
-	return nil
+	return fmt.Errorf("all sustained op attempts failed, last error: %w", err)
 }
 
 func (db *Database) couldRetryOperation(err error) bool {
