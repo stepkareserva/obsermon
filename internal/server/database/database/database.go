@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -85,7 +86,10 @@ func (db *Database) ExecTxFn(ctx context.Context, txFn database.TxFn) (err error
 	defer func() {
 		if err != nil {
 			if rbErr := tx.Rollback(); rbErr != nil {
-				err = rbErr
+				txErr := fmt.Errorf("transaction: %w", err)
+				rbErr = fmt.Errorf("tx rollback: %w", err)
+				err = fmt.Errorf("multiple transaction errors: %w",
+					errors.Join(txErr, rbErr))
 			}
 		} else {
 			err = tx.Commit()
