@@ -39,7 +39,7 @@ func (h *UpdateHandler) UpdateGaugeURLHandler(ctx context.Context) http.HandlerF
 			return
 		}
 		gauge := models.Gauge{Name: name, Value: value}
-		if _, err := h.service.UpdateGauge(gauge); err != nil {
+		if _, err := h.service.UpdateGauge(r.Context(), gauge); err != nil {
 			h.WriteError(w, hu.ErrInternalServerError, err.Error())
 			return
 		}
@@ -59,7 +59,7 @@ func (h *UpdateHandler) UpdateCounterURLHandler(ctx context.Context) http.Handle
 		}
 
 		counter := models.Counter{Name: name, Value: value}
-		if _, err := h.service.UpdateCounter(counter); err != nil {
+		if _, err := h.service.UpdateCounter(r.Context(), counter); err != nil {
 			h.WriteError(w, hu.ErrInternalServerError, err.Error())
 			return
 		}
@@ -90,7 +90,7 @@ func (h *UpdateHandler) UpdateMetricJSONHandler(ctx context.Context) http.Handle
 			h.WriteError(w, hu.ErrInvalidRequestJSON, err.Error())
 			return
 		}
-		updated, err := h.service.UpdateMetric(request)
+		updated, err := h.service.UpdateMetric(r.Context(), request)
 		if err != nil {
 			h.WriteError(w, hu.ErrInternalServerError, err.Error())
 			return

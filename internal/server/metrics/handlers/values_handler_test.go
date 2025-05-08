@@ -26,12 +26,12 @@ func TestValuesHandler(t *testing.T) {
 
 		mockService.
 			EXPECT().
-			ListGauges().
+			ListGauges(gomock.Any()).
 			Return(models.GaugesList{}, nil)
 
 		mockService.
 			EXPECT().
-			ListCounters().
+			ListCounters(gomock.Any()).
 			Return(models.CountersList{}, nil)
 
 		// get values

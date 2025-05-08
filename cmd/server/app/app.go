@@ -223,7 +223,7 @@ func (a *App) initStorage(cfg config.Config) error {
 
 	// restore state, if state exists
 	if currentState != nil {
-		if err := currentState.Export(a.storage); err != nil {
+		if err := currentState.Export(context.TODO(), a.storage); err != nil {
 			return fmt.Errorf("restoring state: %w", err)
 		}
 	}

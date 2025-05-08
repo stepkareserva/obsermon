@@ -75,13 +75,13 @@ func (h *ValuesHandler) MetricValuesHandler(ctx context.Context) http.HandlerFun
 	</html>`))
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		gauges, err := h.service.ListGauges()
+		gauges, err := h.service.ListGauges(r.Context())
 		if err != nil {
 			h.WriteError(w, hu.ErrInternalServerError, err.Error())
 			return
 		}
 
-		counters, err := h.service.ListCounters()
+		counters, err := h.service.ListCounters(r.Context())
 		if err != nil {
 			h.WriteError(w, hu.ErrInternalServerError, err.Error())
 			return

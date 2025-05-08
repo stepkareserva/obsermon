@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -20,7 +21,7 @@ type Storage struct {
 	sstorage StateStorage
 
 	saveCh chan time.Time
-	stopCh chan struct{}
+	cancel context.CancelFunc
 	wg     sync.WaitGroup
 
 	logger *zap.Logger
@@ -37,6 +38,8 @@ func New(cfg Config, base service.Storage, logger *zap.Logger) (*Storage, error)
 		return nil, fmt.Errorf("logger is nil")
 	}
 
+	ctx, cancel := context.WithCancel(context.TODO())
+
 	// saveCh could be chan of struct{} but to unify storing process use chan of time,
 	// because in some cases storing are based on ticker (which use chan of time)
 	// and in other cases storing are based on our channel.
@@ -45,7 +48,7 @@ func New(cfg Config, base service.Storage, logger *zap.Logger) (*Storage, error)
 		Storage:  base,
 		sstorage: cfg.StateStorage,
 		saveCh:   make(chan time.Time),
-		stopCh:   make(chan struct{}),
+		cancel:   cancel,
 		logger:   logger,
 	}
 
@@ -53,56 +56,56 @@ func New(cfg Config, base service.Storage, logger *zap.Logger) (*Storage, error)
 	storage.wg.Add(1)
 	go func() {
 		defer storage.wg.Done()
-		storage.runStoringLoop(cfg.StoreInterval)
+		storage.runStoringLoop(ctx, cfg.StoreInterval)
 	}()
 
 	return storage, nil
 }
 
 func (s *Storage) Close() error {
-	s.stopCh <- struct{}{}
+	s.cancel()
 	s.wg.Wait()
 	return nil
 }
 
-func (s *Storage) SetGauge(val models.Gauge) error {
+func (s *Storage) SetGauge(ctx context.Context, val models.Gauge) error {
 	if s == nil || s.Storage == nil {
 		return fmt.Errorf("storage not exists")
 	}
-	if err := s.Storage.SetGauge(val); err != nil {
+	if err := s.Storage.SetGauge(ctx, val); err != nil {
 		return err
 	}
 	s.onModify()
 	return nil
 }
 
-func (s *Storage) SetGauges(vals models.GaugesList) error {
+func (s *Storage) SetGauges(ctx context.Context, vals models.GaugesList) error {
 	if s == nil || s.Storage == nil {
 		return fmt.Errorf("storage not exists")
 	}
-	if err := s.Storage.SetGauges(vals); err != nil {
+	if err := s.Storage.SetGauges(ctx, vals); err != nil {
 		return err
 	}
 	s.onModify()
 	return nil
 }
 
-func (s *Storage) ReplaceGauges(val models.GaugesList) error {
+func (s *Storage) ReplaceGauges(ctx context.Context, val models.GaugesList) error {
 	if s == nil || s.Storage == nil {
 		return fmt.Errorf("storage not exists")
 	}
-	if err := s.Storage.ReplaceGauges(val); err != nil {
+	if err := s.Storage.ReplaceGauges(ctx, val); err != nil {
 		return err
 	}
 	s.onModify()
 	return nil
 }
 
-func (s *Storage) UpdateCounter(val models.Counter) (*models.Counter, error) {
+func (s *Storage) UpdateCounter(ctx context.Context, val models.Counter) (*models.Counter, error) {
 	if s == nil || s.Storage == nil {
 		return nil, fmt.Errorf("storage not exists")
 	}
-	updated, err := s.Storage.UpdateCounter(val)
+	updated, err := s.Storage.UpdateCounter(ctx, val)
 	if err != nil {
 		return nil, err
 	}
@@ -110,11 +113,11 @@ func (s *Storage) UpdateCounter(val models.Counter) (*models.Counter, error) {
 	return updated, nil
 }
 
-func (s *Storage) UpdateCounters(vals models.CountersList) (models.CountersList, error) {
+func (s *Storage) UpdateCounters(ctx context.Context, vals models.CountersList) (models.CountersList, error) {
 	if s == nil || s.Storage == nil {
 		return nil, fmt.Errorf("storage not exists")
 	}
-	updated, err := s.Storage.UpdateCounters(vals)
+	updated, err := s.Storage.UpdateCounters(ctx, vals)
 	if err != nil {
 		return nil, err
 	}
@@ -122,36 +125,36 @@ func (s *Storage) UpdateCounters(vals models.CountersList) (models.CountersList,
 	return updated, nil
 }
 
-func (s *Storage) ReplaceCounters(val models.CountersList) error {
+func (s *Storage) ReplaceCounters(ctx context.Context, val models.CountersList) error {
 	if s == nil || s.Storage == nil {
 		return fmt.Errorf("storage not exists")
 	}
-	if err := s.Storage.ReplaceCounters(val); err != nil {
+	if err := s.Storage.ReplaceCounters(ctx, val); err != nil {
 		return err
 	}
 	s.onModify()
 	return nil
 }
 
-func (s *Storage) runStoringLoop(interval time.Duration) {
+func (s *Storage) runStoringLoop(ctx context.Context, interval time.Duration) {
 	if interval > 0 {
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
-		s.channelStoringLoop(ticker.C)
+		s.channelStoringLoop(ctx, ticker.C)
 	} else {
-		s.channelStoringLoop(s.saveCh)
+		s.channelStoringLoop(ctx, s.saveCh)
 	}
 }
 
-func (s *Storage) channelStoringLoop(ch <-chan time.Time) {
+func (s *Storage) channelStoringLoop(ctx context.Context, ch <-chan time.Time) {
 	for {
 		select {
 		case <-ch:
-			if err := s.storeState(); err != nil {
+			if err := s.storeState(ctx); err != nil {
 				s.logger.Error("store state", zap.Error(err))
 			}
-		case <-s.stopCh:
-			if err := s.storeState(); err != nil {
+		case <-ctx.Done():
+			if err := s.storeState(ctx); err != nil {
 				s.logger.Error("store state", zap.Error(err))
 			}
 			return
@@ -159,9 +162,9 @@ func (s *Storage) channelStoringLoop(ch <-chan time.Time) {
 	}
 }
 
-func (s *Storage) storeState() error {
+func (s *Storage) storeState(ctx context.Context) error {
 	var state State
-	if err := state.Import(s.Storage); err != nil {
+	if err := state.Import(ctx, s.Storage); err != nil {
 		return fmt.Errorf("storage state request: %w", err)
 	}
 	if err := s.sstorage.StoreState(state); err != nil {

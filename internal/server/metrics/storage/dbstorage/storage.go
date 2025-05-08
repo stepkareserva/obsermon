@@ -66,13 +66,10 @@ func (s *Storage) initTables() error {
 	return nil
 }
 
-func (s *Storage) SetGauge(val models.Gauge) error {
+func (s *Storage) SetGauge(ctx context.Context, val models.Gauge) error {
 	if s == nil || s.db == nil {
 		return fmt.Errorf("database not exists")
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
-	defer cancel()
 
 	if _, err := s.db.Exec(ctx, setGaugeQuery, val.Name, val.Value); err != nil {
 		return fmt.Errorf("set gauge: %w", err)
@@ -81,7 +78,7 @@ func (s *Storage) SetGauge(val models.Gauge) error {
 	return nil
 }
 
-func (s *Storage) SetGauges(vals models.GaugesList) error {
+func (s *Storage) SetGauges(ctx context.Context, vals models.GaugesList) error {
 	if s == nil || s.db == nil {
 		return fmt.Errorf("database not exists")
 	}
@@ -106,17 +103,14 @@ func (s *Storage) SetGauges(vals models.GaugesList) error {
 		return nil
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
-	defer cancel()
-
 	if err := s.db.ExecTxFn(ctx, txfn); err != nil {
 		return fmt.Errorf("set gauges: %w", err)
 	}
 
 	return nil
 }
-func (s *Storage) FindGauge(name string) (*models.Gauge, bool, error) {
-	value, exists, err := findMetric[models.GaugeValue](s, findGaugeQuery, name)
+func (s *Storage) FindGauge(ctx context.Context, name string) (*models.Gauge, bool, error) {
+	value, exists, err := findMetric[models.GaugeValue](ctx, s, findGaugeQuery, name)
 	if err != nil {
 		return nil, false, fmt.Errorf("find gauge: %w", err)
 	}
@@ -129,8 +123,8 @@ func (s *Storage) FindGauge(name string) (*models.Gauge, bool, error) {
 	}, true, nil
 }
 
-func (s *Storage) ListGauges() (models.GaugesList, error) {
-	names, values, err := listMetrics[models.GaugeValue](s, listGaugesQuery)
+func (s *Storage) ListGauges(ctx context.Context) (models.GaugesList, error) {
+	names, values, err := listMetrics[models.GaugeValue](ctx, s, listGaugesQuery)
 	if err != nil {
 		return nil, fmt.Errorf("list gauges: %w", err)
 	}
@@ -141,15 +135,15 @@ func (s *Storage) ListGauges() (models.GaugesList, error) {
 	return gauges, nil
 }
 
-func (s *Storage) ReplaceGauges(val models.GaugesList) error {
+func (s *Storage) ReplaceGauges(ctx context.Context, val models.GaugesList) error {
 	names, values := unzipGauges(val)
-	if err := replaceMetrics(s, clearGaugeQuery, insertGaugeQuery, names, values); err != nil {
+	if err := replaceMetrics(ctx, s, clearGaugeQuery, insertGaugeQuery, names, values); err != nil {
 		return fmt.Errorf("replace gauges: %w", err)
 	}
 	return nil
 }
 
-func (s *Storage) UpdateCounter(val models.Counter) (*models.Counter, error) {
+func (s *Storage) UpdateCounter(ctx context.Context, val models.Counter) (*models.Counter, error) {
 	if s == nil || s.db == nil {
 		return nil, fmt.Errorf("database not exists")
 	}
@@ -182,9 +176,6 @@ func (s *Storage) UpdateCounter(val models.Counter) (*models.Counter, error) {
 		}
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
-	defer cancel()
-
 	if err := s.db.ExecTxFn(ctx, txfn); err != nil {
 		return nil, fmt.Errorf("update counter: %w", err)
 	}
@@ -192,7 +183,7 @@ func (s *Storage) UpdateCounter(val models.Counter) (*models.Counter, error) {
 	return &updatedVal, nil
 }
 
-func (s *Storage) UpdateCounters(vals models.CountersList) (models.CountersList, error) {
+func (s *Storage) UpdateCounters(ctx context.Context, vals models.CountersList) (models.CountersList, error) {
 	if s == nil || s.db == nil {
 		return nil, fmt.Errorf("database not exists")
 	}
@@ -260,9 +251,6 @@ func (s *Storage) UpdateCounters(vals models.CountersList) (models.CountersList,
 		return nil
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
-	defer cancel()
-
 	if err := s.db.ExecTxFn(ctx, txfn); err != nil {
 		return nil, fmt.Errorf("update counters: %w", err)
 	}
@@ -270,8 +258,8 @@ func (s *Storage) UpdateCounters(vals models.CountersList) (models.CountersList,
 	return updatedVals, nil
 }
 
-func (s *Storage) FindCounter(name string) (*models.Counter, bool, error) {
-	value, exists, err := findMetric[models.CounterValue](s, findCounterQuery, name)
+func (s *Storage) FindCounter(ctx context.Context, name string) (*models.Counter, bool, error) {
+	value, exists, err := findMetric[models.CounterValue](ctx, s, findCounterQuery, name)
 	if err != nil {
 		return nil, false, fmt.Errorf("find gauge: %w", err)
 	}
@@ -284,8 +272,8 @@ func (s *Storage) FindCounter(name string) (*models.Counter, bool, error) {
 	}, true, nil
 }
 
-func (s *Storage) ListCounters() (models.CountersList, error) {
-	names, values, err := listMetrics[models.CounterValue](s, listCountersQuery)
+func (s *Storage) ListCounters(ctx context.Context) (models.CountersList, error) {
+	names, values, err := listMetrics[models.CounterValue](ctx, s, listCountersQuery)
 	if err != nil {
 		return nil, fmt.Errorf("list counters: %w", err)
 	}
@@ -296,21 +284,18 @@ func (s *Storage) ListCounters() (models.CountersList, error) {
 	return counters, nil
 }
 
-func (s *Storage) ReplaceCounters(val models.CountersList) error {
+func (s *Storage) ReplaceCounters(ctx context.Context, val models.CountersList) error {
 	names, values := unzipCounters(val)
-	if err := replaceMetrics(s, clearCountersQuery, insertCounterQuery, names, values); err != nil {
+	if err := replaceMetrics(ctx, s, clearCountersQuery, insertCounterQuery, names, values); err != nil {
 		return fmt.Errorf("replace counters: %w", err)
 	}
 	return nil
 }
 
-func findMetric[Value any](s *Storage, query, name string) (*Value, bool, error) {
+func findMetric[Value any](ctx context.Context, s *Storage, query, name string) (*Value, bool, error) {
 	if s == nil || s.db == nil {
 		return nil, false, fmt.Errorf("database not exists")
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
-	defer cancel()
 
 	row, err := s.db.QueryRow(ctx, query, name)
 	if err != nil {
@@ -329,13 +314,10 @@ func findMetric[Value any](s *Storage, query, name string) (*Value, bool, error)
 	return &value, true, nil
 }
 
-func listMetrics[Value any](s *Storage, query string) (names []string, values []Value, err error) {
+func listMetrics[Value any](ctx context.Context, s *Storage, query string) (names []string, values []Value, err error) {
 	if s == nil || s.db == nil {
 		return nil, nil, fmt.Errorf("database not exists")
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
-	defer cancel()
 
 	rows, err := s.db.Query(ctx, query)
 	if err != nil {
@@ -368,7 +350,7 @@ func listMetrics[Value any](s *Storage, query string) (names []string, values []
 	return names, values, nil
 }
 
-func replaceMetrics[Value any](s *Storage, clearQuery, insertQuery string, names []string, values []Value) error {
+func replaceMetrics[Value any](ctx context.Context, s *Storage, clearQuery, insertQuery string, names []string, values []Value) error {
 	if s == nil || s.db == nil {
 		return fmt.Errorf("database not exists")
 	}
@@ -401,9 +383,6 @@ func replaceMetrics[Value any](s *Storage, clearQuery, insertQuery string, names
 
 		return nil
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
-	defer cancel()
 
 	if err := s.db.ExecTxFn(ctx, txfn); err != nil {
 		return fmt.Errorf("replace metrics: %w", err)

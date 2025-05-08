@@ -48,7 +48,7 @@ func (h *UpdateHandler) UpdateMetricsJSONHandler(ctx context.Context) http.Handl
 				return
 			}
 		}
-		updated, err := h.service.UpdateMetrics(request)
+		updated, err := h.service.UpdateMetrics(r.Context(), request)
 		if err != nil {
 			h.WriteError(w, hu.ErrInternalServerError, err.Error())
 			return

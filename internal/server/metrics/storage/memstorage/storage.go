@@ -1,6 +1,7 @@
 package memstorage
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -23,7 +24,7 @@ func New() *Storage {
 	}
 }
 
-func (m *Storage) SetGauge(val models.Gauge) error {
+func (m *Storage) SetGauge(ctx context.Context, val models.Gauge) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -31,7 +32,7 @@ func (m *Storage) SetGauge(val models.Gauge) error {
 	return nil
 }
 
-func (m *Storage) SetGauges(vals models.GaugesList) error {
+func (m *Storage) SetGauges(ctx context.Context, vals models.GaugesList) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -40,7 +41,7 @@ func (m *Storage) SetGauges(vals models.GaugesList) error {
 	}
 	return nil
 }
-func (m *Storage) FindGauge(name string) (*models.Gauge, bool, error) {
+func (m *Storage) FindGauge(ctx context.Context, name string) (*models.Gauge, bool, error) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
@@ -48,14 +49,14 @@ func (m *Storage) FindGauge(name string) (*models.Gauge, bool, error) {
 	return &models.Gauge{Name: name, Value: val}, exists, nil
 }
 
-func (m *Storage) ListGauges() (models.GaugesList, error) {
+func (m *Storage) ListGauges(ctx context.Context) (models.GaugesList, error) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
 	return m.gauges.List(), nil
 }
 
-func (m *Storage) ReplaceGauges(val models.GaugesList) error {
+func (m *Storage) ReplaceGauges(ctx context.Context, val models.GaugesList) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -63,7 +64,7 @@ func (m *Storage) ReplaceGauges(val models.GaugesList) error {
 	return nil
 }
 
-func (m *Storage) UpdateCounter(val models.Counter) (*models.Counter, error) {
+func (m *Storage) UpdateCounter(ctx context.Context, val models.Counter) (*models.Counter, error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -78,7 +79,7 @@ func (m *Storage) UpdateCounter(val models.Counter) (*models.Counter, error) {
 	return &val, nil
 }
 
-func (m *Storage) UpdateCounters(vals models.CountersList) (models.CountersList, error) {
+func (m *Storage) UpdateCounters(ctx context.Context, vals models.CountersList) (models.CountersList, error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -95,7 +96,7 @@ func (m *Storage) UpdateCounters(vals models.CountersList) (models.CountersList,
 	return vals, nil
 }
 
-func (m *Storage) FindCounter(name string) (*models.Counter, bool, error) {
+func (m *Storage) FindCounter(ctx context.Context, name string) (*models.Counter, bool, error) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
@@ -103,14 +104,14 @@ func (m *Storage) FindCounter(name string) (*models.Counter, bool, error) {
 	return &models.Counter{Name: name, Value: val}, exists, nil
 }
 
-func (m *Storage) ListCounters() (models.CountersList, error) {
+func (m *Storage) ListCounters(ctx context.Context) (models.CountersList, error) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
 	return m.counters.List(), nil
 }
 
-func (m *Storage) ReplaceCounters(val models.CountersList) error {
+func (m *Storage) ReplaceCounters(ctx context.Context, val models.CountersList) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 

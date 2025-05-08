@@ -28,7 +28,7 @@ func TestValidUpdateCounterHandler(t *testing.T) {
 
 		mockService.
 			EXPECT().
-			UpdateCounter(gomock.Eq(models.Counter{
+			UpdateCounter(gomock.Any(), gomock.Eq(models.Counter{
 				Name:  "name",
 				Value: 1,
 			})).
@@ -84,7 +84,7 @@ func TestValidUpdateGaugeHandler(t *testing.T) {
 
 		mockService.
 			EXPECT().
-			UpdateGauge(gomock.Eq(models.Gauge{
+			UpdateGauge(gomock.Any(), gomock.Eq(models.Gauge{
 				Name:  "name",
 				Value: 1.0,
 			})).
@@ -147,7 +147,7 @@ func TestValidUpdateCounterJSONHandler(t *testing.T) {
 
 		mockService.
 			EXPECT().
-			UpdateMetric(counter).
+			UpdateMetric(gomock.Any(), counter).
 			Return(&counter, nil)
 
 		res := testingPostJSON(t, ts.URL+"/", counterJSON)
@@ -176,7 +176,7 @@ func TestValidUpdateGaugeJSONHandler(t *testing.T) {
 
 		mockService.
 			EXPECT().
-			UpdateMetric(gauge).
+			UpdateMetric(gomock.Any(), gauge).
 			Return(&gauge, nil)
 
 		res := testingPostJSON(t, ts.URL+"/", gaugeJSON)

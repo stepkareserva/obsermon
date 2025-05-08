@@ -46,7 +46,7 @@ func TestValidUpdatesHandler(t *testing.T) {
 
 		mockService.
 			EXPECT().
-			UpdateMetrics(metrics).
+			UpdateMetrics(gomock.Any(), metrics).
 			Return(metrics, nil)
 
 		res := testingPostJSON(t, ts.URL+"/", metricsJSON)

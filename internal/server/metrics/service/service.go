@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"sort"
 
@@ -21,31 +22,31 @@ func New(storage Storage) (*Service, error) {
 	return &Service{storage: storage}, nil
 }
 
-func (s *Service) UpdateGauge(val models.Gauge) (*models.Gauge, error) {
+func (s *Service) UpdateGauge(ctx context.Context, val models.Gauge) (*models.Gauge, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, err
 	}
 
-	if err := s.storage.SetGauge(val); err != nil {
+	if err := s.storage.SetGauge(ctx, val); err != nil {
 		return nil, err
 	}
 
 	return &val, nil
 }
 
-func (s *Service) FindGauge(name string) (*models.Gauge, bool, error) {
+func (s *Service) FindGauge(ctx context.Context, name string) (*models.Gauge, bool, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, false, err
 	}
 
-	return s.storage.FindGauge(name)
+	return s.storage.FindGauge(ctx, name)
 }
 
-func (s *Service) ListGauges() (models.GaugesList, error) {
+func (s *Service) ListGauges(ctx context.Context) (models.GaugesList, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, err
 	}
-	gauges, err := s.storage.ListGauges()
+	gauges, err := s.storage.ListGauges(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -57,32 +58,32 @@ func (s *Service) ListGauges() (models.GaugesList, error) {
 	return gauges, nil
 }
 
-func (s *Service) UpdateCounter(val models.Counter) (*models.Counter, error) {
+func (s *Service) UpdateCounter(ctx context.Context, val models.Counter) (*models.Counter, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, err
 	}
 
-	updatedVal, err := s.storage.UpdateCounter(val)
+	updatedVal, err := s.storage.UpdateCounter(ctx, val)
 	if err != nil {
 		return nil, fmt.Errorf("update counter: %w", err)
 	}
 	return updatedVal, nil
 }
 
-func (s *Service) FindCounter(name string) (*models.Counter, bool, error) {
+func (s *Service) FindCounter(ctx context.Context, name string) (*models.Counter, bool, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, false, err
 	}
 
-	return s.storage.FindCounter(name)
+	return s.storage.FindCounter(ctx, name)
 }
 
-func (s *Service) ListCounters() (models.CountersList, error) {
+func (s *Service) ListCounters(ctx context.Context) (models.CountersList, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, err
 	}
 
-	counters, err := s.storage.ListCounters()
+	counters, err := s.storage.ListCounters(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +95,7 @@ func (s *Service) ListCounters() (models.CountersList, error) {
 	return counters, nil
 }
 
-func (s *Service) UpdateMetric(val models.Metric) (*models.Metric, error) {
+func (s *Service) UpdateMetric(ctx context.Context, val models.Metric) (*models.Metric, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, err
 	}
@@ -105,7 +106,7 @@ func (s *Service) UpdateMetric(val models.Metric) (*models.Metric, error) {
 		if err != nil {
 			return nil, err
 		}
-		updated, err := s.UpdateCounter(*counter)
+		updated, err := s.UpdateCounter(ctx, *counter)
 		if err != nil {
 			return nil, err
 		}
@@ -116,7 +117,7 @@ func (s *Service) UpdateMetric(val models.Metric) (*models.Metric, error) {
 		if err != nil {
 			return nil, err
 		}
-		updated, err := s.UpdateGauge(*gauge)
+		updated, err := s.UpdateGauge(ctx, *gauge)
 		if err != nil {
 			return nil, err
 		}
@@ -127,21 +128,21 @@ func (s *Service) UpdateMetric(val models.Metric) (*models.Metric, error) {
 	}
 }
 
-func (s *Service) FindMetric(t models.MetricType, name string) (*models.Metric, bool, error) {
+func (s *Service) FindMetric(ctx context.Context, t models.MetricType, name string) (*models.Metric, bool, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, false, err
 	}
 
 	switch t {
 	case models.MetricTypeCounter:
-		c, exists, err := s.FindCounter(name)
+		c, exists, err := s.FindCounter(ctx, name)
 		if err != nil || !exists {
 			return nil, exists, err
 		}
 		m := models.CounterMetric(*c)
 		return &m, true, nil
 	case models.MetricTypeGauge:
-		g, exists, err := s.FindGauge(name)
+		g, exists, err := s.FindGauge(ctx, name)
 		if err != nil || !exists {
 			return nil, exists, err
 		}
@@ -152,7 +153,7 @@ func (s *Service) FindMetric(t models.MetricType, name string) (*models.Metric, 
 	}
 }
 
-func (s *Service) UpdateMetrics(vals models.Metrics) (models.Metrics, error) {
+func (s *Service) UpdateMetrics(ctx context.Context, vals models.Metrics) (models.Metrics, error) {
 	if err := s.checkValidity(); err != nil {
 		return nil, err
 	}
@@ -164,11 +165,11 @@ func (s *Service) UpdateMetrics(vals models.Metrics) (models.Metrics, error) {
 	}
 
 	// update counters and gauges
-	counters, err = s.storage.UpdateCounters(counters)
+	counters, err = s.storage.UpdateCounters(ctx, counters)
 	if err != nil {
 		return nil, fmt.Errorf("update counters: %w", err)
 	}
-	err = s.storage.SetGauges(gauges)
+	err = s.storage.SetGauges(ctx, gauges)
 	if err != nil {
 		return nil, fmt.Errorf("update gauges: %w", err)
 	}

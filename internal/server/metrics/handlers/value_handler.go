@@ -33,7 +33,7 @@ func NewValueHandler(s Service, log *zap.Logger) (*ValueHandler, error) {
 func (h *ValueHandler) GaugeValueURLHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, ChiName)
-		gauge, exists, err := h.service.FindGauge(name)
+		gauge, exists, err := h.service.FindGauge(r.Context(), name)
 		if err != nil {
 			h.WriteError(w, hu.ErrInternalServerError, err.Error())
 			return
@@ -55,7 +55,7 @@ func (h *ValueHandler) GaugeValueURLHandler(ctx context.Context) http.HandlerFun
 func (h *ValueHandler) CounterValueURLHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, ChiName)
-		counter, exists, err := h.service.FindCounter(name)
+		counter, exists, err := h.service.FindCounter(r.Context(), name)
 		if err != nil {
 			h.WriteError(w, hu.ErrInternalServerError, err.Error())
 			return
@@ -95,7 +95,7 @@ func (h *ValueHandler) ValueMetricJSONHandler(ctx context.Context) http.HandlerF
 			h.WriteError(w, hu.ErrInvalidRequestJSON, err.Error())
 			return
 		}
-		m, exists, err := h.service.FindMetric(request.MType, request.ID)
+		m, exists, err := h.service.FindMetric(r.Context(), request.MType, request.ID)
 		if err != nil {
 			h.WriteError(w, hu.ErrInternalServerError, err.Error())
 			return
