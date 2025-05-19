@@ -33,6 +33,7 @@ type Tx interface {
 }
 
 type Db interface {
+	Migrate() error
 	BeginTx(ctx context.Context) (Tx, error)
 	PingContext(ctx context.Context) error
 	Close() error

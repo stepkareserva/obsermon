@@ -34,7 +34,7 @@ var (
 		`)
 
 	findCounterQuery = queryReplacer.Replace(`
-		SELECT {value}
+		SELECT {name}, {value}
 			FROM {counters}
 			WHERE {name} = $1
 		`)
@@ -45,7 +45,7 @@ var (
 		`)
 
 	selectCounterForUpdateQuery = queryReplacer.Replace(`
-		SELECT {value}
+		SELECT {name}, {value}
 			FROM {counters}
 			WHERE {name} = $1
 		FOR UPDATE
@@ -70,7 +70,7 @@ var (
 		`)
 
 	findGaugeQuery = queryReplacer.Replace(`
-		SELECT {value}
+		SELECT {name}, {value}
 			FROM {gauges}
 			WHERE {name} = $1
 		`)

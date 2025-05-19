@@ -9,29 +9,22 @@ import (
 	"time"
 
 	"github.com/stepkareserva/obsermon/internal/server/config"
-
-	"github.com/stepkareserva/obsermon/internal/server/database/database"
-	"github.com/stepkareserva/obsermon/internal/server/database/sustained"
-	idatabase "github.com/stepkareserva/obsermon/internal/server/interfaces/database"
-
-	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
+	"github.com/stepkareserva/obsermon/internal/server/http/handlers"
+	"github.com/stepkareserva/obsermon/internal/server/http/router"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/storage/dbstorage"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/storage/memstorage"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/storage/persistence"
-	"github.com/stepkareserva/obsermon/internal/server/routing"
 	"github.com/stepkareserva/obsermon/internal/server/server"
-
 	"go.uber.org/zap"
 )
 
 type App struct {
-	database idatabase.Database
-	storage  service.Storage
-	service  handlers.Service
-	handler  http.Handler
-	server   *server.Server
-	log      *zap.Logger
+	storage service.Storage
+	service handlers.Service
+	handler http.Handler
+	server  *server.Server
+	log     *zap.Logger
 }
 
 func New(ctx context.Context, cfg config.Config, log *zap.Logger) (*App, error) {
@@ -43,13 +36,6 @@ func New(ctx context.Context, cfg config.Config, log *zap.Logger) (*App, error) 
 	}
 
 	app := App{log: log}
-
-	if err := app.initDatabase(cfg); err != nil {
-		if closeErr := app.Close(); closeErr != nil {
-			log.Error("app close", zap.Error(closeErr))
-		}
-		return nil, fmt.Errorf("init storage: %w", err)
-	}
 
 	if err := app.initStorage(cfg); err != nil {
 		if closeErr := app.Close(); closeErr != nil {
@@ -114,16 +100,6 @@ func (a *App) Close() error {
 		a.storage = nil
 	}
 
-	// close database if it can be closed
-	if a.database != nil {
-		if err := a.database.Close(); err != nil {
-			closingErrs = errors.Join(err, fmt.Errorf("database closing: %w", err))
-		} else {
-			a.log.Info("database closed")
-		}
-		a.database = nil
-	}
-
 	return closingErrs
 }
 
@@ -148,7 +124,7 @@ func (a *App) Run(ctx context.Context) error {
 	}
 }
 
-func (a *App) initDatabase(cfg config.Config) error {
+/*func (a *App) initDatabase(cfg config.Config) error {
 	if cfg.DBConnection == "" {
 		a.log.Info("Database connection not performed, don't use database")
 		return nil
@@ -172,7 +148,7 @@ func (a *App) initDatabase(cfg config.Config) error {
 	a.database = sustDB
 
 	return nil
-}
+}*/
 
 func (a *App) initStorage(cfg config.Config) error {
 	// omg I don't know how to refactor it.
@@ -180,23 +156,10 @@ func (a *App) initStorage(cfg config.Config) error {
 	// then create one of storage impl, then apply to it
 	// loaded state.
 
-	// try to load current state if passed
-	var currentState *persistence.State
-	if cfg.Restore {
-		storage := persistence.NewJSONStateStorage(cfg.FileStoragePath)
-		state, err := storage.LoadState()
-		if err != nil {
-			a.log.Warn("service config restoring", zap.Error(err))
-		} else {
-			currentState = state
-			a.log.Info("restored state loaded", zap.String("location", cfg.FileStoragePath))
-		}
-	}
-
 	// create database, presistent or memory storage
 	if cfg.DBConnection != "" {
 		// use db storage
-		storage, err := dbstorage.New(a.database, a.log)
+		storage, err := dbstorage.New(cfg.DBConnection, a.log)
 		if err != nil {
 			return fmt.Errorf("init db storage: %w", err)
 		}
@@ -212,19 +175,13 @@ func (a *App) initStorage(cfg config.Config) error {
 			persistenceCfg := persistence.Config{
 				StateStorage:  &persistenStorage,
 				StoreInterval: cfg.StoreInterval(),
+				Restore:       cfg.Restore,
 			}
 			var err error
 			a.storage, err = persistence.New(persistenceCfg, a.storage, a.log)
 			if err != nil {
 				return fmt.Errorf("persistent storage: %w", err)
 			}
-		}
-	}
-
-	// restore state, if state exists
-	if currentState != nil {
-		if err := currentState.Export(context.TODO(), a.storage); err != nil {
-			return fmt.Errorf("restoring state: %w", err)
 		}
 	}
 
@@ -244,23 +201,9 @@ func (a *App) initService(cfg config.Config) error {
 }
 
 func (a *App) initHandler(ctx context.Context, cfg config.Config) error {
-	// create router
-	router := routing.New(a.log)
-
-	// add metrics handlers
-	if err := router.AddMetricsHandlers(ctx, a.service); err != nil {
-		return fmt.Errorf("metrics handler: %w", err)
-	}
-
-	// add database handler
-	if err := router.AddDatabaseHandlers(ctx, a.database); err != nil {
-		return fmt.Errorf("database handler: %w", err)
-	}
-
-	// set handlers
-	handler, err := router.Handler()
+	handler, err := router.New(ctx, a.log, a.service)
 	if err != nil {
-		return fmt.Errorf("router handler: %w", err)
+		return fmt.Errorf("init handler: %w", err)
 	}
 	a.handler = handler
 

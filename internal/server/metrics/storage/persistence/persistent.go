@@ -14,6 +14,7 @@ import (
 type Config struct {
 	StateStorage  StateStorage
 	StoreInterval time.Duration
+	Restore       bool
 }
 
 type Storage struct {
@@ -36,6 +37,14 @@ func New(cfg Config, base service.Storage, logger *zap.Logger) (*Storage, error)
 	}
 	if logger == nil {
 		return nil, fmt.Errorf("logger is nil")
+	}
+	if cfg.Restore {
+		state, err := cfg.StateStorage.LoadState()
+		if err != nil {
+			logger.Warn("state loading: %w", zap.Error(err))
+		} else if err := state.Export(context.TODO(), base); err != nil {
+			logger.Warn("state exporting: %w", zap.Error(err))
+		}
 	}
 
 	ctx, cancel := context.WithCancel(context.TODO())

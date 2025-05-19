@@ -8,18 +8,23 @@ import (
 	"github.com/stepkareserva/obsermon/internal/models"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/storage/dbstorage/db"
+	"go.uber.org/zap"
 )
 
 type Storage struct {
+	db  db.Db
 	uow *UnitOfWork
 }
 
 var _ service.Storage = (*Storage)(nil)
 
-func New(db db.Db) (*Storage, error) {
-	if db == nil {
-		return nil, fmt.Errorf("database not exists")
+func New(dbConn string, log *zap.Logger) (*Storage, error) {
+	if log == nil {
+		return nil, fmt.Errorf("log not exists")
 	}
+
+	db := db.NewSqlDB(dbConn, log)
+
 	retryPolicy := []time.Duration{
 		1 * time.Second,
 		3 * time.Second,
@@ -28,14 +33,25 @@ func New(db db.Db) (*Storage, error) {
 	uow := UnitOfWork{db: db, retryPolicy: retryPolicy}
 
 	storage := Storage{
+		db:  db,
 		uow: &uow,
 	}
 
-	if err := storage.initTables(); err != nil {
-		return nil, err
-	}
+	//if err := storage.initTables(); err != nil {
+	//	return nil, err
+	//}
 
 	return &storage, nil
+}
+
+func (s *Storage) Close() error {
+	if s == nil || s.db == nil {
+		return nil
+	}
+	if err := s.db.Close(); err != nil {
+		return fmt.Errorf("db closing: %w", err)
+	}
+	return nil
 }
 
 func (s *Storage) initTables() error {

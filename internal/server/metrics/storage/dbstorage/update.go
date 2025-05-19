@@ -132,6 +132,7 @@ func updateCounter(ctx context.Context, stmts *counterStmts, counter models.Coun
 	}()
 
 	current, err := ScanCounter(rows)
+
 	if err != nil {
 		return nil, fmt.Errorf("scan counters: %w", err)
 	}
@@ -146,7 +147,8 @@ func updateCounter(ctx context.Context, stmts *counterStmts, counter models.Coun
 	if err = current.Value.Update(counter.Value); err != nil {
 		return nil, fmt.Errorf("update counter value: %w", err)
 	}
-	if _, err = stmts.upd.ExecContext(ctx, counter.Name); err != nil {
+
+	if _, err = stmts.upd.ExecContext(ctx, current.Name, current.Value); err != nil {
 		return nil, fmt.Errorf("update counter: %w", err)
 	}
 	return current, nil
