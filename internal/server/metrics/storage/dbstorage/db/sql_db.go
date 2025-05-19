@@ -80,6 +80,12 @@ func (d *SqlDB) keepConnection(ctx context.Context, log *zap.Logger) {
 	sqlDB.SetConnMaxLifetime(30 * time.Minute)
 	sqlDB.SetConnMaxIdleTime(300 * time.Minute)
 
+	// try to migrate
+	if err = Migrate(ctx, sqlDB); err != nil {
+		log.Warn("db migration", zap.Error(err))
+		return
+	}
+
 	// use db if success
 	d.db.Store(sqlDB)
 }
