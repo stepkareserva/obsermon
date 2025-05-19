@@ -6,7 +6,7 @@ import (
 	"sort"
 
 	"github.com/stepkareserva/obsermon/internal/models"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
+	"github.com/stepkareserva/obsermon/internal/server/http/handlers"
 )
 
 type Service struct {

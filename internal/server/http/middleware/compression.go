@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	hu "github.com/stepkareserva/obsermon/internal/server/httputils"
+	"github.com/stepkareserva/obsermon/internal/server/http/constants"
 	"go.uber.org/zap"
 )
 
@@ -56,14 +56,14 @@ func Compression(log *zap.Logger) Middleware {
 
 func isCompressedRequest(r *http.Request) bool {
 	return lookupHeaderComponent(
-		r.Header.Values(hu.ContentEncoding),
-		hu.GZipEncoding)
+		r.Header.Values(constants.ContentEncoding),
+		constants.GZipEncoding)
 }
 
 func compressedResponseSupported(r *http.Request) bool {
 	return lookupHeaderComponent(
-		r.Header.Values(hu.AcceptEncoding),
-		hu.GZipEncoding)
+		r.Header.Values(constants.AcceptEncoding),
+		constants.GZipEncoding)
 }
 
 func lookupHeaderComponent(header []string, target string) bool {

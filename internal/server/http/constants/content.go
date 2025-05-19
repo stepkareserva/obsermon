@@ -1,4 +1,4 @@
-package httputils
+package constants
 
 const (
 	ContentType      = "Content-Type"

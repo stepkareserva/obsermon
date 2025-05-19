@@ -12,12 +12,13 @@ import (
 
 	"github.com/stepkareserva/obsermon/internal/models"
 
-	hu "github.com/stepkareserva/obsermon/internal/server/httputils"
+	"github.com/stepkareserva/obsermon/internal/server/http/constants"
+	"github.com/stepkareserva/obsermon/internal/server/http/errors"
 )
 
 type UpdateHandler struct {
 	service Service
-	hu.ErrorsWriter
+	errors.ErrorsWriter
 }
 
 func NewUpdateHandler(s Service, log *zap.Logger) (*UpdateHandler, error) {
@@ -26,73 +27,73 @@ func NewUpdateHandler(s Service, log *zap.Logger) (*UpdateHandler, error) {
 	}
 	return &UpdateHandler{
 		service:      s,
-		ErrorsWriter: hu.NewErrorsWriter(log),
+		ErrorsWriter: errors.NewErrorsWriter(log),
 	}, nil
 }
 
 func (h *UpdateHandler) UpdateGaugeURLHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		name := chi.URLParam(r, ChiName)
+		name := chi.URLParam(r, constants.ChiName)
 		var value models.GaugeValue
-		if err := value.FromString(chi.URLParam(r, ChiValue)); err != nil {
-			h.WriteError(w, ErrInvalidMetricValue, err.Error())
+		if err := value.FromString(chi.URLParam(r, constants.ChiValue)); err != nil {
+			h.WriteError(w, errors.ErrInvalidMetricValue, err.Error())
 			return
 		}
 		gauge := models.Gauge{Name: name, Value: value}
 		if _, err := h.service.UpdateGauge(r.Context(), gauge); err != nil {
-			h.WriteError(w, hu.ErrInternalServerError, err.Error())
+			h.WriteError(w, errors.ErrInternalServerError, err.Error())
 			return
 		}
 
-		w.Header().Set(hu.ContentType, hu.ContentTypeText)
+		w.Header().Set(constants.ContentType, constants.ContentTypeText)
 		w.WriteHeader(http.StatusOK)
 	}
 }
 
 func (h *UpdateHandler) UpdateCounterURLHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		name := chi.URLParam(r, ChiName)
+		name := chi.URLParam(r, constants.ChiName)
 		var value models.CounterValue
-		if err := value.FromString(chi.URLParam(r, ChiValue)); err != nil {
-			h.WriteError(w, ErrInvalidMetricValue, err.Error())
+		if err := value.FromString(chi.URLParam(r, constants.ChiValue)); err != nil {
+			h.WriteError(w, errors.ErrInvalidMetricValue, err.Error())
 			return
 		}
 
 		counter := models.Counter{Name: name, Value: value}
 		if _, err := h.service.UpdateCounter(r.Context(), counter); err != nil {
-			h.WriteError(w, hu.ErrInternalServerError, err.Error())
+			h.WriteError(w, errors.ErrInternalServerError, err.Error())
 			return
 		}
 
-		w.Header().Set(hu.ContentType, hu.ContentTypeHTML)
+		w.Header().Set(constants.ContentType, constants.ContentTypeHTML)
 		w.WriteHeader(http.StatusOK)
 	}
 }
 
 func (h *UpdateHandler) UpdateUnknownMetricURLHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		h.WriteError(w, ErrInvalidMetricType, chi.URLParam(r, ChiMetric))
+		h.WriteError(w, errors.ErrInvalidMetricType, chi.URLParam(r, constants.ChiMetric))
 	}
 }
 
 func (h *UpdateHandler) UpdateMetricJSONHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get(hu.ContentType) != hu.ContentTypeJSON {
-			h.WriteError(w, hu.ErrUnsupportedContentType)
+		if r.Header.Get(constants.ContentType) != constants.ContentTypeJSON {
+			h.WriteError(w, errors.ErrUnsupportedContentType)
 			return
 		}
 		var request models.UpdateMetricRequest
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-			h.WriteError(w, hu.ErrInvalidRequestJSON, err.Error())
+			h.WriteError(w, errors.ErrInvalidRequestJSON, err.Error())
 			return
 		}
 		if err := validator.New().Struct(request); err != nil {
-			h.WriteError(w, hu.ErrInvalidRequestJSON, err.Error())
+			h.WriteError(w, errors.ErrInvalidRequestJSON, err.Error())
 			return
 		}
 		updated, err := h.service.UpdateMetric(r.Context(), request)
 		if err != nil {
-			h.WriteError(w, hu.ErrInternalServerError, err.Error())
+			h.WriteError(w, errors.ErrInternalServerError, err.Error())
 			return
 		}
 		// update and return updated metrics in the same request
@@ -102,9 +103,9 @@ func (h *UpdateHandler) UpdateMetricJSONHandler(ctx context.Context) http.Handle
 		// update and aggregate on value requests.
 		// but now updated metric value should be returned as
 		// part of update request's response, so it keep in mind.
-		w.Header().Set(hu.ContentType, hu.ContentTypeJSON)
+		w.Header().Set(constants.ContentType, constants.ContentTypeJSON)
 		if err = json.NewEncoder(w).Encode(*updated); err != nil {
-			h.WriteError(w, hu.ErrInternalServerError, err.Error())
+			h.WriteError(w, errors.ErrInternalServerError, err.Error())
 			return
 		}
 	}

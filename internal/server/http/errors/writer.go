@@ -1,10 +1,11 @@
-package httputils
+package errors
 
 import (
 	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/stepkareserva/obsermon/internal/server/http/constants"
 	"go.uber.org/zap"
 )
 
@@ -32,7 +33,7 @@ func (e *ErrorsWriter) WriteError(w http.ResponseWriter, err HandlerError, detai
 }
 
 func writeError(w http.ResponseWriter, err HandlerError) error {
-	w.Header().Set(ContentType, ContentTypeTextU)
+	w.Header().Set(constants.ContentType, constants.ContentTypeTextU)
 	w.WriteHeader(err.StatusCode)
 
 	if _, err := w.Write([]byte(err.Message)); err != nil {

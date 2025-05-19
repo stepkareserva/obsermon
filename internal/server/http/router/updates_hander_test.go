@@ -1,25 +1,20 @@
-package handlers
+package router
 
 import (
-	"context"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-	"go.uber.org/zap"
 
 	"github.com/stepkareserva/obsermon/internal/models"
-	"github.com/stepkareserva/obsermon/internal/server/mocks"
 )
 
 // test for counter value handler
 func TestValidUpdatesHandler(t *testing.T) {
-	ctrl, mockService, ts := getUpdatesTestObjects(t)
+	ctrl, mockService, ts := getTestObjects(t)
 	defer ctrl.Finish()
 	defer ts.Close()
 
@@ -49,7 +44,7 @@ func TestValidUpdatesHandler(t *testing.T) {
 			UpdateMetrics(gomock.Any(), metrics).
 			Return(metrics, nil)
 
-		res := testingPostJSON(t, ts.URL+"/", metricsJSON)
+		res := testingPostJSON(t, ts.URL+"/updates", metricsJSON)
 		defer safeCloseRes(t, res)
 		require.Equal(t, http.StatusOK, res.StatusCode)
 		body, err := io.ReadAll(res.Body)
@@ -59,7 +54,7 @@ func TestValidUpdatesHandler(t *testing.T) {
 }
 
 func TestInvalidUpdatesHandler(t *testing.T) {
-	ctrl, _, ts := getUpdatesTestObjects(t)
+	ctrl, _, ts := getTestObjects(t)
 	defer ctrl.Finish()
 	defer ts.Close()
 
@@ -68,23 +63,8 @@ func TestInvalidUpdatesHandler(t *testing.T) {
 			{"id":"name", "field":"counter", "delta":1},
 			{"id":"other", "other":"gauge", "value":2.5}
 		]`
-		res := testingPostJSON(t, ts.URL+"/", invalidJSON)
+		res := testingPostJSON(t, ts.URL+"/updates", invalidJSON)
 		defer safeCloseRes(t, res)
 		require.Equal(t, http.StatusBadRequest, res.StatusCode)
 	})
-}
-
-func getUpdatesTestObjects(t *testing.T) (*gomock.Controller, *mocks.MockService, *httptest.Server) {
-	ctrl := gomock.NewController(t)
-	mockService := mocks.NewMockService(ctrl)
-
-	handlers, err := New(mockService, zap.NewNop())
-	require.NoError(t, err, "handlers initialization error")
-
-	router := chi.NewRouter()
-	handlers.registerUpdatesRoutes(context.TODO(), router)
-
-	ts := httptest.NewServer(router)
-
-	return ctrl, mockService, ts
 }

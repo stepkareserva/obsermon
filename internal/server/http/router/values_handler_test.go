@@ -1,24 +1,19 @@
-package handlers
+package router
 
 import (
-	"context"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-	"go.uber.org/zap"
 
 	"github.com/stepkareserva/obsermon/internal/models"
-	"github.com/stepkareserva/obsermon/internal/server/mocks"
 )
 
 func TestValuesHandler(t *testing.T) {
-	ctrl, mockService, ts := getValuesTestObjects(t)
+	ctrl, mockService, ts := getTestObjects(t)
 	defer ctrl.Finish()
 	defer ts.Close()
 
@@ -45,19 +40,4 @@ func TestValuesHandler(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "text/html", contentType)
 	})
-}
-
-func getValuesTestObjects(t *testing.T) (*gomock.Controller, *mocks.MockService, *httptest.Server) {
-	ctrl := gomock.NewController(t)
-	mockService := mocks.NewMockService(ctrl)
-
-	handlers, err := New(mockService, zap.NewNop())
-	require.NoError(t, err, "handlers initialization error")
-
-	router := chi.NewRouter()
-	handlers.registerValuesRoutes(context.TODO(), router)
-
-	ts := httptest.NewServer(router)
-
-	return ctrl, mockService, ts
 }

@@ -213,6 +213,44 @@ func (mr *MockCounterStorageMockRecorder) UpdateCounters(ctx, vals any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCounters", reflect.TypeOf((*MockCounterStorage)(nil).UpdateCounters), ctx, vals)
 }
 
+// MockPingable is a mock of Pingable interface.
+type MockPingable struct {
+	ctrl     *gomock.Controller
+	recorder *MockPingableMockRecorder
+	isgomock struct{}
+}
+
+// MockPingableMockRecorder is the mock recorder for MockPingable.
+type MockPingableMockRecorder struct {
+	mock *MockPingable
+}
+
+// NewMockPingable creates a new mock instance.
+func NewMockPingable(ctrl *gomock.Controller) *MockPingable {
+	mock := &MockPingable{ctrl: ctrl}
+	mock.recorder = &MockPingableMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockPingable) EXPECT() *MockPingableMockRecorder {
+	return m.recorder
+}
+
+// Ping mocks base method.
+func (m *MockPingable) Ping(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Ping", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Ping indicates an expected call of Ping.
+func (mr *MockPingableMockRecorder) Ping(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockPingable)(nil).Ping), ctx)
+}
+
 // MockStorage is a mock of Storage interface.
 type MockStorage struct {
 	ctrl     *gomock.Controller

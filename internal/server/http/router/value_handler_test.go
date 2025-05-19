@@ -1,29 +1,24 @@
-package handlers
+package router
 
 import (
-	"context"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-	"go.uber.org/zap"
 
 	"github.com/stepkareserva/obsermon/internal/models"
-	"github.com/stepkareserva/obsermon/internal/server/mocks"
 )
 
 // test for counter value handler
 func TestValidValueCounterHandler(t *testing.T) {
-	ctrl, mockService, ts := getValueTestObjects(t)
+	ctrl, mockService, ts := getTestObjects(t)
 	defer ctrl.Finish()
 	defer ts.Close()
 
-	t.Run("test /counter/name", func(t *testing.T) {
+	t.Run("test /value/counter/name", func(t *testing.T) {
 
 		mockService.
 			EXPECT().
@@ -33,7 +28,7 @@ func TestValidValueCounterHandler(t *testing.T) {
 				Value: 1,
 			}, true, nil)
 
-		res := testingGetURL(t, ts.URL+"/counter/name")
+		res := testingGetURL(t, ts.URL+"/value/counter/name")
 		defer safeCloseRes(t, res)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		body, err := io.ReadAll(res.Body)
@@ -43,18 +38,18 @@ func TestValidValueCounterHandler(t *testing.T) {
 }
 
 func TestNotFoundValueCounterHandler(t *testing.T) {
-	ctrl, mockService, ts := getValueTestObjects(t)
+	ctrl, mockService, ts := getTestObjects(t)
 	defer ctrl.Finish()
 	defer ts.Close()
 
-	t.Run("test /counter/name", func(t *testing.T) {
+	t.Run("test /value/counter/name", func(t *testing.T) {
 
 		mockService.
 			EXPECT().
 			FindCounter(gomock.Any(), gomock.Eq("name")).
 			Return(nil, false, nil)
 
-		res := testingGetURL(t, ts.URL+"/counter/name")
+		res := testingGetURL(t, ts.URL+"/value/counter/name")
 		defer safeCloseRes(t, res)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 	})
@@ -62,11 +57,11 @@ func TestNotFoundValueCounterHandler(t *testing.T) {
 
 // test for gauge value handler
 func TestValidValueGaugeHandler(t *testing.T) {
-	ctrl, mockService, ts := getValueTestObjects(t)
+	ctrl, mockService, ts := getTestObjects(t)
 	defer ctrl.Finish()
 	defer ts.Close()
 
-	t.Run("test /gauge/name", func(t *testing.T) {
+	t.Run("test /value/gauge/name", func(t *testing.T) {
 
 		mockService.
 			EXPECT().
@@ -76,7 +71,7 @@ func TestValidValueGaugeHandler(t *testing.T) {
 				Value: 1.2,
 			}, true, nil)
 
-		res := testingGetURL(t, ts.URL+"/gauge/name")
+		res := testingGetURL(t, ts.URL+"/value/gauge/name")
 		defer safeCloseRes(t, res)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		body, err := io.ReadAll(res.Body)
@@ -86,25 +81,25 @@ func TestValidValueGaugeHandler(t *testing.T) {
 }
 
 func TestNotFoundValueGaugeHandler(t *testing.T) {
-	ctrl, mockService, ts := getValueTestObjects(t)
+	ctrl, mockService, ts := getTestObjects(t)
 	defer ctrl.Finish()
 	defer ts.Close()
 
-	t.Run("test /gauge/name", func(t *testing.T) {
+	t.Run("test /value/gauge/name", func(t *testing.T) {
 
 		mockService.
 			EXPECT().
 			FindGauge(gomock.Any(), gomock.Eq("name")).
 			Return(nil, false, nil)
 
-		res := testingGetURL(t, ts.URL+"/gauge/name")
+		res := testingGetURL(t, ts.URL+"/value/gauge/name")
 		defer safeCloseRes(t, res)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 	})
 }
 
 func TestValidValueCounterJSONHandler(t *testing.T) {
-	ctrl, mockService, ts := getValueTestObjects(t)
+	ctrl, mockService, ts := getTestObjects(t)
 	defer ctrl.Finish()
 	defer ts.Close()
 
@@ -123,7 +118,7 @@ func TestValidValueCounterJSONHandler(t *testing.T) {
 			FindMetric(gomock.Any(), models.MetricTypeCounter, "name").
 			Return(&counter, true, nil)
 
-		res := testingPostJSON(t, ts.URL+"/", counterJSON)
+		res := testingPostJSON(t, ts.URL+"/value", counterJSON)
 		defer safeCloseRes(t, res)
 		require.Equal(t, http.StatusOK, res.StatusCode)
 		body, err := io.ReadAll(res.Body)
@@ -133,7 +128,7 @@ func TestValidValueCounterJSONHandler(t *testing.T) {
 }
 
 func TestValidValueGaugeJSONHandler(t *testing.T) {
-	ctrl, mockService, ts := getValueTestObjects(t)
+	ctrl, mockService, ts := getTestObjects(t)
 	defer ctrl.Finish()
 	defer ts.Close()
 
@@ -152,7 +147,7 @@ func TestValidValueGaugeJSONHandler(t *testing.T) {
 			FindMetric(gomock.Any(), models.MetricTypeGauge, "name").
 			Return(&gauge, true, nil)
 
-		res := testingPostJSON(t, ts.URL+"/", gaugeJSON)
+		res := testingPostJSON(t, ts.URL+"/value", gaugeJSON)
 		defer safeCloseRes(t, res)
 		require.Equal(t, http.StatusOK, res.StatusCode)
 		body, err := io.ReadAll(res.Body)
@@ -162,30 +157,15 @@ func TestValidValueGaugeJSONHandler(t *testing.T) {
 }
 
 func TestInvalidValueJSONHandler(t *testing.T) {
-	ctrl, _, ts := getValueTestObjects(t)
+	ctrl, _, ts := getTestObjects(t)
 	defer ctrl.Finish()
 	defer ts.Close()
 
 	t.Run("value invalid: {}", func(t *testing.T) {
 		invalidJSON := "{}"
 
-		res := testingPostJSON(t, ts.URL+"/", invalidJSON)
+		res := testingPostJSON(t, ts.URL+"/value", invalidJSON)
 		defer safeCloseRes(t, res)
 		require.Equal(t, http.StatusBadRequest, res.StatusCode)
 	})
-}
-
-func getValueTestObjects(t *testing.T) (*gomock.Controller, *mocks.MockService, *httptest.Server) {
-	ctrl := gomock.NewController(t)
-	mockService := mocks.NewMockService(ctrl)
-
-	handlers, err := New(mockService, zap.NewNop())
-	require.NoError(t, err, "handlers initialization error")
-
-	router := chi.NewRouter()
-	handlers.registerValueRoutes(context.TODO(), router)
-
-	ts := httptest.NewServer(router)
-
-	return ctrl, mockService, ts
 }

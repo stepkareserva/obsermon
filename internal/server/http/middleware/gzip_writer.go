@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	hu "github.com/stepkareserva/obsermon/internal/server/httputils"
+	"github.com/stepkareserva/obsermon/internal/server/http/constants"
 )
 
 // http.ResponseWriter impl which supports
@@ -45,10 +45,10 @@ func (g *gzipWriter) WriteHeader(status int) {
 	g.status = status
 
 	useCompression := !g.isErrorStatus(status) &&
-		g.supportContentCompress(g.Header().Get(hu.ContentType))
+		g.supportContentCompress(g.Header().Get(constants.ContentType))
 
 	if useCompression {
-		g.Header().Set(hu.ContentEncoding, hu.GZipEncoding)
+		g.Header().Set(constants.ContentEncoding, constants.GZipEncoding)
 		g.compressor = gzip.NewWriter(g.ResponseWriter)
 	} else {
 		g.compressor = nil
@@ -73,10 +73,10 @@ func (g *gzipWriter) Close() error {
 
 func (g *gzipWriter) supportContentCompress(contentType string) bool {
 	compressableContent := []string{
-		hu.ContentTypeJSON,
-		hu.ContentTypeJSONU,
-		hu.ContentTypeHTML,
-		hu.ContentTypeHTMLU,
+		constants.ContentTypeJSON,
+		constants.ContentTypeJSONU,
+		constants.ContentTypeHTML,
+		constants.ContentTypeHTMLU,
 	}
 	for _, g := range compressableContent {
 		if contentType == g {

@@ -1,12 +1,29 @@
-package handlers
+package router
 
 import (
+	"context"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/stepkareserva/obsermon/internal/server/mocks"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
+	"go.uber.org/zap"
 )
+
+func getTestObjects(t *testing.T) (*gomock.Controller, *mocks.MockService, *httptest.Server) {
+	ctrl := gomock.NewController(t)
+	mockService := mocks.NewMockService(ctrl)
+
+	handlers, err := New(context.TODO(), zap.NewNop(), mockService)
+	require.NoError(t, err, "handlers initialization error")
+
+	ts := httptest.NewServer(handlers)
+
+	return ctrl, mockService, ts
+}
 
 func testingGetURL(t *testing.T, url string) *http.Response {
 	res, err := http.Get(url)

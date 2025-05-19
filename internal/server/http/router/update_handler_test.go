@@ -1,30 +1,25 @@
-package handlers
+package router
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-	"go.uber.org/zap"
 
 	"github.com/stepkareserva/obsermon/internal/models"
-	"github.com/stepkareserva/obsermon/internal/server/mocks"
 )
 
 // tests for update counters handle
 func TestValidUpdateCounterHandler(t *testing.T) {
-	ctrl, mockService, ts := getUpdateTestObjects(t)
+	ctrl, mockService, ts := getTestObjects(t)
 	defer ctrl.Finish()
 	defer ts.Close()
 
-	t.Run("test /counter/name/1", func(t *testing.T) {
+	t.Run("test /update/counter/name/1", func(t *testing.T) {
 
 		mockService.
 			EXPECT().
@@ -37,21 +32,21 @@ func TestValidUpdateCounterHandler(t *testing.T) {
 				Value: 1,
 			}, nil)
 
-		res := testingPostURL(t, ts.URL+"/counter/name/1")
+		res := testingPostURL(t, ts.URL+"/update/counter/name/1")
 		defer safeCloseRes(t, res)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
 }
 
 func TestInvalidUpdateCounterHandler(t *testing.T) {
-	ctrl, _, ts := getUpdateTestObjects(t)
+	ctrl, _, ts := getTestObjects(t)
 	defer ctrl.Finish()
 	defer ts.Close()
 
 	invalidRequests := []string{
-		"/counter/name/1.000",
-		"/counter/name/1.25",
-		"/counter/name/99999999999999999999999999",
+		"/update/counter/name/1.000",
+		"/update/counter/name/1.25",
+		"/update/counter/name/99999999999999999999999999",
 	}
 	for _, req := range invalidRequests {
 		t.Run(fmt.Sprintf("test %s", req), func(t *testing.T) {
@@ -63,12 +58,12 @@ func TestInvalidUpdateCounterHandler(t *testing.T) {
 }
 
 func TestNotFoundUpdateCounterHandler(t *testing.T) {
-	ctrl, _, ts := getUpdateTestObjects(t)
+	ctrl, _, ts := getTestObjects(t)
 	defer ctrl.Finish()
 	defer ts.Close()
 
-	t.Run("test /counter/", func(t *testing.T) {
-		res := testingPostURL(t, ts.URL+"/counter/")
+	t.Run("test /update/counter/", func(t *testing.T) {
+		res := testingPostURL(t, ts.URL+"/update/counter/")
 		defer safeCloseRes(t, res)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 	})
@@ -76,11 +71,11 @@ func TestNotFoundUpdateCounterHandler(t *testing.T) {
 
 // tests for update gauges handle
 func TestValidUpdateGaugeHandler(t *testing.T) {
-	ctrl, mockService, ts := getUpdateTestObjects(t)
+	ctrl, mockService, ts := getTestObjects(t)
 	defer ctrl.Finish()
 	defer ts.Close()
 
-	t.Run("test /gauge/name/1.0", func(t *testing.T) {
+	t.Run("test /update/gauge/name/1.0", func(t *testing.T) {
 
 		mockService.
 			EXPECT().
@@ -93,20 +88,20 @@ func TestValidUpdateGaugeHandler(t *testing.T) {
 				Value: 1.0,
 			}, nil)
 
-		res := testingPostURL(t, ts.URL+"/gauge/name/1.0")
+		res := testingPostURL(t, ts.URL+"/update/gauge/name/1.0")
 		defer safeCloseRes(t, res)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
 }
 
 func TestInvalidUpdateGaugeHandler(t *testing.T) {
-	ctrl, _, ts := getUpdateTestObjects(t)
+	ctrl, _, ts := getTestObjects(t)
 	defer ctrl.Finish()
 	defer ts.Close()
 
 	invalidRequests := []string{
-		"/gauge/name/value",
-		"/gauge/name/1.2.3",
+		"/update/gauge/name/value",
+		"/update/gauge/name/1.2.3",
 	}
 	for _, req := range invalidRequests {
 		t.Run(fmt.Sprintf("test %s", req), func(t *testing.T) {
@@ -118,12 +113,12 @@ func TestInvalidUpdateGaugeHandler(t *testing.T) {
 }
 
 func TestNotFoundUpdateGaugeHandler(t *testing.T) {
-	ctrl, _, ts := getUpdateTestObjects(t)
+	ctrl, _, ts := getTestObjects(t)
 	defer ctrl.Finish()
 	defer ts.Close()
 
-	t.Run("test /gauge/", func(t *testing.T) {
-		res := testingPostURL(t, ts.URL+"/gauge/")
+	t.Run("test /update/gauge/", func(t *testing.T) {
+		res := testingPostURL(t, ts.URL+"/update/gauge/")
 		defer safeCloseRes(t, res)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 	})
@@ -131,7 +126,7 @@ func TestNotFoundUpdateGaugeHandler(t *testing.T) {
 
 // tests for JSON handlers
 func TestValidUpdateCounterJSONHandler(t *testing.T) {
-	ctrl, mockService, ts := getUpdateTestObjects(t)
+	ctrl, mockService, ts := getTestObjects(t)
 	defer ctrl.Finish()
 	defer ts.Close()
 
@@ -150,7 +145,7 @@ func TestValidUpdateCounterJSONHandler(t *testing.T) {
 			UpdateMetric(gomock.Any(), counter).
 			Return(&counter, nil)
 
-		res := testingPostJSON(t, ts.URL+"/", counterJSON)
+		res := testingPostJSON(t, ts.URL+"/update", counterJSON)
 		defer safeCloseRes(t, res)
 		require.Equal(t, http.StatusOK, res.StatusCode)
 		body, err := io.ReadAll(res.Body)
@@ -160,7 +155,7 @@ func TestValidUpdateCounterJSONHandler(t *testing.T) {
 }
 
 func TestValidUpdateGaugeJSONHandler(t *testing.T) {
-	ctrl, mockService, ts := getUpdateTestObjects(t)
+	ctrl, mockService, ts := getTestObjects(t)
 	defer ctrl.Finish()
 	defer ts.Close()
 
@@ -179,7 +174,7 @@ func TestValidUpdateGaugeJSONHandler(t *testing.T) {
 			UpdateMetric(gomock.Any(), gauge).
 			Return(&gauge, nil)
 
-		res := testingPostJSON(t, ts.URL+"/", gaugeJSON)
+		res := testingPostJSON(t, ts.URL+"/update", gaugeJSON)
 		defer safeCloseRes(t, res)
 		require.Equal(t, http.StatusOK, res.StatusCode)
 		body, err := io.ReadAll(res.Body)
@@ -189,30 +184,15 @@ func TestValidUpdateGaugeJSONHandler(t *testing.T) {
 }
 
 func TestInvalidUpdateJSONHandler(t *testing.T) {
-	ctrl, _, ts := getUpdateTestObjects(t)
+	ctrl, _, ts := getTestObjects(t)
 	defer ctrl.Finish()
 	defer ts.Close()
 
 	t.Run("update invalid", func(t *testing.T) {
 		invalidJSON := "{}"
 
-		res := testingPostJSON(t, ts.URL+"/", invalidJSON)
+		res := testingPostJSON(t, ts.URL+"/update", invalidJSON)
 		defer safeCloseRes(t, res)
 		require.Equal(t, http.StatusBadRequest, res.StatusCode)
 	})
-}
-
-func getUpdateTestObjects(t *testing.T) (*gomock.Controller, *mocks.MockService, *httptest.Server) {
-	ctrl := gomock.NewController(t)
-	mockService := mocks.NewMockService(ctrl)
-
-	handlers, err := New(mockService, zap.NewNop())
-	require.NoError(t, err, "handlers initialization error")
-
-	router := chi.NewRouter()
-	handlers.registerUpdateRoutes(context.TODO(), router)
-
-	ts := httptest.NewServer(router)
-
-	return ctrl, mockService, ts
 }
