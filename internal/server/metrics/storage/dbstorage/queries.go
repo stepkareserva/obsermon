@@ -16,7 +16,7 @@ var (
 		)`)
 
 	createGaugesQuery = queryReplacer.Replace(`
-		CREATE TABLE IF NOT EXISTS {gauges} (
+			CREATE TABLE IF NOT EXISTS {gauges} (
 			{name} TEXT PRIMARY KEY,
 			{value} DOUBLE PRECISION NOT NULL
 		)`)

@@ -24,6 +24,10 @@ type CounterStorage interface {
 	ReplaceCounters(ctx context.Context, val models.CountersList) error
 }
 
+type Pingable interface {
+	Ping(ctx context.Context) error
+}
+
 //go:generate mockgen -source=$GOFILE -destination=../../mocks/mock_storage.go -package=mocks
 
 type Storage interface {

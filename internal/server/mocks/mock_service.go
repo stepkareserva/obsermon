@@ -227,6 +227,44 @@ func (mr *MockMetricsServiceMockRecorder) UpdateMetrics(ctx, vals any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMetrics", reflect.TypeOf((*MockMetricsService)(nil).UpdateMetrics), ctx, vals)
 }
 
+// MockPingableService is a mock of PingableService interface.
+type MockPingableService struct {
+	ctrl     *gomock.Controller
+	recorder *MockPingableServiceMockRecorder
+	isgomock struct{}
+}
+
+// MockPingableServiceMockRecorder is the mock recorder for MockPingableService.
+type MockPingableServiceMockRecorder struct {
+	mock *MockPingableService
+}
+
+// NewMockPingableService creates a new mock instance.
+func NewMockPingableService(ctrl *gomock.Controller) *MockPingableService {
+	mock := &MockPingableService{ctrl: ctrl}
+	mock.recorder = &MockPingableServiceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockPingableService) EXPECT() *MockPingableServiceMockRecorder {
+	return m.recorder
+}
+
+// Ping mocks base method.
+func (m *MockPingableService) Ping(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Ping", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Ping indicates an expected call of Ping.
+func (mr *MockPingableServiceMockRecorder) Ping(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockPingableService)(nil).Ping), ctx)
+}
+
 // MockService is a mock of Service interface.
 type MockService struct {
 	ctrl     *gomock.Controller
@@ -327,6 +365,20 @@ func (m *MockService) ListGauges(ctx context.Context) (models.GaugesList, error)
 func (mr *MockServiceMockRecorder) ListGauges(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGauges", reflect.TypeOf((*MockService)(nil).ListGauges), ctx)
+}
+
+// Ping mocks base method.
+func (m *MockService) Ping(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Ping", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Ping indicates an expected call of Ping.
+func (mr *MockServiceMockRecorder) Ping(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockService)(nil).Ping), ctx)
 }
 
 // UpdateCounter mocks base method.

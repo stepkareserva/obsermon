@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"net/http"
-
-	hu "github.com/stepkareserva/obsermon/internal/server/httputils"
 )
+
+type HandlerError struct {
+	StatusCode int
+	Message    string
+}
 
 var (
 	ErrInvalidMetricType = hu.HandlerError{
@@ -25,5 +28,10 @@ var (
 	ErrMetricNotFound = hu.HandlerError{
 		StatusCode: http.StatusNotFound,
 		Message:    "Metric not found",
+	}
+
+	ErrDatabaseUnavailable = hu.HandlerError{
+		StatusCode: http.StatusInternalServerError,
+		Message:    "Database unavailable",
 	}
 )

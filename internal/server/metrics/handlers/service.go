@@ -24,10 +24,15 @@ type MetricsService interface {
 	UpdateMetrics(ctx context.Context, vals models.Metrics) (models.Metrics, error)
 }
 
+type PingableService interface {
+	Ping(ctx context.Context) error
+}
+
 //go:generate mockgen -source=$GOFILE -destination=../../mocks/mock_service.go -package=mocks
 
 type Service interface {
 	GaugesService
 	CountersService
 	MetricsService
+	PingableService
 }

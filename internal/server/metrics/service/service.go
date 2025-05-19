@@ -179,6 +179,18 @@ func (s *Service) UpdateMetrics(ctx context.Context, vals models.Metrics) (model
 	return metrics, nil
 }
 
+func (s *Service) Ping(ctx context.Context) error {
+	if s == nil || s.storage == nil {
+		return fmt.Errorf("Service not exists")
+	}
+
+	pingable, ok := s.storage.(Pingable)
+	if !ok {
+		return fmt.Errorf("Storage not pingable")
+	}
+	return pingable.Ping(ctx)
+}
+
 func (s *Service) checkValidity() error {
 	if s == nil || s.storage == nil {
 		return fmt.Errorf("Service not exists")
