@@ -23,7 +23,7 @@ func NewPingHandler(service Service, log *zap.Logger) (*PingHandler, error) {
 
 func (h *PingHandler) Handler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := h.service.Ping(ctx); err != nil {
+		if err := h.service.Ping(r.Context()); err != nil {
 			h.ErrorsWriter.WriteError(w, errors.ErrDatabaseUnavailable, err.Error())
 			return
 		}

@@ -13,7 +13,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-type SqlDB struct {
+type SQLDB struct {
 	dbConn string
 
 	cancel context.CancelFunc
@@ -22,16 +22,16 @@ type SqlDB struct {
 	db atomic.Pointer[sql.DB]
 }
 
-var _ Db = (*SqlDB)(nil)
+var _ DB = (*SQLDB)(nil)
 
-func NewSqlDB(dbConn string, log *zap.Logger) *SqlDB {
+func NewSQLDB(dbConn string, log *zap.Logger) *SQLDB {
 	if log == nil {
 		log = zap.NewNop()
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	d := &SqlDB{
+	d := &SQLDB{
 		dbConn: dbConn,
 		cancel: cancel,
 	}
@@ -43,7 +43,7 @@ func NewSqlDB(dbConn string, log *zap.Logger) *SqlDB {
 	return d
 }
 
-func (d *SqlDB) connectionLoop(ctx context.Context, log *zap.Logger) {
+func (d *SQLDB) connectionLoop(ctx context.Context, log *zap.Logger) {
 	defer d.wg.Done()
 
 	d.keepConnection(ctx, log)
@@ -61,7 +61,7 @@ func (d *SqlDB) connectionLoop(ctx context.Context, log *zap.Logger) {
 	}
 }
 
-func (d *SqlDB) keepConnection(ctx context.Context, log *zap.Logger) {
+func (d *SQLDB) keepConnection(ctx context.Context, log *zap.Logger) {
 	if d.PingContext(ctx) == nil {
 		// everything is fine, db connected
 		return
@@ -90,7 +90,7 @@ func (d *SqlDB) keepConnection(ctx context.Context, log *zap.Logger) {
 	d.db.Store(sqlDB)
 }
 
-func (d *SqlDB) Close() error {
+func (d *SQLDB) Close() error {
 	if d == nil {
 		return nil
 	}
@@ -109,7 +109,7 @@ func (d *SqlDB) Close() error {
 	return nil
 }
 
-func (d *SqlDB) BeginTx(ctx context.Context) (Tx, error) {
+func (d *SQLDB) BeginTx(ctx context.Context) (Tx, error) {
 	if d == nil {
 		return nil, fmt.Errorf("db not exists")
 	}
@@ -127,7 +127,7 @@ func (d *SqlDB) BeginTx(ctx context.Context) (Tx, error) {
 	return &sqlTx{Tx: tx}, nil
 }
 
-func (d *SqlDB) PingContext(ctx context.Context) error {
+func (d *SQLDB) PingContext(ctx context.Context) error {
 	if d == nil {
 		return fmt.Errorf("db not exists")
 	}

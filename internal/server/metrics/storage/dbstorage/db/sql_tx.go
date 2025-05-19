@@ -33,7 +33,7 @@ func (tx *sqlTx) QueryContext(ctx context.Context, query string, args ...any) (R
 	if err != nil {
 		return nil, err
 	}
-	return sqlRows{Rows: rows}, nil
+	return sqlRows{Rows: rows}, rows.Err()
 }
 
 func (tx *sqlTx) Commit() error {

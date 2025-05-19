@@ -25,5 +25,5 @@ func (stmt *sqlStmt) QueryContext(ctx context.Context, args ...any) (Rows, error
 	if err != nil {
 		return nil, err
 	}
-	return sqlRows{Rows: rows}, nil
+	return sqlRows{Rows: rows}, rows.Err()
 }

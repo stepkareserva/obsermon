@@ -32,7 +32,7 @@ type Tx interface {
 	Rollback() error
 }
 
-type Db interface {
+type DB interface {
 	BeginTx(ctx context.Context) (Tx, error)
 	PingContext(ctx context.Context) error
 	Close() error

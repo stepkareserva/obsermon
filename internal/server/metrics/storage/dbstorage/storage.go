@@ -12,7 +12,7 @@ import (
 )
 
 type Storage struct {
-	db  db.Db
+	db  db.DB
 	uow *UnitOfWork
 }
 
@@ -23,7 +23,7 @@ func New(dbConn string, log *zap.Logger) (*Storage, error) {
 		return nil, fmt.Errorf("log not exists")
 	}
 
-	db := db.NewSqlDB(dbConn, log)
+	db := db.NewSQLDB(dbConn, log)
 
 	retryPolicy := []time.Duration{
 		1 * time.Second,
@@ -37,10 +37,6 @@ func New(dbConn string, log *zap.Logger) (*Storage, error) {
 		uow: &uow,
 	}
 
-	//if err := storage.initTables(); err != nil {
-	//	return nil, err
-	//}
-
 	return &storage, nil
 }
 
@@ -51,27 +47,6 @@ func (s *Storage) Close() error {
 	if err := s.db.Close(); err != nil {
 		return fmt.Errorf("db closing: %w", err)
 	}
-	return nil
-}
-
-func (s *Storage) initTables() error {
-	ctx, cancel := context.WithTimeout(context.Background(), SQLOpTimeout)
-	defer cancel()
-
-	err := s.uow.Do(ctx, func(ctx context.Context, tx db.Tx) error {
-		if _, err := tx.ExecContext(ctx, createCountersQuery); err != nil {
-			return fmt.Errorf("counters table creation: %w", err)
-		}
-		if _, err := tx.ExecContext(ctx, createGaugesQuery); err != nil {
-			return fmt.Errorf("gauges table creation: %w", err)
-		}
-		return nil
-	})
-
-	if err != nil {
-		return fmt.Errorf("init tables: %w", err)
-	}
-
 	return nil
 }
 

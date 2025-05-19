@@ -10,11 +10,11 @@ import (
 )
 
 type UnitOfWork struct {
-	db          db.Db
+	db          db.DB
 	retryPolicy []time.Duration
 }
 
-func NewUoW(db db.Db, retryPolicy []time.Duration) UnitOfWork {
+func NewUoW(db db.DB, retryPolicy []time.Duration) UnitOfWork {
 	return UnitOfWork{db: db, retryPolicy: retryPolicy}
 }
 
