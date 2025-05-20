@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS counters (
 
 CREATE TABLE IF NOT EXISTS gauges (
     name TEXT PRIMARY KEY,
-    value DOUBLE NOT NULL
+    value DOUBLE PRECISION NOT NULL
 );
 -- +goose StatementEnd
 
