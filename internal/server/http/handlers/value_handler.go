@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -30,7 +29,7 @@ func NewValueHandler(s Service, log *zap.Logger) (*ValueHandler, error) {
 	}, nil
 }
 
-func (h *ValueHandler) GaugeValueURLHandler(ctx context.Context) http.HandlerFunc {
+func (h *ValueHandler) GaugeValueURLHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, constants.ChiName)
 		gauge, exists, err := h.service.FindGauge(r.Context(), name)
@@ -52,7 +51,7 @@ func (h *ValueHandler) GaugeValueURLHandler(ctx context.Context) http.HandlerFun
 	}
 }
 
-func (h *ValueHandler) CounterValueURLHandler(ctx context.Context) http.HandlerFunc {
+func (h *ValueHandler) CounterValueURLHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, constants.ChiName)
 		counter, exists, err := h.service.FindCounter(r.Context(), name)
@@ -74,13 +73,13 @@ func (h *ValueHandler) CounterValueURLHandler(ctx context.Context) http.HandlerF
 	}
 }
 
-func (h *ValueHandler) UnknownMetricValueURLHandler(ctx context.Context) http.HandlerFunc {
+func (h *ValueHandler) UnknownMetricValueURLHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.WriteError(w, errors.ErrInvalidMetricType, chi.URLParam(r, constants.ChiMetric))
 	}
 }
 
-func (h *ValueHandler) ValueMetricJSONHandler(ctx context.Context) http.HandlerFunc {
+func (h *ValueHandler) ValueMetricJSONHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get(constants.ContentType) != constants.ContentTypeJSON {
 			h.WriteError(w, errors.ErrUnsupportedContentType)

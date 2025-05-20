@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -30,7 +29,7 @@ func NewUpdatesHandler(s Service, log *zap.Logger) (*UpdatesHandler, error) {
 	}, nil
 }
 
-func (h *UpdateHandler) UpdateMetricsJSONHandler(ctx context.Context) http.HandlerFunc {
+func (h *UpdateHandler) UpdateMetricsJSONHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get(constants.ContentType) != constants.ContentTypeJSON {
 			h.WriteError(w, errors.ErrUnsupportedContentType)

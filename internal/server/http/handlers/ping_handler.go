@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/stepkareserva/obsermon/internal/server/http/constants"
@@ -21,7 +20,7 @@ func NewPingHandler(service Service, log *zap.Logger) (*PingHandler, error) {
 	}, nil
 }
 
-func (h *PingHandler) Handler(ctx context.Context) http.HandlerFunc {
+func (h *PingHandler) Handler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := h.service.Ping(r.Context()); err != nil {
 			h.ErrorsWriter.WriteError(w, errors.ErrDatabaseUnavailable, err.Error())

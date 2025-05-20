@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -31,7 +30,7 @@ func NewUpdateHandler(s Service, log *zap.Logger) (*UpdateHandler, error) {
 	}, nil
 }
 
-func (h *UpdateHandler) UpdateGaugeURLHandler(ctx context.Context) http.HandlerFunc {
+func (h *UpdateHandler) UpdateGaugeURLHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, constants.ChiName)
 		var value models.GaugeValue
@@ -50,7 +49,7 @@ func (h *UpdateHandler) UpdateGaugeURLHandler(ctx context.Context) http.HandlerF
 	}
 }
 
-func (h *UpdateHandler) UpdateCounterURLHandler(ctx context.Context) http.HandlerFunc {
+func (h *UpdateHandler) UpdateCounterURLHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, constants.ChiName)
 		var value models.CounterValue
@@ -70,13 +69,13 @@ func (h *UpdateHandler) UpdateCounterURLHandler(ctx context.Context) http.Handle
 	}
 }
 
-func (h *UpdateHandler) UpdateUnknownMetricURLHandler(ctx context.Context) http.HandlerFunc {
+func (h *UpdateHandler) UpdateUnknownMetricURLHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.WriteError(w, errors.ErrInvalidMetricType, chi.URLParam(r, constants.ChiMetric))
 	}
 }
 
-func (h *UpdateHandler) UpdateMetricJSONHandler(ctx context.Context) http.HandlerFunc {
+func (h *UpdateHandler) UpdateMetricJSONHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get(constants.ContentType) != constants.ContentTypeJSON {
 			h.WriteError(w, errors.ErrUnsupportedContentType)

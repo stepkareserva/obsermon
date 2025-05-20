@@ -27,10 +27,7 @@ type App struct {
 	log     *zap.Logger
 }
 
-func New(ctx context.Context, cfg config.Config, log *zap.Logger) (*App, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func New(cfg config.Config, log *zap.Logger) (*App, error) {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -51,7 +48,7 @@ func New(ctx context.Context, cfg config.Config, log *zap.Logger) (*App, error) 
 		return nil, fmt.Errorf("init service: %w", err)
 	}
 
-	if err := app.initHandler(ctx, cfg); err != nil {
+	if err := app.initHandler(cfg); err != nil {
 		if closeErr := app.Close(); closeErr != nil {
 			log.Error("app close", zap.Error(closeErr))
 		}
@@ -200,8 +197,8 @@ func (a *App) initService(cfg config.Config) error {
 	return nil
 }
 
-func (a *App) initHandler(ctx context.Context, cfg config.Config) error {
-	handler, err := router.New(ctx, a.log, a.service)
+func (a *App) initHandler(cfg config.Config) error {
+	handler, err := router.New(a.log, a.service)
 	if err != nil {
 		return fmt.Errorf("init handler: %w", err)
 	}

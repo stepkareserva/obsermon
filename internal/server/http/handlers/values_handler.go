@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"text/template"
@@ -27,7 +26,7 @@ func NewValuesHandler(s Service, log *zap.Logger) (*ValuesHandler, error) {
 	}, nil
 }
 
-func (h *ValuesHandler) MetricValuesHandler(ctx context.Context) http.HandlerFunc {
+func (h *ValuesHandler) MetricValuesHandler() http.HandlerFunc {
 	var tmpl = template.Must(template.New("index").Parse(`
 	<!DOCTYPE html>
 	<html>

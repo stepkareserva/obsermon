@@ -35,7 +35,7 @@ func main() {
 		}
 	}()
 
-	app, err := app.New(context.TODO(), *cfg, log)
+	app, err := app.New(*cfg, log)
 	if err != nil {
 		log.Error("app init", zap.Error(err))
 		return
