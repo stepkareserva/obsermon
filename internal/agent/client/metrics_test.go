@@ -15,7 +15,7 @@ func TestUpdateCounter(t *testing.T) {
 		Name:  "name",
 		Value: models.CounterValue(2),
 	}
-	expectedURLPath := "/update"
+	expectedURLPath := "/updates"
 
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, r.URL.Path, expectedURLPath)
@@ -35,7 +35,7 @@ func TestUpdateGauge(t *testing.T) {
 		Name:  "name",
 		Value: models.GaugeValue(2.5),
 	}
-	expectedURLPath := "/update"
+	expectedURLPath := "/updates"
 
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, r.URL.Path, expectedURLPath)

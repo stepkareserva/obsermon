@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stepkareserva/obsermon/internal/models"
@@ -21,22 +22,22 @@ func TestGaugeService(t *testing.T) {
 	t.Run("test gauge", func(t *testing.T) {
 		mockStorage.
 			EXPECT().
-			SetGauge(models.Gauge{
+			SetGauge(context.TODO(), models.Gauge{
 				Name:  "name",
 				Value: 1.0,
 			})
 
 		mockStorage.
 			EXPECT().
-			FindGauge("name").
+			FindGauge(context.TODO(), "name").
 			Return(&models.Gauge{
 				Name:  "name",
 				Value: 1.0,
 			}, true, nil)
 
-		_, err := service.UpdateGauge(models.Gauge{Name: "name", Value: 1.0})
+		_, err := service.UpdateGauge(context.TODO(), models.Gauge{Name: "name", Value: 1.0})
 		assert.NoError(t, err)
-		gauge, exists, err := service.FindGauge("name")
+		gauge, exists, err := service.FindGauge(context.TODO(), "name")
 		assert.NoError(t, err)
 		assert.True(t, exists)
 		assert.Equal(t, gauge, &models.Gauge{Name: "name", Value: 1.0})
@@ -55,45 +56,32 @@ func TestCounterService(t *testing.T) {
 
 		mockStorage.
 			EXPECT().
-			FindCounter("name").
-			Return(nil, false, nil)
-
-		mockStorage.
-			EXPECT().
-			SetCounter(models.Counter{
+			UpdateCounter(context.TODO(), models.Counter{
 				Name:  "name",
 				Value: 1,
 			})
 
 		mockStorage.
 			EXPECT().
-			FindCounter("name").
-			Return(&models.Counter{
+			UpdateCounter(context.TODO(), models.Counter{
 				Name:  "name",
-				Value: 1,
-			}, true, nil)
-
-		mockStorage.
-			EXPECT().
-			SetCounter(models.Counter{
-				Name:  "name",
-				Value: 3,
+				Value: 2,
 			})
 
 		mockStorage.
 			EXPECT().
-			FindCounter("name").
+			FindCounter(context.TODO(), "name").
 			Return(&models.Counter{
 				Name:  "name",
 				Value: 3,
 			}, true, nil)
 
-		_, err := service.UpdateCounter(models.Counter{Name: "name", Value: 1})
+		_, err := service.UpdateCounter(context.TODO(), models.Counter{Name: "name", Value: 1})
 		assert.NoError(t, err)
-		_, err = service.UpdateCounter(models.Counter{Name: "name", Value: 2})
+		_, err = service.UpdateCounter(context.TODO(), models.Counter{Name: "name", Value: 2})
 		assert.NoError(t, err)
 
-		counter, exists, err := service.FindCounter("name")
+		counter, exists, err := service.FindCounter(context.TODO(), "name")
 		assert.NoError(t, err)
 		assert.True(t, exists)
 		assert.Equal(t, counter, &models.Counter{Name: "name", Value: 3})

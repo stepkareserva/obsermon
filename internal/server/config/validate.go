@@ -20,5 +20,8 @@ func Validate(c Config) error {
 	//	return fmt.Errorf("invalid storage file: %w", err)
 	//}
 
+	// should we validate database connection
+	// or fails later?
+
 	return nil
 }

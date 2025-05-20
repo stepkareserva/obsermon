@@ -2,7 +2,6 @@ package watchdog
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -124,17 +123,11 @@ func (w *Watchdog) processPolledMetrics() metrics.Metrics {
 }
 
 func (w *Watchdog) sendMetrics(metrics metrics.Metrics) error {
-	var errs []error
-	for _, m := range metrics.Counters.List() {
-		if err := w.params.MetricsServerClient.UpdateCounter(m); err != nil {
-			errs = append(errs, err)
-		}
-	}
-	for _, m := range metrics.Gauges.List() {
-		if err := w.params.MetricsServerClient.UpdateGauge(m); err != nil {
-			errs = append(errs, err)
-		}
+	err := w.params.MetricsServerClient.BatchUpdate(
+		metrics.Counters.List(), metrics.Gauges.List())
+	if err != nil {
+		return fmt.Errorf("sending metrics: %w", err)
 	}
 
-	return errors.Join(errs...)
+	return nil
 }

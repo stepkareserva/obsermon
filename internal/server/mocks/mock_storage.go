@@ -10,6 +10,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	models "github.com/stepkareserva/obsermon/internal/models"
@@ -41,9 +42,9 @@ func (m *MockGaugeStorage) EXPECT() *MockGaugeStorageMockRecorder {
 }
 
 // FindGauge mocks base method.
-func (m *MockGaugeStorage) FindGauge(name string) (*models.Gauge, bool, error) {
+func (m *MockGaugeStorage) FindGauge(ctx context.Context, name string) (*models.Gauge, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindGauge", name)
+	ret := m.ctrl.Call(m, "FindGauge", ctx, name)
 	ret0, _ := ret[0].(*models.Gauge)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
@@ -51,52 +52,66 @@ func (m *MockGaugeStorage) FindGauge(name string) (*models.Gauge, bool, error) {
 }
 
 // FindGauge indicates an expected call of FindGauge.
-func (mr *MockGaugeStorageMockRecorder) FindGauge(name any) *gomock.Call {
+func (mr *MockGaugeStorageMockRecorder) FindGauge(ctx, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindGauge", reflect.TypeOf((*MockGaugeStorage)(nil).FindGauge), name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindGauge", reflect.TypeOf((*MockGaugeStorage)(nil).FindGauge), ctx, name)
 }
 
 // ListGauges mocks base method.
-func (m *MockGaugeStorage) ListGauges() (models.GaugesList, error) {
+func (m *MockGaugeStorage) ListGauges(ctx context.Context) (models.GaugesList, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListGauges")
+	ret := m.ctrl.Call(m, "ListGauges", ctx)
 	ret0, _ := ret[0].(models.GaugesList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListGauges indicates an expected call of ListGauges.
-func (mr *MockGaugeStorageMockRecorder) ListGauges() *gomock.Call {
+func (mr *MockGaugeStorageMockRecorder) ListGauges(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGauges", reflect.TypeOf((*MockGaugeStorage)(nil).ListGauges))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGauges", reflect.TypeOf((*MockGaugeStorage)(nil).ListGauges), ctx)
 }
 
 // ReplaceGauges mocks base method.
-func (m *MockGaugeStorage) ReplaceGauges(val models.GaugesList) error {
+func (m *MockGaugeStorage) ReplaceGauges(ctx context.Context, val models.GaugesList) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReplaceGauges", val)
+	ret := m.ctrl.Call(m, "ReplaceGauges", ctx, val)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ReplaceGauges indicates an expected call of ReplaceGauges.
-func (mr *MockGaugeStorageMockRecorder) ReplaceGauges(val any) *gomock.Call {
+func (mr *MockGaugeStorageMockRecorder) ReplaceGauges(ctx, val any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplaceGauges", reflect.TypeOf((*MockGaugeStorage)(nil).ReplaceGauges), val)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplaceGauges", reflect.TypeOf((*MockGaugeStorage)(nil).ReplaceGauges), ctx, val)
 }
 
 // SetGauge mocks base method.
-func (m *MockGaugeStorage) SetGauge(val models.Gauge) error {
+func (m *MockGaugeStorage) SetGauge(ctx context.Context, val models.Gauge) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetGauge", val)
+	ret := m.ctrl.Call(m, "SetGauge", ctx, val)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetGauge indicates an expected call of SetGauge.
-func (mr *MockGaugeStorageMockRecorder) SetGauge(val any) *gomock.Call {
+func (mr *MockGaugeStorageMockRecorder) SetGauge(ctx, val any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGauge", reflect.TypeOf((*MockGaugeStorage)(nil).SetGauge), val)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGauge", reflect.TypeOf((*MockGaugeStorage)(nil).SetGauge), ctx, val)
+}
+
+// SetGauges mocks base method.
+func (m *MockGaugeStorage) SetGauges(ctx context.Context, val models.GaugesList) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetGauges", ctx, val)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetGauges indicates an expected call of SetGauges.
+func (mr *MockGaugeStorageMockRecorder) SetGauges(ctx, val any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGauges", reflect.TypeOf((*MockGaugeStorage)(nil).SetGauges), ctx, val)
 }
 
 // MockCounterStorage is a mock of CounterStorage interface.
@@ -124,9 +139,9 @@ func (m *MockCounterStorage) EXPECT() *MockCounterStorageMockRecorder {
 }
 
 // FindCounter mocks base method.
-func (m *MockCounterStorage) FindCounter(name string) (*models.Counter, bool, error) {
+func (m *MockCounterStorage) FindCounter(ctx context.Context, name string) (*models.Counter, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindCounter", name)
+	ret := m.ctrl.Call(m, "FindCounter", ctx, name)
 	ret0, _ := ret[0].(*models.Counter)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
@@ -134,52 +149,106 @@ func (m *MockCounterStorage) FindCounter(name string) (*models.Counter, bool, er
 }
 
 // FindCounter indicates an expected call of FindCounter.
-func (mr *MockCounterStorageMockRecorder) FindCounter(name any) *gomock.Call {
+func (mr *MockCounterStorageMockRecorder) FindCounter(ctx, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCounter", reflect.TypeOf((*MockCounterStorage)(nil).FindCounter), name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCounter", reflect.TypeOf((*MockCounterStorage)(nil).FindCounter), ctx, name)
 }
 
 // ListCounters mocks base method.
-func (m *MockCounterStorage) ListCounters() (models.CountersList, error) {
+func (m *MockCounterStorage) ListCounters(ctx context.Context) (models.CountersList, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListCounters")
+	ret := m.ctrl.Call(m, "ListCounters", ctx)
 	ret0, _ := ret[0].(models.CountersList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListCounters indicates an expected call of ListCounters.
-func (mr *MockCounterStorageMockRecorder) ListCounters() *gomock.Call {
+func (mr *MockCounterStorageMockRecorder) ListCounters(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCounters", reflect.TypeOf((*MockCounterStorage)(nil).ListCounters))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCounters", reflect.TypeOf((*MockCounterStorage)(nil).ListCounters), ctx)
 }
 
 // ReplaceCounters mocks base method.
-func (m *MockCounterStorage) ReplaceCounters(val models.CountersList) error {
+func (m *MockCounterStorage) ReplaceCounters(ctx context.Context, val models.CountersList) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReplaceCounters", val)
+	ret := m.ctrl.Call(m, "ReplaceCounters", ctx, val)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ReplaceCounters indicates an expected call of ReplaceCounters.
-func (mr *MockCounterStorageMockRecorder) ReplaceCounters(val any) *gomock.Call {
+func (mr *MockCounterStorageMockRecorder) ReplaceCounters(ctx, val any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplaceCounters", reflect.TypeOf((*MockCounterStorage)(nil).ReplaceCounters), val)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplaceCounters", reflect.TypeOf((*MockCounterStorage)(nil).ReplaceCounters), ctx, val)
 }
 
-// SetCounter mocks base method.
-func (m *MockCounterStorage) SetCounter(val models.Counter) error {
+// UpdateCounter mocks base method.
+func (m *MockCounterStorage) UpdateCounter(ctx context.Context, val models.Counter) (*models.Counter, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetCounter", val)
+	ret := m.ctrl.Call(m, "UpdateCounter", ctx, val)
+	ret0, _ := ret[0].(*models.Counter)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateCounter indicates an expected call of UpdateCounter.
+func (mr *MockCounterStorageMockRecorder) UpdateCounter(ctx, val any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCounter", reflect.TypeOf((*MockCounterStorage)(nil).UpdateCounter), ctx, val)
+}
+
+// UpdateCounters mocks base method.
+func (m *MockCounterStorage) UpdateCounters(ctx context.Context, vals models.CountersList) (models.CountersList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateCounters", ctx, vals)
+	ret0, _ := ret[0].(models.CountersList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateCounters indicates an expected call of UpdateCounters.
+func (mr *MockCounterStorageMockRecorder) UpdateCounters(ctx, vals any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCounters", reflect.TypeOf((*MockCounterStorage)(nil).UpdateCounters), ctx, vals)
+}
+
+// MockPingable is a mock of Pingable interface.
+type MockPingable struct {
+	ctrl     *gomock.Controller
+	recorder *MockPingableMockRecorder
+	isgomock struct{}
+}
+
+// MockPingableMockRecorder is the mock recorder for MockPingable.
+type MockPingableMockRecorder struct {
+	mock *MockPingable
+}
+
+// NewMockPingable creates a new mock instance.
+func NewMockPingable(ctrl *gomock.Controller) *MockPingable {
+	mock := &MockPingable{ctrl: ctrl}
+	mock.recorder = &MockPingableMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockPingable) EXPECT() *MockPingableMockRecorder {
+	return m.recorder
+}
+
+// Ping mocks base method.
+func (m *MockPingable) Ping(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Ping", ctx)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SetCounter indicates an expected call of SetCounter.
-func (mr *MockCounterStorageMockRecorder) SetCounter(val any) *gomock.Call {
+// Ping indicates an expected call of Ping.
+func (mr *MockPingableMockRecorder) Ping(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCounter", reflect.TypeOf((*MockCounterStorage)(nil).SetCounter), val)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockPingable)(nil).Ping), ctx)
 }
 
 // MockStorage is a mock of Storage interface.
@@ -207,9 +276,9 @@ func (m *MockStorage) EXPECT() *MockStorageMockRecorder {
 }
 
 // FindCounter mocks base method.
-func (m *MockStorage) FindCounter(name string) (*models.Counter, bool, error) {
+func (m *MockStorage) FindCounter(ctx context.Context, name string) (*models.Counter, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindCounter", name)
+	ret := m.ctrl.Call(m, "FindCounter", ctx, name)
 	ret0, _ := ret[0].(*models.Counter)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
@@ -217,15 +286,15 @@ func (m *MockStorage) FindCounter(name string) (*models.Counter, bool, error) {
 }
 
 // FindCounter indicates an expected call of FindCounter.
-func (mr *MockStorageMockRecorder) FindCounter(name any) *gomock.Call {
+func (mr *MockStorageMockRecorder) FindCounter(ctx, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCounter", reflect.TypeOf((*MockStorage)(nil).FindCounter), name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCounter", reflect.TypeOf((*MockStorage)(nil).FindCounter), ctx, name)
 }
 
 // FindGauge mocks base method.
-func (m *MockStorage) FindGauge(name string) (*models.Gauge, bool, error) {
+func (m *MockStorage) FindGauge(ctx context.Context, name string) (*models.Gauge, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindGauge", name)
+	ret := m.ctrl.Call(m, "FindGauge", ctx, name)
 	ret0, _ := ret[0].(*models.Gauge)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
@@ -233,93 +302,123 @@ func (m *MockStorage) FindGauge(name string) (*models.Gauge, bool, error) {
 }
 
 // FindGauge indicates an expected call of FindGauge.
-func (mr *MockStorageMockRecorder) FindGauge(name any) *gomock.Call {
+func (mr *MockStorageMockRecorder) FindGauge(ctx, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindGauge", reflect.TypeOf((*MockStorage)(nil).FindGauge), name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindGauge", reflect.TypeOf((*MockStorage)(nil).FindGauge), ctx, name)
 }
 
 // ListCounters mocks base method.
-func (m *MockStorage) ListCounters() (models.CountersList, error) {
+func (m *MockStorage) ListCounters(ctx context.Context) (models.CountersList, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListCounters")
+	ret := m.ctrl.Call(m, "ListCounters", ctx)
 	ret0, _ := ret[0].(models.CountersList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListCounters indicates an expected call of ListCounters.
-func (mr *MockStorageMockRecorder) ListCounters() *gomock.Call {
+func (mr *MockStorageMockRecorder) ListCounters(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCounters", reflect.TypeOf((*MockStorage)(nil).ListCounters))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCounters", reflect.TypeOf((*MockStorage)(nil).ListCounters), ctx)
 }
 
 // ListGauges mocks base method.
-func (m *MockStorage) ListGauges() (models.GaugesList, error) {
+func (m *MockStorage) ListGauges(ctx context.Context) (models.GaugesList, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListGauges")
+	ret := m.ctrl.Call(m, "ListGauges", ctx)
 	ret0, _ := ret[0].(models.GaugesList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListGauges indicates an expected call of ListGauges.
-func (mr *MockStorageMockRecorder) ListGauges() *gomock.Call {
+func (mr *MockStorageMockRecorder) ListGauges(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGauges", reflect.TypeOf((*MockStorage)(nil).ListGauges))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGauges", reflect.TypeOf((*MockStorage)(nil).ListGauges), ctx)
 }
 
 // ReplaceCounters mocks base method.
-func (m *MockStorage) ReplaceCounters(val models.CountersList) error {
+func (m *MockStorage) ReplaceCounters(ctx context.Context, val models.CountersList) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReplaceCounters", val)
+	ret := m.ctrl.Call(m, "ReplaceCounters", ctx, val)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ReplaceCounters indicates an expected call of ReplaceCounters.
-func (mr *MockStorageMockRecorder) ReplaceCounters(val any) *gomock.Call {
+func (mr *MockStorageMockRecorder) ReplaceCounters(ctx, val any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplaceCounters", reflect.TypeOf((*MockStorage)(nil).ReplaceCounters), val)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplaceCounters", reflect.TypeOf((*MockStorage)(nil).ReplaceCounters), ctx, val)
 }
 
 // ReplaceGauges mocks base method.
-func (m *MockStorage) ReplaceGauges(val models.GaugesList) error {
+func (m *MockStorage) ReplaceGauges(ctx context.Context, val models.GaugesList) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReplaceGauges", val)
+	ret := m.ctrl.Call(m, "ReplaceGauges", ctx, val)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ReplaceGauges indicates an expected call of ReplaceGauges.
-func (mr *MockStorageMockRecorder) ReplaceGauges(val any) *gomock.Call {
+func (mr *MockStorageMockRecorder) ReplaceGauges(ctx, val any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplaceGauges", reflect.TypeOf((*MockStorage)(nil).ReplaceGauges), val)
-}
-
-// SetCounter mocks base method.
-func (m *MockStorage) SetCounter(val models.Counter) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetCounter", val)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetCounter indicates an expected call of SetCounter.
-func (mr *MockStorageMockRecorder) SetCounter(val any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCounter", reflect.TypeOf((*MockStorage)(nil).SetCounter), val)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplaceGauges", reflect.TypeOf((*MockStorage)(nil).ReplaceGauges), ctx, val)
 }
 
 // SetGauge mocks base method.
-func (m *MockStorage) SetGauge(val models.Gauge) error {
+func (m *MockStorage) SetGauge(ctx context.Context, val models.Gauge) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetGauge", val)
+	ret := m.ctrl.Call(m, "SetGauge", ctx, val)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetGauge indicates an expected call of SetGauge.
-func (mr *MockStorageMockRecorder) SetGauge(val any) *gomock.Call {
+func (mr *MockStorageMockRecorder) SetGauge(ctx, val any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGauge", reflect.TypeOf((*MockStorage)(nil).SetGauge), val)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGauge", reflect.TypeOf((*MockStorage)(nil).SetGauge), ctx, val)
+}
+
+// SetGauges mocks base method.
+func (m *MockStorage) SetGauges(ctx context.Context, val models.GaugesList) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetGauges", ctx, val)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetGauges indicates an expected call of SetGauges.
+func (mr *MockStorageMockRecorder) SetGauges(ctx, val any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGauges", reflect.TypeOf((*MockStorage)(nil).SetGauges), ctx, val)
+}
+
+// UpdateCounter mocks base method.
+func (m *MockStorage) UpdateCounter(ctx context.Context, val models.Counter) (*models.Counter, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateCounter", ctx, val)
+	ret0, _ := ret[0].(*models.Counter)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateCounter indicates an expected call of UpdateCounter.
+func (mr *MockStorageMockRecorder) UpdateCounter(ctx, val any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCounter", reflect.TypeOf((*MockStorage)(nil).UpdateCounter), ctx, val)
+}
+
+// UpdateCounters mocks base method.
+func (m *MockStorage) UpdateCounters(ctx context.Context, vals models.CountersList) (models.CountersList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateCounters", ctx, vals)
+	ret0, _ := ret[0].(models.CountersList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateCounters indicates an expected call of UpdateCounters.
+func (mr *MockStorageMockRecorder) UpdateCounters(ctx, vals any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCounters", reflect.TypeOf((*MockStorage)(nil).UpdateCounters), ctx, vals)
 }

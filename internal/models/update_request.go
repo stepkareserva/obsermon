@@ -1,5 +1,9 @@
 package models
 
-type UpdateMetricRequest = Metrics
+type UpdateMetricRequest = Metric
 
-type UpdateMetricResponse = Metrics
+type UpdateMetricResponse = Metric
+
+type UpdateMetricsRequest = Metrics
+
+type UpdateMetricsResponse = Metrics

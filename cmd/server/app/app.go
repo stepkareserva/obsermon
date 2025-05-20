@@ -9,11 +9,12 @@ import (
 	"time"
 
 	"github.com/stepkareserva/obsermon/internal/server/config"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/handlers"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/memstorage"
-	"github.com/stepkareserva/obsermon/internal/server/metrics/persistence"
+	"github.com/stepkareserva/obsermon/internal/server/http/handlers"
+	"github.com/stepkareserva/obsermon/internal/server/http/router"
 	"github.com/stepkareserva/obsermon/internal/server/metrics/service"
-	"github.com/stepkareserva/obsermon/internal/server/routing"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/storage/dbstorage"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/storage/memstorage"
+	"github.com/stepkareserva/obsermon/internal/server/metrics/storage/persistence"
 	"github.com/stepkareserva/obsermon/internal/server/server"
 	"go.uber.org/zap"
 )
@@ -26,10 +27,7 @@ type App struct {
 	log     *zap.Logger
 }
 
-func New(ctx context.Context, cfg config.Config, log *zap.Logger) (*App, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func New(cfg config.Config, log *zap.Logger) (*App, error) {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -50,7 +48,7 @@ func New(ctx context.Context, cfg config.Config, log *zap.Logger) (*App, error) 
 		return nil, fmt.Errorf("init service: %w", err)
 	}
 
-	if err := app.initHandler(ctx, cfg); err != nil {
+	if err := app.initHandler(cfg); err != nil {
 		if closeErr := app.Close(); closeErr != nil {
 			log.Error("app close", zap.Error(closeErr))
 		}
@@ -123,23 +121,66 @@ func (a *App) Run(ctx context.Context) error {
 	}
 }
 
-func (a *App) initStorage(cfg config.Config) error {
-	// storage
-	storage := memstorage.New()
-
-	// wrap onto persistent storage
-	stateStorage := persistence.NewJSONStateStorage(cfg.FileStoragePath)
-	persistenceCfg := persistence.Config{
-		StateStorage:  &stateStorage,
-		Restore:       cfg.Restore,
-		StoreInterval: cfg.StoreInterval(),
+/*func (a *App) initDatabase(cfg config.Config) error {
+	if cfg.DBConnection == "" {
+		a.log.Info("Database connection not performed, don't use database")
+		return nil
 	}
-	persistentStorage, err := persistence.New(persistenceCfg, storage, a.log)
+
+	// create database
+	db, err := database.New(cfg.DBConnection)
 	if err != nil {
-		return fmt.Errorf("persistent storage: %w", err)
+		return fmt.Errorf("db connect: %w", err)
+	}
+	a.database = db
+	if err := db.Ping(); err != nil {
+		return fmt.Errorf("db ping: %w", err)
 	}
 
-	a.storage = persistentStorage
+	// wrap onto sustainable database
+	sustDB, err := sustained.New(a.database)
+	if err != nil {
+		return fmt.Errorf("sustained db creation")
+	}
+	a.database = sustDB
+
+	return nil
+}*/
+
+func (a *App) initStorage(cfg config.Config) error {
+	// omg I don't know how to refactor it.
+	// we need to firstly load storage state if exists,
+	// then create one of storage impl, then apply to it
+	// loaded state.
+
+	// create database, presistent or memory storage
+	if cfg.DBConnection != "" {
+		// use db storage
+		storage, err := dbstorage.New(cfg.DBConnection, a.log)
+		if err != nil {
+			return fmt.Errorf("init db storage: %w", err)
+		}
+		a.storage = storage
+	} else {
+		// storage
+		a.storage = memstorage.New()
+
+		// wrap onto persistent, if corresponding param passed
+		if cfg.FileStoragePath != "" {
+			// wrap onto persistent storage
+			persistenStorage := persistence.NewJSONStateStorage(cfg.FileStoragePath)
+			persistenceCfg := persistence.Config{
+				StateStorage:  &persistenStorage,
+				StoreInterval: cfg.StoreInterval(),
+				Restore:       cfg.Restore,
+			}
+			var err error
+			a.storage, err = persistence.New(persistenceCfg, a.storage, a.log)
+			if err != nil {
+				return fmt.Errorf("persistent storage: %w", err)
+			}
+		}
+	}
 
 	return nil
 }
@@ -156,19 +197,10 @@ func (a *App) initService(cfg config.Config) error {
 	return nil
 }
 
-func (a *App) initHandler(ctx context.Context, cfg config.Config) error {
-	// create router
-	router := routing.New(a.log)
-
-	// add metrics handlers
-	if err := router.AddMetricsHandlers(ctx, a.service); err != nil {
-		return fmt.Errorf("metrics handler: %w", err)
-	}
-
-	// set handlers
-	handler, err := router.Handler()
+func (a *App) initHandler(cfg config.Config) error {
+	handler, err := router.New(a.log, a.service)
 	if err != nil {
-		return fmt.Errorf("router handler: %w", err)
+		return fmt.Errorf("init handler: %w", err)
 	}
 	a.handler = handler
 
