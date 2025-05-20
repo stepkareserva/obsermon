@@ -17,6 +17,7 @@ type Storage struct {
 }
 
 var _ service.Storage = (*Storage)(nil)
+var _ service.Pingable = (*Storage)(nil)
 
 func New(dbConn string, log *zap.Logger) (*Storage, error) {
 	if log == nil {
@@ -116,4 +117,11 @@ func (s *Storage) ReplaceCounters(ctx context.Context, val models.CountersList) 
 		return fmt.Errorf("database not exists")
 	}
 	return ReplaceCounters(ctx, s.uow, val)
+}
+
+func (s *Storage) Ping(ctx context.Context) error {
+	if s == nil || s.db == nil {
+		return fmt.Errorf("database not exists")
+	}
+	return s.db.PingContext(ctx)
 }
