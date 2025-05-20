@@ -77,7 +77,7 @@ func (c *MetricsClient) sendUpdateRequest(metrics models.Metrics) error {
 	for _, waitIterval := range attemptsIntervals {
 		time.Sleep(waitIterval)
 
-		resp, err = c.postJson("/updates", metrics)
+		resp, err = c.postJSON("/updates", metrics)
 
 		switch {
 		case err == nil:
@@ -94,7 +94,7 @@ func (c *MetricsClient) sendUpdateRequest(metrics models.Metrics) error {
 	return fmt.Errorf("post updates: %w", err)
 }
 
-func (c *MetricsClient) postJson(url string, object interface{}) (*resty.Response, error) {
+func (c *MetricsClient) postJSON(url string, object interface{}) (*resty.Response, error) {
 	body, err := json.Marshal(object)
 	if err != nil {
 		return nil, fmt.Errorf("json marshalling body: %w", err)
