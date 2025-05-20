@@ -1,7 +1,12 @@
 package client
 
 import (
+	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -14,12 +19,13 @@ import (
 )
 
 type MetricsClient struct {
-	client *resty.Client
+	client    *resty.Client
+	secretkey string
 }
 
 const requestTimeout = 5 * time.Second
 
-func New(endpoint string) (*MetricsClient, error) {
+func New(endpoint string, secretkey string) (*MetricsClient, error) {
 	u, err := url.ParseRequestURI(endpoint)
 	if err != nil {
 		return nil, err
@@ -32,7 +38,7 @@ func New(endpoint string) (*MetricsClient, error) {
 	client.SetBaseURL(endpoint)
 	client.SetTimeout(requestTimeout)
 
-	return &MetricsClient{client: client}, nil
+	return &MetricsClient{client: client, secretkey: secretkey}, nil
 }
 
 func (c *MetricsClient) UpdateCounter(value models.Counter) error {
@@ -59,10 +65,6 @@ func (c *MetricsClient) sendUpdateRequest(metrics models.Metrics) error {
 		return nil
 	}
 
-	req := c.client.R().
-		SetHeader("Content-Type", "application/json").
-		SetBody(metrics)
-
 	attemptsIntervals := []time.Duration{
 		0 * time.Second,
 		1 * time.Second,
@@ -75,7 +77,8 @@ func (c *MetricsClient) sendUpdateRequest(metrics models.Metrics) error {
 	for _, waitIterval := range attemptsIntervals {
 		time.Sleep(waitIterval)
 
-		resp, err = req.Post("/updates")
+		resp, err = c.postJson("/updates", metrics)
+
 		switch {
 		case err == nil:
 			if resp.StatusCode() != http.StatusOK {
@@ -89,6 +92,29 @@ func (c *MetricsClient) sendUpdateRequest(metrics models.Metrics) error {
 	}
 
 	return fmt.Errorf("post updates: %w", err)
+}
+
+func (c *MetricsClient) postJson(url string, object interface{}) (*resty.Response, error) {
+	body, err := json.Marshal(object)
+	if err != nil {
+		return nil, fmt.Errorf("json marshalling body: %w", err)
+	}
+
+	// !important: we must post only raw data as io.Reader,
+	// all other variants like SetBody(object) or SetBody(body)
+	// doesn't guarantee that request bodt will be equal to 'body'
+	req := c.client.R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(bytes.NewReader(body))
+
+	if len(c.secretkey) > 0 {
+		h := hmac.New(sha256.New, []byte(c.secretkey))
+		h.Write(body)
+		hashSum := hex.EncodeToString(h.Sum(nil))
+		req.SetHeader("HashSHA256", hashSum)
+	}
+
+	return req.Post(url)
 }
 
 func isServerUnavailableErr(err error) bool {

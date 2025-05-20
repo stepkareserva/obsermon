@@ -198,7 +198,7 @@ func (a *App) initService(cfg config.Config) error {
 }
 
 func (a *App) initHandler(cfg config.Config) error {
-	handler, err := router.New(a.log, a.service)
+	handler, err := router.New(a.log, cfg.ReportSignKey, a.service)
 	if err != nil {
 		return fmt.Errorf("init handler: %w", err)
 	}

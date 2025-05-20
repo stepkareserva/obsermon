@@ -14,6 +14,8 @@ type Config struct {
 	// pool interval in seconds.
 	// to get duration call ReportInterval()
 	ReportIntervalS int `env:"REPORT_INTERVAL"`
+	// key to sign report requests
+	ReportSignKey string `env:"KEY"`
 }
 
 func (c *Config) EndpointURL() string {
