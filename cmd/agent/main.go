@@ -26,7 +26,7 @@ func main() {
 	}
 
 	// metrics client
-	metricsClient, err := client.New(cfg.EndpointURL(), cfg.ReportSignKey)
+	metricsClient, err := client.New(cfg.EndpointURL(), cfg.ReportSignKey, cfg.RateLimit)
 	if err != nil {
 		log.Printf("metrics client initialization: %v", err)
 		return

@@ -5,6 +5,10 @@ import (
 	"math/rand/v2"
 	"reflect"
 	"runtime"
+	"time"
+
+	"github.com/shirou/gopsutil/v4/cpu"
+	"github.com/shirou/gopsutil/v4/mem"
 
 	"github.com/stepkareserva/obsermon/internal/agent/metrics"
 	"github.com/stepkareserva/obsermon/internal/models"
@@ -44,9 +48,13 @@ var (
 	RandomGauge = "RandomValue"
 
 	PollCount = "PollCount"
+
+	TotalMemoryGauge     = "TotalMemory"
+	FreeMemoryGauge      = "FreeMemory"
+	CPUutilization1Gauge = "CPUutilization1"
 )
 
-func GetMetrics() (*metrics.Metrics, error) {
+func GetRuntimeMetrics() (*metrics.Metrics, error) {
 	gauges, err := getRuntimeGauges()
 	if err != nil {
 		return nil, err
@@ -63,6 +71,27 @@ func GetMetrics() (*metrics.Metrics, error) {
 	return &metrics.Metrics{
 		Gauges:   gauges,
 		Counters: counters,
+	}, nil
+}
+
+func GetGolangMetrics() (*metrics.Metrics, error) {
+	// virtual memory is RAM in gopsutil? why...
+	memstat, err := mem.VirtualMemory()
+	if err != nil {
+		return nil, fmt.Errorf("memory stat: %w", err)
+	}
+
+	cpustat, err := cpu.Percent(100*time.Millisecond, false)
+	if err != nil {
+		return nil, fmt.Errorf("cpu utilization: %w", err)
+	}
+
+	return &metrics.Metrics{
+		Gauges: models.GaugesMap{
+			TotalMemoryGauge:     models.GaugeValue(memstat.Total),
+			FreeMemoryGauge:      models.GaugeValue(memstat.Free),
+			CPUutilization1Gauge: models.GaugeValue(cpustat[0]),
+		},
 	}, nil
 }
 

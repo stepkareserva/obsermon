@@ -23,6 +23,7 @@ func defaultConfig() *Config {
 		Endpoint:        "localhost:8080",
 		PollIntervalS:   2,
 		ReportIntervalS: 10,
+		RateLimit:       1,
 	}
 }
 
@@ -39,8 +40,11 @@ func readCLIParams(c *Config) error {
 		"report (send metrics to server) interval, in seconds,\n"+
 			"positive integer")
 	fs.StringVar(&c.ReportSignKey, "k", c.ReportSignKey,
-		"report sign key, string")
-
+		"report sign key,\n"+
+			"string")
+	fs.IntVar(&c.RateLimit, "l", c.RateLimit,
+		"requests rate limit, 0 for unlimited,\n"+
+			"non-negative integer")
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		return err
 	}

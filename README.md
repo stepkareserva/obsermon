@@ -35,6 +35,7 @@ Params:
 |`-p`  | `POLL_INTERVAL` | `int` | `2` | poll (local metrics update) interval, in seconds, positive integer 
 |`-r` | `REPORT_INTERVAL` | `int` | `10` | report (send metrics to server) interval, in seconds, positive integer
 |`-k` | `KEY` | `string` | `""` | key to sing requests via SHA256
+|`-l` | `RATE_LIMIT` | `int` | `1` | max count of requests on the same time
 
 ## Service API
 

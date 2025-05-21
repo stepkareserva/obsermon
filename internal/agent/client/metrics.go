@@ -9,18 +9,21 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/stepkareserva/obsermon/internal/agent/taskpool"
 	"github.com/stepkareserva/obsermon/internal/models"
 )
 
 type MetricsClient struct {
 	client    *resty.Client
 	secretkey string
+	tp        *taskpool.TaskPool
 }
 
 const requestTimeout = 5 * time.Second
@@ -28,7 +31,7 @@ const requestTimeout = 5 * time.Second
 // header HashSHA256 is forbidden by checker
 var signHeader = http.CanonicalHeaderKey("HashSHA256")
 
-func New(endpoint string, secretkey string) (*MetricsClient, error) {
+func New(endpoint string, secretkey string, rateLimit int) (*MetricsClient, error) {
 	u, err := url.ParseRequestURI(endpoint)
 	if err != nil {
 		return nil, err
@@ -41,18 +44,29 @@ func New(endpoint string, secretkey string) (*MetricsClient, error) {
 	client.SetBaseURL(endpoint)
 	client.SetTimeout(requestTimeout)
 
-	return &MetricsClient{client: client, secretkey: secretkey}, nil
+	return &MetricsClient{
+		client:    client,
+		secretkey: secretkey,
+		tp:        taskpool.New(rateLimit),
+	}, nil
 }
 
-func (c *MetricsClient) UpdateCounter(value models.Counter) error {
-	return c.BatchUpdate(models.CountersList{value}, nil)
+func (c *MetricsClient) Close() {
+	if c == nil || c.tp == nil {
+		return
+	}
+	c.tp.Close()
 }
 
-func (c *MetricsClient) UpdateGauge(value models.Gauge) error {
-	return c.BatchUpdate(nil, models.GaugesList{value})
+func (c *MetricsClient) UpdateCounter(value models.Counter) {
+	c.BatchUpdate(models.CountersList{value}, nil)
 }
 
-func (c *MetricsClient) BatchUpdate(counters models.CountersList, gauges models.GaugesList) error {
+func (c *MetricsClient) UpdateGauge(value models.Gauge) {
+	c.BatchUpdate(nil, models.GaugesList{value})
+}
+
+func (c *MetricsClient) BatchUpdate(counters models.CountersList, gauges models.GaugesList) {
 	metrics := make(models.Metrics, 0, len(counters)+len(gauges))
 	for _, counter := range counters {
 		metrics = append(metrics, models.CounterMetric(counter))
@@ -60,7 +74,13 @@ func (c *MetricsClient) BatchUpdate(counters models.CountersList, gauges models.
 	for _, gauge := range gauges {
 		metrics = append(metrics, models.GaugeMetric(gauge))
 	}
-	return c.sendUpdateRequest(metrics)
+
+	c.tp.AddTask(func() {
+		err := c.sendUpdateRequest(metrics)
+		if err != nil {
+			log.Printf("send update request: %v", err)
+		}
+	})
 }
 
 func (c *MetricsClient) sendUpdateRequest(metrics models.Metrics) error {
