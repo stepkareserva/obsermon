@@ -21,6 +21,12 @@ func Sign(secretkey string, log *zap.Logger) Middleware {
 	ev := errors.NewErrorsWriter(log)
 	return func(next http.Handler) http.Handler {
 		singing := func(w http.ResponseWriter, r *http.Request) {
+			// skip non signed messages
+			if _, ok := r.Header[singHeader]; !ok {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			// check request sign
 			signOK, err := checkSign(r, secretkey)
 			if err != nil {
