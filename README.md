@@ -19,6 +19,7 @@ Params:
 |`-f`  | `FILE_STORAGE_PATH` | `string` | `obsermon/storage.json` in appdata (depends on os) | path to server state storage file
 |`-r`  | `RESTORE` | `bool` | `false` | restore server state from storage file
 |`-d`  | `DATABASE_DSN` | `string` | `""` | database connection string
+|`-k` | `KEY` | `string` | `""` | key to sing requests via SHA256
 |`-m`  | `MODE` | `string` | `prod` | app mode, `quiet` (no logs), `dev` (human-readable logs), `prod` (machine-readable logs)|
 
 
@@ -32,7 +33,8 @@ Params:
 |:-----|:------|:-------|:----------|:----------------|
 |`-a`  | `ADDRESS` | `string` | `localhost:8080` | server endpoint tcp address, like `:8080`, `127.0.0.1:80`, `localhost:22`
 |`-p`  | `POLL_INTERVAL` | `int` | `2` | poll (local metrics update) interval, in seconds, positive integer 
-|`-r` | `REPORT_INTERVAL` | `int` | `10 | report (send metrics to server) interval, in seconds, positive integer
+|`-r` | `REPORT_INTERVAL` | `int` | `10` | report (send metrics to server) interval, in seconds, positive integer
+|`-k` | `KEY` | `string` | `""` | key to sing requests via SHA256
 
 ## Service API
 

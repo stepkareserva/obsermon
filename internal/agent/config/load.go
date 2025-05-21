@@ -38,6 +38,8 @@ func readCLIParams(c *Config) error {
 	fs.IntVar(&c.ReportIntervalS, "r", c.ReportIntervalS,
 		"report (send metrics to server) interval, in seconds,\n"+
 			"positive integer")
+	fs.StringVar(&c.ReportSignKey, "k", c.ReportSignKey,
+		"report sign key, string")
 
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		return err
