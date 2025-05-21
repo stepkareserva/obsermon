@@ -25,6 +25,9 @@ type MetricsClient struct {
 
 const requestTimeout = 5 * time.Second
 
+// header HashSHA256 is forbidden by checker
+var signHeader = http.CanonicalHeaderKey("HashSHA256")
+
 func New(endpoint string, secretkey string) (*MetricsClient, error) {
 	u, err := url.ParseRequestURI(endpoint)
 	if err != nil {
@@ -111,7 +114,7 @@ func (c *MetricsClient) postJSON(url string, object interface{}) (*resty.Respons
 		h := hmac.New(sha256.New, []byte(c.secretkey))
 		h.Write(body)
 		hashSum := hex.EncodeToString(h.Sum(nil))
-		req.SetHeader("HashSHA256", hashSum)
+		req.SetHeader(signHeader, hashSum)
 	}
 
 	return req.Post(url)

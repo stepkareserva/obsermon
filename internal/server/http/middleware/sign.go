@@ -14,7 +14,8 @@ import (
 	"go.uber.org/zap"
 )
 
-const singHeader = "HashSHA256"
+// header HashSHA256 is forbidden by checker
+var signHeader = http.CanonicalHeaderKey("HashSHA256")
 
 // create middleware for check request signature
 func Sign(secretkey string, log *zap.Logger) Middleware {
@@ -22,7 +23,7 @@ func Sign(secretkey string, log *zap.Logger) Middleware {
 	return func(next http.Handler) http.Handler {
 		singing := func(w http.ResponseWriter, r *http.Request) {
 			// skip non signed messages
-			if _, ok := r.Header[singHeader]; !ok {
+			if _, ok := r.Header[signHeader]; !ok {
 				next.ServeHTTP(w, r)
 				return
 			}
@@ -49,7 +50,7 @@ func Sign(secretkey string, log *zap.Logger) Middleware {
 }
 
 func checkSign(r *http.Request, secretkey string) (bool, error) {
-	headerSign, err := hex.DecodeString(r.Header.Get(singHeader))
+	headerSign, err := hex.DecodeString(r.Header.Get(signHeader))
 	if err != nil {
 		return false, fmt.Errorf("decoding sign: %w", err)
 	}
@@ -100,6 +101,6 @@ func (w *signingWriter) Write(data []byte) (int, error) {
 func (w *signingWriter) FlushToClient() {
 	hash := w.hash.Sum(nil)
 	hashString := hex.EncodeToString(hash)
-	w.ResponseWriter.Header().Set(singHeader, hashString)
+	w.ResponseWriter.Header().Set(signHeader, hashString)
 	w.hash.Reset()
 }
