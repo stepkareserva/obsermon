@@ -16,5 +16,8 @@ func Validate(c Config) error {
 	if c.ReportInterval() <= 0 {
 		return fmt.Errorf("invalid report interval %v", c.ReportInterval())
 	}
+	if c.RateLimit < 0 {
+		return fmt.Errorf("invalid rate limit %v", c.RateLimit)
+	}
 	return nil
 }

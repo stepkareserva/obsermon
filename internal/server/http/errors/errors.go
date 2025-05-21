@@ -49,4 +49,9 @@ var (
 		StatusCode: http.StatusInternalServerError,
 		Message:    "Database unavailable",
 	}
+
+	ErrInvalidRequestSign = HandlerError{
+		StatusCode: http.StatusBadRequest,
+		Message:    "Invalid request sign",
+	}
 )

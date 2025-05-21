@@ -16,7 +16,7 @@ func getTestObjects(t *testing.T) (*gomock.Controller, *mocks.MockService, *http
 	ctrl := gomock.NewController(t)
 	mockService := mocks.NewMockService(ctrl)
 
-	handlers, err := New(zap.NewNop(), mockService)
+	handlers, err := New(zap.NewNop(), "", mockService)
 	require.NoError(t, err, "handlers initialization error")
 
 	ts := httptest.NewServer(handlers)

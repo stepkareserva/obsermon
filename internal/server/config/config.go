@@ -9,8 +9,9 @@ type Config struct {
 	StoreIntervalS  int     `env:"STORE_INTERVAL"`
 	FileStoragePath string  `env:"FILE_STORAGE_PATH"`
 	Restore         bool    `env:"RESTORE"`
-	Mode            AppMode `env:"MODE"`
 	DBConnection    string  `env:"DATABASE_DSN"`
+	ReportSignKey   string  `env:"KEY"`
+	Mode            AppMode `env:"MODE"`
 }
 
 func (c *Config) StoreInterval() time.Duration {

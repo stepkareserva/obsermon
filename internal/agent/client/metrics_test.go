@@ -23,11 +23,11 @@ func TestUpdateCounter(t *testing.T) {
 	}))
 	defer mockServer.Close()
 
-	metricsClient, err := New(mockServer.URL)
+	metricsClient, err := New(mockServer.URL, "", 1)
 	require.NoError(t, err)
+	defer metricsClient.Close()
 
-	err = metricsClient.UpdateCounter(counter)
-	require.NoError(t, err)
+	metricsClient.UpdateCounter(counter)
 }
 
 func TestUpdateGauge(t *testing.T) {
@@ -43,9 +43,9 @@ func TestUpdateGauge(t *testing.T) {
 	}))
 	defer mockServer.Close()
 
-	metricsClient, err := New(mockServer.URL)
+	metricsClient, err := New(mockServer.URL, "", 1)
 	require.NoError(t, err)
+	defer metricsClient.Close()
 
-	err = metricsClient.UpdateGauge(gauge)
-	require.NoError(t, err)
+	metricsClient.UpdateGauge(gauge)
 }

@@ -12,12 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type Routing struct {
-	router *chi.Mux
-	log    *zap.Logger
-}
-
-func New(log *zap.Logger, s handlers.Service) (http.Handler, error) {
+func New(log *zap.Logger, secretkey string, s handlers.Service) (http.Handler, error) {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -27,6 +22,9 @@ func New(log *zap.Logger, s handlers.Service) (http.Handler, error) {
 	r.Use(middleware.Logger(log))
 	r.Use(middleware.Compression(log))
 	r.Use(middleware.Buffering(log))
+	if len(secretkey) > 0 {
+		r.Use(middleware.Sign(secretkey, log))
+	}
 
 	// register routes
 	if err := addUpdateHandlers(r, s, log); err != nil {

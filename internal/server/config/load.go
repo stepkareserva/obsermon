@@ -27,6 +27,7 @@ func defaultConfig() *Config {
 		FileStoragePath: defaultStoragePath(),
 		Restore:         false,
 		DBConnection:    "",
+		ReportSignKey:   "",
 		Mode:            Prod,
 	}
 }
@@ -71,6 +72,9 @@ func readCLIParams(c *Config) error {
 
 	fs.StringVar(&c.DBConnection, "d", c.DBConnection,
 		"database connection string")
+
+	fs.StringVar(&c.ReportSignKey, "k", c.ReportSignKey,
+		"reports and requests sing key, string")
 
 	fs.Var(&c.Mode, "m",
 		"app mode, quiet/dev/prod")
