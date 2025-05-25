@@ -43,6 +43,13 @@ func New(params WatchdogParams) (*Watchdog, error) {
 	return &watchdog, nil
 }
 
+func (w *Watchdog) Close() {
+	if w == nil {
+		return
+	}
+	close(w.metrics)
+}
+
 func (w *Watchdog) Start(ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Add(3)
@@ -72,7 +79,6 @@ func (w *Watchdog) runtimeMetricsPoller(ctx context.Context) {
 
 		select {
 		case <-ctx.Done():
-			close(w.metrics)
 			log.Println("Metrics updater stopped")
 			return
 		case <-timer.C:
@@ -94,7 +100,6 @@ func (w *Watchdog) golangMetricsPoller(ctx context.Context) {
 
 		select {
 		case <-ctx.Done():
-			close(w.metrics)
 			log.Println("Metrics updater stopped")
 			return
 		case <-timer.C:
