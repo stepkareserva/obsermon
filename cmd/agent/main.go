@@ -56,6 +56,7 @@ func main() {
 		log.Printf("watchdog initialization: %v", err)
 		return
 	}
+	defer watchdog.Close()
 	watchdog.Start(ctx)
 
 	log.Println("Agent shut down")

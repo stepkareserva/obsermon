@@ -43,6 +43,7 @@ func TestWatchdog(t *testing.T) {
 
 	watchdog, err := New(watchdogParams)
 	require.NoError(t, err)
+	defer watchdog.Close()
 	watchdog.Start(ctx)
 
 	// check target requests on mock server
