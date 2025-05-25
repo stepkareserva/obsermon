@@ -20,17 +20,17 @@ func NewJSONStateStorage(path string) JSONStateStorage {
 func (s *JSONStateStorage) LoadState() (state *State, err error) {
 	file, err := os.Open(s.path)
 	if err != nil {
-		return nil, fmt.Errorf("storage file opening: %w", err)
+		return nil, fmt.Errorf("storage file opening: %v", err)
 	}
 	defer func() {
 		if errClose := file.Close(); errClose != nil {
-			err = errors.Join(err, fmt.Errorf("storage file closing: %w", errClose))
+			err = errors.Join(err, fmt.Errorf("storage file closing: %v", errClose))
 		}
 	}()
 
 	decoder := json.NewDecoder(file)
 	if err = decoder.Decode(&state); err != nil {
-		return nil, fmt.Errorf("storage decoding: %w", err)
+		return nil, fmt.Errorf("storage decoding: %v", err)
 	}
 	return
 }
@@ -40,23 +40,23 @@ func (s *JSONStateStorage) StoreState(state State) error {
 	// to avoid half-written file
 	file, creationErr := os.CreateTemp("", "")
 	if creationErr != nil {
-		return fmt.Errorf("storage file creation: %w", creationErr)
+		return fmt.Errorf("storage file creation: %v", creationErr)
 	}
 
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
 	if err := encoder.Encode(state); err != nil {
-		return fmt.Errorf("storage encoding: %w", err)
+		return fmt.Errorf("storage encoding: %v", err)
 	}
 	if err := file.Close(); err != nil {
-		return fmt.Errorf("storage file closing: %w", err)
+		return fmt.Errorf("storage file closing: %v", err)
 	}
 
 	if renameErr := os.Rename(file.Name(), s.path); renameErr != nil {
 		if removeErr := os.Remove(file.Name()); removeErr != nil {
-			return fmt.Errorf("storage file replacing: %w", errors.Join(renameErr, removeErr))
+			return fmt.Errorf("storage file replacing: %v", errors.Join(renameErr, removeErr))
 		}
-		return fmt.Errorf("storage file replacing: %w", renameErr)
+		return fmt.Errorf("storage file replacing: %v", renameErr)
 	}
 
 	return nil

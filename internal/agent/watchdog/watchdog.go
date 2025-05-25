@@ -45,11 +45,16 @@ func New(params WatchdogParams) (*Watchdog, error) {
 
 func (w *Watchdog) Start(ctx context.Context) {
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
 
 	go func() {
 		defer wg.Done()
-		w.metricsPoller(ctx)
+		w.runtimeMetricsPoller(ctx)
+	}()
+
+	go func() {
+		defer wg.Done()
+		w.golangMetricsPoller(ctx)
 	}()
 
 	go func() {
@@ -60,12 +65,7 @@ func (w *Watchdog) Start(ctx context.Context) {
 	wg.Wait()
 }
 
-/*func (w *Watchdog) Stop() {
-	w.cancel()
-	w.wg.Wait()
-}*/
-
-func (w *Watchdog) metricsPoller(ctx context.Context) {
+func (w *Watchdog) runtimeMetricsPoller(ctx context.Context) {
 	for {
 		timer := time.NewTimer(w.params.PollInterval)
 		defer timer.Stop()
@@ -76,10 +76,32 @@ func (w *Watchdog) metricsPoller(ctx context.Context) {
 			log.Println("Metrics updater stopped")
 			return
 		case <-timer.C:
-			m, err := monitor.GetMetrics()
+			m, err := monitor.GetRuntimeMetrics()
 			if err != nil {
 				// just skip because of what else shall we do
-				log.Printf("Get Metrics error: %v", err)
+				log.Printf("Get Runtime Metrics error: %v", err)
+			} else {
+				w.metrics <- *m
+			}
+		}
+	}
+}
+
+func (w *Watchdog) golangMetricsPoller(ctx context.Context) {
+	for {
+		timer := time.NewTimer(w.params.PollInterval)
+		defer timer.Stop()
+
+		select {
+		case <-ctx.Done():
+			close(w.metrics)
+			log.Println("Metrics updater stopped")
+			return
+		case <-timer.C:
+			m, err := monitor.GetGolangMetrics()
+			if err != nil {
+				// just skip because of what else shall we do
+				log.Printf("Get Golang Metrics error: %v", err)
 			} else {
 				w.metrics <- *m
 			}
@@ -98,10 +120,7 @@ func (w *Watchdog) metricsReporter(ctx context.Context) {
 			return
 		case <-timer.C:
 			metrics := w.processPolledMetrics()
-			if err := w.sendMetrics(metrics); err != nil {
-				// just skip because of what else shall we do
-				log.Printf("Send Metrics error: %v", err)
-			}
+			w.sendMetrics(metrics)
 		}
 	}
 }
@@ -122,12 +141,8 @@ func (w *Watchdog) processPolledMetrics() metrics.Metrics {
 	}
 }
 
-func (w *Watchdog) sendMetrics(metrics metrics.Metrics) error {
-	err := w.params.MetricsServerClient.BatchUpdate(
-		metrics.Counters.List(), metrics.Gauges.List())
-	if err != nil {
-		return fmt.Errorf("sending metrics: %w", err)
-	}
-
-	return nil
+func (w *Watchdog) sendMetrics(metrics metrics.Metrics) {
+	w.params.MetricsServerClient.BatchUpdate(
+		metrics.Counters.List(),
+		metrics.Gauges.List())
 }

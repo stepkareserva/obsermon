@@ -17,7 +17,7 @@ type Counter struct {
 func (c *CounterValue) FromString(s string) error {
 	value, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
-		return fmt.Errorf("could not parse CounterValue: %w", err)
+		return fmt.Errorf("could not parse CounterValue: %v", err)
 	}
 	*c = CounterValue(value)
 	return nil

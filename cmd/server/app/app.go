@@ -38,28 +38,28 @@ func New(cfg config.Config, log *zap.Logger) (*App, error) {
 		if closeErr := app.Close(); closeErr != nil {
 			log.Error("app close", zap.Error(closeErr))
 		}
-		return nil, fmt.Errorf("init storage: %w", err)
+		return nil, fmt.Errorf("init storage: %v", err)
 	}
 
 	if err := app.initService(cfg); err != nil {
 		if closeErr := app.Close(); closeErr != nil {
 			log.Error("app close", zap.Error(closeErr))
 		}
-		return nil, fmt.Errorf("init service: %w", err)
+		return nil, fmt.Errorf("init service: %v", err)
 	}
 
 	if err := app.initHandler(cfg); err != nil {
 		if closeErr := app.Close(); closeErr != nil {
 			log.Error("app close", zap.Error(closeErr))
 		}
-		return nil, fmt.Errorf("init handler: %w", err)
+		return nil, fmt.Errorf("init handler: %v", err)
 	}
 
 	if err := app.initServer(cfg); err != nil {
 		if closeErr := app.Close(); closeErr != nil {
 			log.Error("app close", zap.Error(closeErr))
 		}
-		return nil, fmt.Errorf("init server: %w", err)
+		return nil, fmt.Errorf("init server: %v", err)
 	}
 
 	return &app, nil
@@ -76,7 +76,7 @@ func (a *App) Close() error {
 		context, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := a.server.Shutdown(context); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			closingErrs = errors.Join(err, fmt.Errorf("server shutdown: %w", err))
+			closingErrs = errors.Join(err, fmt.Errorf("server shutdown: %v", err))
 		} else {
 			a.log.Info("server stopped")
 		}
@@ -87,7 +87,7 @@ func (a *App) Close() error {
 	if a.storage != nil {
 		if c, ok := a.storage.(io.Closer); ok {
 			if err := c.Close(); err != nil {
-				closingErrs = errors.Join(err, fmt.Errorf("storage closing: %w", err))
+				closingErrs = errors.Join(err, fmt.Errorf("storage closing: %v", err))
 			} else {
 				a.log.Info("storage closed")
 			}
@@ -117,7 +117,7 @@ func (a *App) Run(ctx context.Context) error {
 		a.log.Info("app received cancel signal")
 		return nil
 	case srvErr := <-serverErrCh:
-		return fmt.Errorf("server running: %w", srvErr)
+		return fmt.Errorf("server running: %v", srvErr)
 	}
 }
 
@@ -130,11 +130,11 @@ func (a *App) Run(ctx context.Context) error {
 	// create database
 	db, err := database.New(cfg.DBConnection)
 	if err != nil {
-		return fmt.Errorf("db connect: %w", err)
+		return fmt.Errorf("db connect: %v", err)
 	}
 	a.database = db
 	if err := db.Ping(); err != nil {
-		return fmt.Errorf("db ping: %w", err)
+		return fmt.Errorf("db ping: %v", err)
 	}
 
 	// wrap onto sustainable database
@@ -158,7 +158,7 @@ func (a *App) initStorage(cfg config.Config) error {
 		// use db storage
 		storage, err := dbstorage.New(cfg.DBConnection, a.log)
 		if err != nil {
-			return fmt.Errorf("init db storage: %w", err)
+			return fmt.Errorf("init db storage: %v", err)
 		}
 		a.storage = storage
 	} else {
@@ -177,7 +177,7 @@ func (a *App) initStorage(cfg config.Config) error {
 			var err error
 			a.storage, err = persistence.New(persistenceCfg, a.storage, a.log)
 			if err != nil {
-				return fmt.Errorf("persistent storage: %w", err)
+				return fmt.Errorf("persistent storage: %v", err)
 			}
 		}
 	}
@@ -189,7 +189,7 @@ func (a *App) initService(cfg config.Config) error {
 	// service
 	service, err := service.New(a.storage)
 	if err != nil {
-		return fmt.Errorf("service creation: %w", err)
+		return fmt.Errorf("service creation: %v", err)
 	}
 
 	a.service = service
@@ -198,9 +198,9 @@ func (a *App) initService(cfg config.Config) error {
 }
 
 func (a *App) initHandler(cfg config.Config) error {
-	handler, err := router.New(a.log, a.service)
+	handler, err := router.New(a.log, cfg.ReportSignKey, a.service)
 	if err != nil {
-		return fmt.Errorf("init handler: %w", err)
+		return fmt.Errorf("init handler: %v", err)
 	}
 	a.handler = handler
 

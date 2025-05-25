@@ -26,8 +26,9 @@ func TestWatchdog(t *testing.T) {
 	defer mockServer.Close()
 
 	// mock server client
-	metricsClient, err := client.New(mockServer.URL)
+	metricsClient, err := client.New(mockServer.URL, "", 1)
 	require.NoError(t, err)
+	defer metricsClient.Close()
 
 	// watchdog
 	watchdogParams := WatchdogParams{

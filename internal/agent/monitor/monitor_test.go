@@ -11,8 +11,8 @@ func TestGetRuntimeGauges(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestGetMetrics(t *testing.T) {
-	metrics, err := GetMetrics()
+func TestGetRuntimeMetrics(t *testing.T) {
+	metrics, err := GetRuntimeMetrics()
 	require.NoError(t, err)
 	require.Equal(t, 28, len(metrics.Gauges))
 	require.Equal(t, 1, len(metrics.Counters))

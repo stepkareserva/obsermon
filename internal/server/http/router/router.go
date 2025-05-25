@@ -12,12 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type Routing struct {
-	router *chi.Mux
-	log    *zap.Logger
-}
-
-func New(log *zap.Logger, s handlers.Service) (http.Handler, error) {
+func New(log *zap.Logger, secretkey string, s handlers.Service) (http.Handler, error) {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -27,19 +22,22 @@ func New(log *zap.Logger, s handlers.Service) (http.Handler, error) {
 	r.Use(middleware.Logger(log))
 	r.Use(middleware.Compression(log))
 	r.Use(middleware.Buffering(log))
+	if len(secretkey) > 0 {
+		r.Use(middleware.Sign(secretkey, log))
+	}
 
 	// register routes
 	if err := addUpdateHandlers(r, s, log); err != nil {
-		return nil, fmt.Errorf("update handlers: %w", err)
+		return nil, fmt.Errorf("update handlers: %v", err)
 	}
 	if err := addValueHandlers(r, s, log); err != nil {
-		return nil, fmt.Errorf("value handlers: %w", err)
+		return nil, fmt.Errorf("value handlers: %v", err)
 	}
 	if err := addValuesHandlers(r, s, log); err != nil {
-		return nil, fmt.Errorf("values handlers: %w", err)
+		return nil, fmt.Errorf("values handlers: %v", err)
 	}
 	if err := addPingHandlers(r, s, log); err != nil {
-		return nil, fmt.Errorf("ping handlers: %w", err)
+		return nil, fmt.Errorf("ping handlers: %v", err)
 	}
 
 	return r, nil
@@ -48,7 +46,7 @@ func New(log *zap.Logger, s handlers.Service) (http.Handler, error) {
 func addUpdateHandlers(r chi.Router, s handlers.Service, log *zap.Logger) error {
 	updHandler, err := handlers.NewUpdateHandler(s, log)
 	if err != nil {
-		return fmt.Errorf("update handler creation: %w", err)
+		return fmt.Errorf("update handler creation: %v", err)
 	}
 	r.Route("/update", func(r chi.Router) {
 		r.Post(fmt.Sprintf("/%s/{%s}/{%s}", constants.MetricGauge, constants.ChiName, constants.ChiValue),
@@ -71,7 +69,7 @@ func addUpdateHandlers(r chi.Router, s handlers.Service, log *zap.Logger) error 
 func addValueHandlers(r chi.Router, s handlers.Service, log *zap.Logger) error {
 	valHandler, err := handlers.NewValueHandler(s, log)
 	if err != nil {
-		return fmt.Errorf("value handler creation: %w", err)
+		return fmt.Errorf("value handler creation: %v", err)
 	}
 	r.Route("/value", func(r chi.Router) {
 		r.Get(fmt.Sprintf("/%s/{%s}", constants.MetricGauge, constants.ChiName),
@@ -90,7 +88,7 @@ func addValueHandlers(r chi.Router, s handlers.Service, log *zap.Logger) error {
 func addValuesHandlers(r chi.Router, s handlers.Service, log *zap.Logger) error {
 	valsHandler, err := handlers.NewValuesHandler(s, log)
 	if err != nil {
-		return fmt.Errorf("values handler creation: %w", err)
+		return fmt.Errorf("values handler creation: %v", err)
 	}
 	r.Get("/", valsHandler.MetricValuesHandler())
 
@@ -100,7 +98,7 @@ func addValuesHandlers(r chi.Router, s handlers.Service, log *zap.Logger) error 
 func addPingHandlers(r chi.Router, s handlers.Service, log *zap.Logger) error {
 	pingHandler, err := handlers.NewPingHandler(s, log)
 	if err != nil {
-		return fmt.Errorf("ping handler creation: %w", err)
+		return fmt.Errorf("ping handler creation: %v", err)
 	}
 	r.Get("/ping", pingHandler.Handler())
 

@@ -41,9 +41,9 @@ func New(cfg Config, base service.Storage, logger *zap.Logger) (*Storage, error)
 	if cfg.Restore {
 		state, err := cfg.StateStorage.LoadState()
 		if err != nil {
-			logger.Warn("state loading: %w", zap.Error(err))
+			logger.Warn("state loading: %v", zap.Error(err))
 		} else if err := state.Export(context.TODO(), base); err != nil {
-			logger.Warn("state exporting: %w", zap.Error(err))
+			logger.Warn("state exporting: %v", zap.Error(err))
 		}
 	}
 
@@ -174,10 +174,10 @@ func (s *Storage) channelStoringLoop(ctx context.Context, ch <-chan time.Time) {
 func (s *Storage) storeState(ctx context.Context) error {
 	var state State
 	if err := state.Import(ctx, s.Storage); err != nil {
-		return fmt.Errorf("storage state request: %w", err)
+		return fmt.Errorf("storage state request: %v", err)
 	}
 	if err := s.sstorage.StoreState(state); err != nil {
-		return fmt.Errorf("storage state storing: %w", err)
+		return fmt.Errorf("storage state storing: %v", err)
 	}
 	return nil
 }

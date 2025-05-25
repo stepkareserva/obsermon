@@ -17,7 +17,7 @@ type Gauge struct {
 func (g *GaugeValue) FromString(s string) error {
 	value, err := strconv.ParseFloat(s, 64)
 	if err != nil {
-		return fmt.Errorf("could not parse GaugeValue: %w", err)
+		return fmt.Errorf("could not parse GaugeValue: %v", err)
 	}
 	*g = GaugeValue(value)
 	return nil
