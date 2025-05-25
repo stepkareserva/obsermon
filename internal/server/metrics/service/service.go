@@ -65,7 +65,7 @@ func (s *Service) UpdateCounter(ctx context.Context, val models.Counter) (*model
 
 	updatedVal, err := s.storage.UpdateCounter(ctx, val)
 	if err != nil {
-		return nil, fmt.Errorf("update counter: %w", err)
+		return nil, fmt.Errorf("update counter: %v", err)
 	}
 	return updatedVal, nil
 }
@@ -161,17 +161,17 @@ func (s *Service) UpdateMetrics(ctx context.Context, vals models.Metrics) (model
 	// get counters and gauges from metrics
 	counters, gauges, err := splitMetrics(vals)
 	if err != nil {
-		return nil, fmt.Errorf("split metrics: %w", err)
+		return nil, fmt.Errorf("split metrics: %v", err)
 	}
 
 	// update counters and gauges
 	counters, err = s.storage.UpdateCounters(ctx, counters)
 	if err != nil {
-		return nil, fmt.Errorf("update counters: %w", err)
+		return nil, fmt.Errorf("update counters: %v", err)
 	}
 	err = s.storage.SetGauges(ctx, gauges)
 	if err != nil {
-		return nil, fmt.Errorf("update gauges: %w", err)
+		return nil, fmt.Errorf("update gauges: %v", err)
 	}
 
 	metrics := mergeMetrics(counters, gauges)

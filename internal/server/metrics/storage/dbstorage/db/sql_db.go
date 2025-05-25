@@ -103,7 +103,7 @@ func (d *SQLDB) Close() error {
 	}
 
 	if err := db.Close(); err != nil {
-		return fmt.Errorf("db closing: %w", err)
+		return fmt.Errorf("db closing: %v", err)
 	}
 
 	return nil
@@ -121,7 +121,7 @@ func (d *SQLDB) BeginTx(ctx context.Context) (Tx, error) {
 
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, fmt.Errorf("begin tx: %w", err)
+		return nil, fmt.Errorf("begin tx: %v", err)
 	}
 
 	return &sqlTx{Tx: tx}, nil

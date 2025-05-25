@@ -110,17 +110,17 @@ func (c *MetricsClient) sendUpdateRequest(metrics models.Metrics) error {
 			}
 			return nil
 		case !isServerUnavailableErr(err):
-			return fmt.Errorf("post updates: %w", err)
+			return fmt.Errorf("post updates: %v", err)
 		}
 	}
 
-	return fmt.Errorf("post updates: %w", err)
+	return fmt.Errorf("post updates: %v", err)
 }
 
 func (c *MetricsClient) postJSON(url string, object interface{}) (*resty.Response, error) {
 	body, err := json.Marshal(object)
 	if err != nil {
-		return nil, fmt.Errorf("json marshalling body: %w", err)
+		return nil, fmt.Errorf("json marshalling body: %v", err)
 	}
 
 	// !important: we must post only raw data as io.Reader,

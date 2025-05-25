@@ -71,7 +71,7 @@ func (m *Storage) UpdateCounter(ctx context.Context, val models.Counter) (*model
 	counter, exists := m.counters[val.Name]
 	if exists {
 		if err := val.Value.Update(counter); err != nil {
-			return nil, fmt.Errorf("update counter: %w", err)
+			return nil, fmt.Errorf("update counter: %v", err)
 		}
 	}
 	m.counters[val.Name] = val.Value
@@ -87,7 +87,7 @@ func (m *Storage) UpdateCounters(ctx context.Context, vals models.CountersList) 
 		counter, exists := m.counters[val.Name]
 		if exists {
 			if err := val.Value.Update(counter); err != nil {
-				return nil, fmt.Errorf("update counters: %w", err)
+				return nil, fmt.Errorf("update counters: %v", err)
 			}
 		}
 		m.counters[val.Name] = val.Value

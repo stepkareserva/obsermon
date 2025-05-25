@@ -52,19 +52,19 @@ func Sign(secretkey string, log *zap.Logger) Middleware {
 func checkSign(r *http.Request, secretkey string) (bool, error) {
 	headerSign, err := hex.DecodeString(r.Header.Get(signHeader))
 	if err != nil {
-		return false, fmt.Errorf("decoding sign: %w", err)
+		return false, fmt.Errorf("decoding sign: %v", err)
 	}
 
 	// read body and write it back
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		return false, fmt.Errorf("reading request body: %w", err)
+		return false, fmt.Errorf("reading request body: %v", err)
 	}
 	r.Body = io.NopCloser(bytes.NewReader(body))
 
 	hash := hmac.New(sha256.New, []byte(secretkey))
 	if _, err := hash.Write(body); err != nil {
-		return false, fmt.Errorf("hash write: %w", err)
+		return false, fmt.Errorf("hash write: %v", err)
 	}
 	sign := hash.Sum(nil)
 
@@ -93,7 +93,7 @@ var _ http.ResponseWriter = (*signingWriter)(nil)
 
 func (w *signingWriter) Write(data []byte) (int, error) {
 	if _, err := w.hash.Write(data); err != nil {
-		return 0, fmt.Errorf("data hash: %w", err)
+		return 0, fmt.Errorf("data hash: %v", err)
 	}
 	return w.ResponseWriter.Write(data)
 }

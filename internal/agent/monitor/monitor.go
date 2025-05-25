@@ -78,12 +78,12 @@ func GetGolangMetrics() (*metrics.Metrics, error) {
 	// virtual memory is RAM in gopsutil? why...
 	memstat, err := mem.VirtualMemory()
 	if err != nil {
-		return nil, fmt.Errorf("memory stat: %w", err)
+		return nil, fmt.Errorf("memory stat: %v", err)
 	}
 
 	cpustat, err := cpu.Percent(100*time.Millisecond, false)
 	if err != nil {
-		return nil, fmt.Errorf("cpu utilization: %w", err)
+		return nil, fmt.Errorf("cpu utilization: %v", err)
 	}
 
 	return &metrics.Metrics{

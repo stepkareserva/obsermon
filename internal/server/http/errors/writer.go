@@ -39,7 +39,7 @@ func writeError(w http.ResponseWriter, err HandlerError) error {
 	w.WriteHeader(err.StatusCode)
 
 	if _, err := w.Write([]byte(err.Message)); err != nil {
-		return fmt.Errorf("writing error: %w", err)
+		return fmt.Errorf("writing error: %v", err)
 	}
 	return nil
 }

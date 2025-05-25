@@ -21,10 +21,10 @@ func (s *State) Export(ctx context.Context, storage service.Storage) error {
 		return fmt.Errorf("storage not exists")
 	}
 	if err := storage.ReplaceCounters(ctx, s.Counters); err != nil {
-		return fmt.Errorf("replacing storage counters: %w", err)
+		return fmt.Errorf("replacing storage counters: %v", err)
 	}
 	if err := storage.ReplaceGauges(ctx, s.Gauges); err != nil {
-		return fmt.Errorf("replacing storage gauges: %w", err)
+		return fmt.Errorf("replacing storage gauges: %v", err)
 	}
 	return nil
 }
@@ -39,11 +39,11 @@ func (s *State) Import(ctx context.Context, storage service.Storage) error {
 	var err error
 	s.Counters, err = storage.ListCounters(ctx)
 	if err != nil {
-		return fmt.Errorf("requesting storage counters: %w", err)
+		return fmt.Errorf("requesting storage counters: %v", err)
 	}
 	s.Gauges, err = storage.ListGauges(ctx)
 	if err != nil {
-		return fmt.Errorf("requesting storage gauges: %w", err)
+		return fmt.Errorf("requesting storage gauges: %v", err)
 	}
 	return nil
 }
